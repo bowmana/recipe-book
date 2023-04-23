@@ -8,7 +8,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Nav } from './components/nav/nav';
 
 import { HomePage } from './components/home-page/home-page';
-import { ItemWrapper } from './components/item-wrapper/item-wrapper';
+import { ItemWrapper } from './components/new-recipe-page/item-wrapper/item-wrapper';
+import { UpdateItemWrapper } from './components/update-recipe-page/update-item-wrapper/update-item-wrapper';
 import styles from './App.module.scss';
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/new-recipe" element={<ItemWrapper />} />
-                    {/* <Route path="/profile" element={<Profile />} /> */}
+                    <Route path="/update-recipe/:id" element={<UpdateItemWrapper />} />
                 </Routes>
             </div>
         </Router>

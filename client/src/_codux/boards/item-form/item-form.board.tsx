@@ -1,5 +1,5 @@
 import { createBoard } from '@wixc3/react-board';
-import { ItemForm } from '../../../components/item-form/item-form';
+import { ItemForm } from '../../../components/new-recipe-page/item-form/item-form';
 
 export default createBoard({
     name: 'ItemForm',

@@ -13,14 +13,14 @@ app.use(logger("dev"));
 
 app.post("/events", (req, res) => {
     const event = req.body;
+    console.log("Event Received", event.type);
+    if (event.type === "UserCreated") {
+        console.log("Processing event", event.type);
+        console.log(event.data);
+       
+    }
 
-    axios.post("http://localhost:4000/events", event).catch((err) => {
-        console.log(err.message);
-    });
-
-    axios.post("http://localhost:4002/events", event).catch((err) => {
-        console.log(err.message);
-    });
+    res.status(200).send({});
 });
 
 

@@ -10,6 +10,9 @@ import { Nav } from './components/nav/nav';
 import { HomePage } from './components/home-page/home-page';
 import { ItemWrapper } from './components/new-recipe-page/item-wrapper/item-wrapper';
 import { UpdateItemWrapper } from './components/update-recipe-page/update-item-wrapper/update-item-wrapper';
+import { Registerform } from './components/user-info/register-form/register-form';
+import { Loginform } from './components/user-info/login-form/login-form';
+import { UserNav } from './components/user-info/user-nav/user-nav';
 import styles from './App.module.scss';
 
 function App() {
@@ -18,11 +21,52 @@ function App() {
     return (
         <Router>
             <div className={styles.App}>
-                <Nav />
                 <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/new-recipe" element={<ItemWrapper />} />
-                    <Route path="/update-recipe/:id" element={<UpdateItemWrapper />} />
+                    <Route
+                        path="/"
+                        element={
+                            <div>
+                                <Nav /> <HomePage />{' '}
+                            </div>
+                        }
+                    />
+                    <Route
+                        path="/new-recipe"
+                        element={
+                            <div>
+                                <Nav />
+                                <ItemWrapper />
+                            </div>
+                        }
+                    />
+                    <Route
+                        path="/update-recipe/:id"
+                        element={
+                            <div>
+                                <Nav />
+                                <UpdateItemWrapper />
+                            </div>
+                        }
+                    />
+
+                    <Route
+                        path="/login"
+                        element={
+                            <div>
+                                <UserNav />
+                                <Loginform />
+                            </div>
+                        }
+                    />
+                    <Route
+                        path="/register"
+                        element={
+                            <div>
+                                <UserNav />
+                                <Registerform />
+                            </div>
+                        }
+                    />
                 </Routes>
             </div>
         </Router>

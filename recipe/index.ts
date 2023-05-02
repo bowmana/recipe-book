@@ -72,6 +72,27 @@ app.post("/edit-recipe", async (req: Request, res: Response) => {
     res.status(201).send(recipes[id]);
 });
 
+// app.post('/events', (req: Request, res: Response) => {
+//     const event = req.body;
+//     console.log('Received Event', event.type);
+//     if (event.type === "RecipeCreated") {
+//         const { id, recipe_name, recipe_items } = event.data;
+//         recipes[id] = {
+//             id,
+//             recipe_name,
+//             recipe_items
+//         };
+//     }
+//     if (event.type === "RecipeUpdated") {
+//         const { id, recipe_name, recipe_items } = event.data;
+//         recipes[id] = {
+//             id,
+//             recipe_name,
+//             recipe_items
+//         };
+//     }
+//     res.send({});
+// });
 
 
 

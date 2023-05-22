@@ -14,7 +14,7 @@ export const Nav = ({ className }: NavProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <nav>
-                <Link to="/">My Recipes</Link> | <Link to="/new-recipe">New Recipe</Link> |{' '}
+                <Link to="/home">My Recipes</Link> | <Link to="/new-recipe">New Recipe</Link> |{' '}
                 <Link to="/profile">Profile</Link>
             </nav>
         </div>

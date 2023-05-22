@@ -44,8 +44,8 @@ const morgan_1 = __importDefault(require("morgan"));
 const app = (0, express_1.default)();
 const port = 4001;
 app.use((0, morgan_1.default)("dev"));
-app.use(express_1.default.json());
 app.use((0, cors_1.default)({ origin: ["http://127.0.0.1:5173"], credentials: true, exposedHeaders: ["Set-Cookie"] }));
+app.use(express_1.default.json());
 const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (req.headers.cookie) {
         const token = req.headers.cookie.split('=')[1];
@@ -92,7 +92,7 @@ app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         console.log(err.message);
     });
     res.setHeader('Access-Control-Expose-Headers', '*');
-    res.setHeader('Set-Cookie', `token=${token}; HttpOnly`);
+    res.setHeader('Set-Cookie', `token=${token}; HttpOnly; SameSite=None; Secure`);
     res.status(201).send(user);
 }));
 app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -119,7 +119,7 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         });
         res.setHeader('Access-Control-Expose-Headers', '*');
-        res.setHeader('Set-Cookie', `token=${token}; HttpOnly`);
+        res.setHeader('Set-Cookie', `token=${token}; HttpOnly; SameSite=None; Secure`);
         res.status(200).json(user);
         return;
     }
@@ -131,11 +131,8 @@ app.post('/auth', verifyToken, (req, res) => {
 app.post('/logout', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const token = (_a = req.headers.cookie) === null || _a === void 0 ? void 0 : _a.split('=')[1];
-    if (!token) {
-        res.status(200).send('Already not logged in');
-        return;
-    }
-    res.setHeader('Set-Cookie', 'token=expired; HttpOnly');
+    console.log(token, "token in logout pre expiration");
+    res.setHeader('Set-Cookie', 'token=expired; HttpOnly; Max-Age=0; SameSite=None; Secure');
     res.status(200).send('Logged out');
 }));
 app.listen(port, () => {

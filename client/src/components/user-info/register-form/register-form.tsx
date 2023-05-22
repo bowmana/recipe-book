@@ -70,7 +70,7 @@ export const Registerform = ({ className }: RegisterformProps) => {
                 console.log(res);
                 if (res.status === 201) {
                     console.log('user created');
-                    window.location.href = '/';
+                    window.location.href = '/home';
                 }
             })
             .catch((err: AxiosError) => {

@@ -17,7 +17,7 @@ export const EditItemForm = ({ className, editRecipeItem, item }: EditItemFormPr
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        editRecipeItem(recipe_item, item.id);
+        editRecipeItem(recipe_item, item.recipe_item_id);
         setRecipeItem('');
     };
     return (

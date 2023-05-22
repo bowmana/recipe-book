@@ -20,7 +20,7 @@ export const Loginform = ({ className }: LoginformProps) => {
                 .then((res: AxiosResponse) => {
                     if (res.status === 200) {
                         alert('you are already logged in');
-                        window.location.href = '/';
+                        window.location.href = '/home';
                     }
                 })
                 .catch((err: AxiosError) => {
@@ -60,7 +60,7 @@ export const Loginform = ({ className }: LoginformProps) => {
             .then((res: AxiosResponse) => {
                 if (res.status === 200) {
                     alert('you are logged in');
-                    window.location.href = '/';
+                    window.location.href = '/home';
                 }
                 if (res.status === 204) {
                     console.log('no content', res);

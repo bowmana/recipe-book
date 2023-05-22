@@ -27,8 +27,10 @@ export const UpdateItem = ({
             <ul>
                 <li className={styles['recipe-item']}>
                     <h3>{recipe_item.recipe_item}</h3>
-                    <button onClick={() => deleteRecipeItem(recipe_item.id)}>delete</button>
-                    <button onClick={() => editRecipeItem(recipe_item.id)}>edit</button>
+                    <button onClick={() => deleteRecipeItem(recipe_item.recipe_item_id)}>
+                        delete
+                    </button>
+                    <button onClick={() => editRecipeItem(recipe_item.recipe_item_id)}>edit</button>
                 </li>
             </ul>
         </div>

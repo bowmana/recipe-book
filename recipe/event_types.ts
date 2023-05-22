@@ -1,15 +1,46 @@
-interface RecipeItem {
-    id: string;
-    recipe_item_id: string;
-    isEditing: boolean;
-}
 
-interface Recipe{
-    id: string;
-    recipe: string;
-    recipe_items: RecipeItem[];
-}
+  interface UserCreated extends Event {
+    type: "UserCreated";
+    data: {
+        user_id: number;
+        email: string;
+    }
+    };
+
+    interface LoginSuccess extends Event {
+        type: 'LoginSuccess';
+        data: {
+          user_id: number;
+          email: string;
+        };
+      };
+
+      interface Event {
+        type: string;
+        data: any;
+      }
+
+
+      interface RecipeItem {
+        
+        recipe_item: string;
+        recipe_item_id: number;
+
+    }
     
-interface RecipeList {
-    recipes: Recipe[];
-}
+    interface Recipe {
+        id: string;
+        recipe_name: string;
+        recipe_items: RecipeItem[];
+    }
+    
+
+
+
+      export{
+        Event,
+          UserCreated,
+          LoginSuccess,
+          RecipeItem,
+          Recipe
+      }

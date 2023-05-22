@@ -4,6 +4,7 @@ import { UpdateItemForm } from '../update-item-form/update-item-form';
 import { UpdateItem } from '../update-item/update-item';
 import { UpdateSavedItem } from '../update-saved-item/update-saved-item';
 import { UpdateEditItemForm } from '../update-edit-item-form/update-edit-item-form';
+import { v4 as UUID } from 'uuid';
 import { useParams } from 'react-router-dom';
 
 import { useState, useEffect } from 'react';
@@ -15,48 +16,75 @@ export interface ItemWrapperProps {
     className?: string;
 }
 interface RecipeItem {
-    id: string;
+    recipe_item_id: number | null;
     recipe_item: string;
     isEditing: boolean;
 }
 
 interface Recipe {
-    id: string;
+    recipe_id: number;
     recipe_name: string;
     recipe_items: RecipeItem[];
 }
 
-interface RecipeList {
-    recipes: Recipe[];
-}
-
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-wrappers-and-templates
- * 
-
-*/ //pass in the recipe as a prop
 export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
-    const { id } = useParams<{ id: string }>();
+    const { recipe_id } = useParams<{ recipe_id: string }>();
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
 
-    const addRecipeItem = (recipe_item: string) => {
-        const newItem: RecipeItem = { id: Date.now().toString(), recipe_item, isEditing: false };
-        setRecipeItems([...recipe_items, newItem]);
+    useEffect(() => {
+        const fetchRecipes = async () => {
+            try {
+                const response = await axios.get(`http://localhost:4000/recipes/${recipe_id}`);
+                console.log(response.data, 'recipe data');
+                const fetchedRecipeItems = (response.data.recipe_items || []).map(
+                    (item: RecipeItem) => ({
+                        recipe_item_id: item.recipe_item_id,
+                        recipe_item: item.recipe_item,
+                        isEditing: false, // Add the "isEditing" property
+                    })
+                );
+                setRecipeName(response.data.recipe_name);
 
-        console.log(recipe_items);
+                setRecipeItems(fetchedRecipeItems);
+
+                console.log(response.data);
+                console.log(fetchedRecipeItems);
+            } catch (error) {
+                console.log('Failed to fetch recipes');
+                console.log(error);
+            }
+        };
+        fetchRecipes();
+    }, [recipe_id]);
+
+    const addRecipeItem = async (recipe_item: string) => {
+        try {
+            const newItem: RecipeItem = { recipe_item_id: null, recipe_item, isEditing: false };
+            const response = await axios.post(
+                `http://localhost:4000/recipes/${recipe_id}/additem`,
+                {
+                    recipe_item,
+                }
+            );
+            newItem.recipe_item_id = response.data.recipe_item_id;
+            setRecipeItems([...recipe_items, newItem]);
+            console.log(recipe_items, 'new item added');
+        } catch (error) {
+            console.log('Failed to add recipe item');
+            console.log(error);
+        }
     };
 
-    const deleteRecipeItem = (id: string) => {
-        const updatedRecipeItems = recipe_items.filter((item) => item.id !== id);
+    const deleteRecipeItem = (id: number) => {
+        const updatedRecipeItems = recipe_items.filter((item) => item.recipe_item_id !== id);
         setRecipeItems(updatedRecipeItems);
     };
 
-    const editRecipeItem = (id: string) => {
+    const editRecipeItem = (id: number) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
-                return item.id === id
+                return item.recipe_item_id === id
                     ? {
                           ...item,
                           isEditing: !item.isEditing,
@@ -66,10 +94,10 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         );
     };
 
-    const saveRecipeItem = (recipe_item: string, id: string) => {
+    const saveRecipeItem = (recipe_item: string, id: number) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
-                return item.id === id
+                return item.recipe_item_id === id
                     ? {
                           ...item,
                           recipe_item,
@@ -82,10 +110,11 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const updateRecipe = async () => {
         await axios
-            .post('http://localhost:4000/edit-recipe', {
-                id,
+            .put(`http://localhost:4000/recipes/${recipe_id}`, {
                 recipe_name,
-                recipe_items,
+                recipe_items: recipe_items.map((item) => {
+                    return { recipe_item: item.recipe_item };
+                }),
             })
             .then((response: AxiosResponse) => {
                 console.log(response);
@@ -120,17 +149,25 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             </form>
             <h1>Add Items To {recipe_name}</h1>
             <UpdateItemForm addRecipeItem={addRecipeItem} />
-            {recipe_items.map((item, index) =>
-                item.isEditing ? (
-                    <UpdateEditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
-                ) : (
-                    <UpdateItem
-                        recipe_item={item}
-                        key={index}
-                        deleteRecipeItem={deleteRecipeItem}
-                        editRecipeItem={editRecipeItem}
-                    />
+            {recipe_items && recipe_items.length > 0 ? (
+                recipe_items.map((item, index) =>
+                    item.isEditing ? (
+                        <UpdateEditItemForm
+                            key={index}
+                            editRecipeItem={saveRecipeItem}
+                            item={item}
+                        />
+                    ) : (
+                        <UpdateItem
+                            recipe_item={item}
+                            key={index}
+                            deleteRecipeItem={deleteRecipeItem}
+                            editRecipeItem={editRecipeItem}
+                        />
+                    )
                 )
+            ) : (
+                <h1>There are no items in this recipe</h1>
             )}
         </div>
     );

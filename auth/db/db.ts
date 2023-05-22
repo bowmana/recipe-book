@@ -21,11 +21,13 @@ export class DataBaseConnection {
         try{
             await this.pool.connect();
             console.log("Connected to database");
-            this.pool.query(`CREATE TABLE IF NOT EXISTS users (
+            this.pool.query(`
+            
+            CREATE TABLE IF NOT EXISTS users (
                 user_id BIGSERIAL PRIMARY KEY,
                 email VARCHAR,
                 password VARCHAR,
-                username VARCHAR,
+                role INT DEFAULT 0,
                 token VARCHAR
             );`);
         }

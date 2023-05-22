@@ -9,15 +9,14 @@ export interface RecipeCardProps {
 }
 
 interface RecipeItem {
-    id: string;
     recipe_item: string;
-    isEditing: boolean;
+    recipe_item_id: number;
 }
 
 interface Recipe {
-    id: string;
-    recipe_name: string;
     recipe_items: RecipeItem[];
+    recipe_id: number;
+    recipe_name: string;
 }
 
 interface RecipeList {
@@ -25,15 +24,6 @@ interface RecipeList {
 }
 
 const RecipeCard = ({ className, recipes }: RecipeCardProps & RecipeList) => {
-    const editRecipe = async (id: string) => {
-        //post id to server
-
-        await axios.post('/edit-recipe', { id });
-        console.log('posted', { id }, ' to server');
-
-        //redirect to edit page
-    };
-
     return (
         <div className={classNames(styles.root, className)}>
             <h1>Recipes</h1>
@@ -41,14 +31,13 @@ const RecipeCard = ({ className, recipes }: RecipeCardProps & RecipeList) => {
                 {recipes.map((recipe) => {
                     return (
                         <div className={styles['recipe-card']}>
-                            <li key={recipe.id}>
+                            <li key={recipe.recipe_id}>
                                 <div className={styles['recipe-card-buttons']}>
                                     <h2>{recipe.recipe_name}</h2>
 
                                     <Link
-                                        to={`/update-recipe/${recipe.id}`}
+                                        to={`/update-recipe/${recipe.recipe_id}`}
                                         className={styles['edit-recipe']}
-                                        onClick={() => editRecipe(recipe.id)}
                                     >
                                         {' '}
                                         edit{' '}
@@ -58,8 +47,12 @@ const RecipeCard = ({ className, recipes }: RecipeCardProps & RecipeList) => {
                                 </div>
 
                                 <ul>
-                                    {recipe.recipe_items.map((item: any) => {
-                                        return <li key={item.id}>{item.recipe_item}</li>;
+                                    {recipe.recipe_items.map((item: RecipeItem) => {
+                                        return (
+                                            <li key={item.recipe_item_id}>
+                                                <h3>{item.recipe_item}</h3>
+                                            </li>
+                                        );
                                     })}
                                 </ul>
                             </li>

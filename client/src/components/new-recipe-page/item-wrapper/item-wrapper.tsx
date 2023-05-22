@@ -4,6 +4,7 @@ import { ItemForm } from '../item-form/item-form';
 import { Item } from '../item/item';
 import { SavedItem } from '../saved-item/saved-item';
 import { EditItemForm } from '../edit-item-form/edit-item-form';
+import { v4 as UUID } from 'uuid';
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -14,19 +15,9 @@ export interface ItemWrapperProps {
     className?: string;
 }
 interface RecipeItem {
-    id: string;
+    recipe_item_id: string;
     recipe_item: string;
     isEditing: boolean;
-}
-
-interface Recipe {
-    id: string;
-    recipe_name: string;
-    recipe_items: RecipeItem[];
-}
-
-interface RecipeList {
-    recipes: Recipe[];
 }
 
 /**
@@ -34,25 +25,47 @@ interface RecipeList {
  * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-wrappers-and-templates
  */
 export const ItemWrapper = ({ className }: ItemWrapperProps) => {
+    const [user_id, setUserID] = useState(0);
+
+    useEffect(() => {
+        const auth = async () => {
+            const url =
+                process.env.NODE_ENV === 'production'
+                    ? 'http://localhost:4001/auth' // Change if actually deployed to real web server
+                    : 'http://localhost:4001/auth';
+
+            await axios
+                .post(url, {}, { withCredentials: true })
+                .then((axiosResponse: AxiosResponse) => {
+                    setUserID(axiosResponse.data.user_id);
+                })
+                .catch((axiosError: AxiosError) => {
+                    window.location.href = '/login';
+                });
+        };
+
+        auth();
+    }, []);
+
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
 
     const addRecipeItem = (recipe_item: string) => {
-        const newItem: RecipeItem = { id: Date.now().toString(), recipe_item, isEditing: false };
+        const newItem: RecipeItem = { recipe_item_id: UUID(), recipe_item, isEditing: false };
         setRecipeItems([...recipe_items, newItem]);
 
         console.log(recipe_items);
     };
 
     const deleteRecipeItem = (id: string) => {
-        const updatedRecipeItems = recipe_items.filter((item) => item.id !== id);
+        const updatedRecipeItems = recipe_items.filter((item) => item.recipe_item_id !== id);
         setRecipeItems(updatedRecipeItems);
     };
 
     const editRecipeItem = (id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
-                return item.id === id
+                return item.recipe_item_id === id
                     ? {
                           ...item,
                           isEditing: !item.isEditing,
@@ -65,7 +78,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const saveRecipeItem = (recipe_item: string, id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
-                return item.id === id
+                return item.recipe_item_id === id
                     ? {
                           ...item,
                           recipe_item,
@@ -80,7 +93,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         // setIsSaved(true);
 
         await axios
-            .post('http://localhost:4000/recipes', {
+            .post(`http://localhost:4000/${user_id}/recipes`, {
                 recipe_name: recipe_name,
                 recipe_items: recipe_items,
             })
@@ -102,7 +115,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <Link to="/" className={styles['save-recipe']} onClick={saveRecipe}>
+            <Link to="/home" className={styles['save-recipe']} onClick={saveRecipe}>
                 {' '}
                 Save{' '}
             </Link>

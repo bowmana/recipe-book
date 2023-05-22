@@ -19,8 +19,9 @@ import logger from 'morgan';
 const app: Express = express();
 const port: number = 4001;
 app.use(logger("dev"));
-app.use(express.json());
+
 app.use(cors({origin: ["http://127.0.0.1:5173"], credentials: true, exposedHeaders: ["Set-Cookie"]}));
+app.use(express.json());
 
 const verifyToken = async (req: any, res: Response, next: any) => {
     if (req.headers.cookie) {
@@ -61,9 +62,10 @@ app.post("/register", async (req: Request, res: Response) => {
     const newUser: User = await helper.createUser(email, password);
  
 
-    const token: string = jwt.sign({user_id: newUser.user_id, email: newUser.email, role: newUser.role}, process.env.JWT_SECRET as string, {expiresIn: "1hr"});
+    const token = jwt.sign({user_id: newUser.user_id, email: newUser.email, role: newUser.role}, process.env.JWT_SECRET as string, {expiresIn: "1hr"});
     await helper.setToken(newUser.user_id, token);
     const user: User = await helper.getUserByID(newUser.user_id);
+    
 
     await axios.post("http://localhost:4005/events", {
         type: "UserCreated",
@@ -76,7 +78,7 @@ app.post("/register", async (req: Request, res: Response) => {
     });
     
     res.setHeader('Access-Control-Expose-Headers', '*');
-    res.setHeader('Set-Cookie', `token=${token}; HttpOnly`);
+    res.setHeader('Set-Cookie', `token=${token}; HttpOnly; SameSite=None; Secure`);
     res.status(201).send(user);
 
 });
@@ -117,12 +119,8 @@ app.post('/login', async (req: Request, res: Response) => {
             }
         });
 
-
-  
-        
-  
       res.setHeader('Access-Control-Expose-Headers', '*');
-      res.setHeader('Set-Cookie', `token=${token}; HttpOnly`);
+      res.setHeader('Set-Cookie', `token=${token}; HttpOnly; SameSite=None; Secure`);
       res.status(200).json(user);
       return;
     }
@@ -143,13 +141,9 @@ app.post('/login', async (req: Request, res: Response) => {
   
   app.post('/logout', async (req: Request, res: Response) => {
     const token = req.headers.cookie?.split('=')[1];
-  
-    if (!token) {
-      res.status(200).send('Already not logged in');
-      return;
-    }
-  
-    res.setHeader('Set-Cookie', 'token=expired; HttpOnly');
+    console.log(token, "token in logout pre expiration");
+    res.setHeader('Set-Cookie', 'token=expired; HttpOnly; Max-Age=0; SameSite=None; Secure');
+
     res.status(200).send('Logged out');
   });
   

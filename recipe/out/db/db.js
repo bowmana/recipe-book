@@ -32,47 +32,69 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DataBaseConnection = void 0;
+exports.RecipeDataBaseConnection = void 0;
 const pg_1 = require("pg");
 const dotenv = __importStar(require("dotenv"));
-dotenv.config({ path: "../.env" });
-const connectionStrng = process.env.DEV_AUTH_POSTGRES_STRING;
-class DataBaseConnection {
+dotenv.config({ path: '../.env' });
+const connectionString = process.env.NODE_ENV === 'production' ?
+    process.env.PROD_RECIPE_POSTGRES_STRING :
+    process.env.DEV_RECIPE_POSTGRES_STRING;
+class RecipeDataBaseConnection {
     constructor() {
         this.connect = () => __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.pool.connect();
-                console.log("Connected to database");
                 this.pool.query(`
             
-            CREATE TABLE IF NOT EXISTS users (
-                user_id BIGSERIAL PRIMARY KEY,
-                email VARCHAR,
-                password VARCHAR,
-                role INT DEFAULT 0,
-                token VARCHAR
-            );`);
+            CREATE TABLE IF NOT EXISTS recipe_users_table (
+              user_id BIGSERIAL PRIMARY KEY,
+              email VARCHAR,
+              password VARCHAR,
+              role INT DEFAULT 0,
+              token VARCHAR
+            );
+            
+            CREATE TABLE IF NOT EXISTS recipe_table (
+              recipe_id BIGSERIAL PRIMARY KEY,
+              recipe_name VARCHAR
+            );
+            
+            CREATE TABLE IF NOT EXISTS user_recipes (
+              user_id BIGINT REFERENCES recipe_users_table(user_id),
+              recipe_id BIGINT REFERENCES recipe_table(recipe_id),
+              PRIMARY KEY (user_id, recipe_id)
+            );
+            
+            CREATE TABLE IF NOT EXISTS items (
+              recipe_item_id BIGSERIAL PRIMARY KEY,
+              recipe_item VARCHAR
+            );
+            
+            CREATE TABLE IF NOT EXISTS recipe_items (
+              recipe_id BIGINT REFERENCES recipe_table(recipe_id),
+              recipe_item_id BIGINT REFERENCES items(recipe_item_id),
+              PRIMARY KEY (recipe_id, recipe_item_id)
+            );
+
+
+
+            
+            `);
             }
-            catch (err) {
-                console.log("Error connecting to database: " + err);
+            catch (error) {
+                console.log('\nThere was an error connecting to the database');
+                console.log(error);
             }
         });
         this.disconnect = () => __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this.pool.end();
-                console.log("Disconnected from database");
-            }
-            catch (err) {
-                console.log("Error disconnecting from database: " + err);
-            }
+            yield this.pool.end();
         });
         try {
-            console.log("Attempting to connect to database" + connectionStrng);
-            this.pool = new pg_1.Pool({ connectionString: connectionStrng });
+            this.pool = new pg_1.Pool({ connectionString });
         }
-        catch (err) {
-            console.log("Error connecting to database: " + err);
+        catch (error) {
+            console.log('Pool could not be created');
         }
     }
 }
-exports.DataBaseConnection = DataBaseConnection;
+exports.RecipeDataBaseConnection = RecipeDataBaseConnection;

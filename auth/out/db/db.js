@@ -44,7 +44,7 @@ class DataBaseConnection {
                 yield this.pool.connect();
                 console.log("Connected to database");
                 this.pool.query(`
-            
+           
             CREATE TABLE IF NOT EXISTS users (
                 user_id BIGSERIAL PRIMARY KEY,
                 email VARCHAR,

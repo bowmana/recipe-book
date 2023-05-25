@@ -7,7 +7,7 @@ export interface ItemProps {
     className?: string;
 }
 interface RecipeItem {
-    id: string;
+    recipe_item_id: number;
     recipe_item: string;
     isEditing: boolean;
 }

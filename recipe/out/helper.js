@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipeName = exports.clearRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
+exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
 const db_1 = require("./db/db");
 const dbConn = new db_1.RecipeDataBaseConnection();
 dbConn.connect();
@@ -58,20 +58,20 @@ exports.userExists = userExists;
 //     item_id BIGSERIAL PRIMARY KEY,
 //     recipe_item VARCHAR
 //   );
-const createRecipe = (user_id, recipe_name) => __awaiter(void 0, void 0, void 0, function* () {
+const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
-        INSERT INTO recipe_table (recipe_name)
-        VALUES ($1)
+        INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type)
+        VALUES ($1, $2, $3)
         RETURNING recipe_id
-        `, [recipe_name]);
+        `, [recipe_name, recipe_cuisine, recipe_type]);
         const recipe_id = result.rows[0].recipe_id;
         yield dbConn.pool.query(`
         INSERT INTO user_recipes (user_id, recipe_id)
         VALUES ($1, $2)
         RETURNING recipe_id
         `, [user_id, recipe_id]);
-        return { recipe_id, recipe_name };
+        return { recipe_id, recipe_name, recipe_cuisine, recipe_type };
     }
     catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createRecipe"');
@@ -131,7 +131,7 @@ exports.createRecipeItem = createRecipeItem;
 const getUserRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
-            SELECT recipe_table.recipe_id, recipe_table.recipe_name
+            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type
             FROM recipe_table
             INNER JOIN user_recipes
             ON recipe_table.recipe_id = user_recipes.recipe_id
@@ -174,21 +174,33 @@ const recipeExists = (recipe_id) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.recipeExists = recipeExists;
-const updateRecipeName = (recipe_id, recipe_name) => __awaiter(void 0, void 0, void 0, function* () {
+const updateRecipe = (recipe_id, recipe_name, recipe_cuisine, recipe_type) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield dbConn.pool.query(`
         UPDATE recipe_table
-        SET recipe_name = $1
-        WHERE recipe_id = $2
-      `, [recipe_name, recipe_id]);
+        SET recipe_name = $1, recipe_cuisine = $2, recipe_type = $3
+        WHERE recipe_id = $4
+      `, [recipe_name, recipe_cuisine, recipe_type, recipe_id]);
+        const updatedRecipeResult = yield dbConn.pool.query(`
+        SELECT recipe_name, recipe_cuisine, recipe_type
+        FROM recipe_table
+        WHERE recipe_id = $1
+      `, [recipe_id]);
+        const updatedRecipe = updatedRecipeResult.rows[0];
+        return {
+            recipe_id,
+            recipe_name: updatedRecipe.recipe_name,
+            recipe_cuisine: updatedRecipe.recipe_cuisine,
+            recipe_type: updatedRecipe.recipe_type,
+        };
     }
     catch (error) {
-        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "updateRecipeName"');
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "updateRecipe"');
         console.log(error);
         throw error;
     }
 });
-exports.updateRecipeName = updateRecipeName;
+exports.updateRecipe = updateRecipe;
 const deleteRecipeItems = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield dbConn.pool.query(`
@@ -229,19 +241,6 @@ exports.deleteRecipeItems = deleteRecipeItems;
 //         console.log(error);
 //     }
 // };
-const clearRecipe = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield dbConn.pool.query(`
-        DELETE FROM recipe_items
-        WHERE recipe_id = $1
-        `, [recipe_id]);
-    }
-    catch (error) {
-        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "clearRecipe"');
-        console.log(error);
-    }
-});
-exports.clearRecipe = clearRecipe;
 const getRecipeById = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -256,6 +255,8 @@ const getRecipeById = (recipe_id) => __awaiter(void 0, void 0, void 0, function*
         return {
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
+            recipe_cuisine: recipe.recipe_cuisine,
+            recipe_type: recipe.recipe_type,
         };
     }
     catch (error) {
@@ -283,3 +284,21 @@ const getRecipeItems = (recipe_id) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getRecipeItems = getRecipeItems;
+const deleteRecipe = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        DELETE FROM user_recipes
+        WHERE recipe_id = $1
+      `, [recipe_id]);
+        yield dbConn.pool.query(`
+        DELETE FROM recipe_table
+        WHERE recipe_id = $1
+      `, [recipe_id]);
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipe"');
+        console.log(error);
+        throw error;
+    }
+});
+exports.deleteRecipe = deleteRecipe;

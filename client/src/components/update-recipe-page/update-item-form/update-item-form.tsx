@@ -7,10 +7,6 @@ export interface ItemFormProps {
     className?: string;
 }
 
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-forms-and-templates
- */
 export const UpdateItemForm = ({ className, addRecipeItem }: ItemFormProps & any) => {
     const [recipe_item, setRecipeItem] = useState('' as string);
 
@@ -19,6 +15,7 @@ export const UpdateItemForm = ({ className, addRecipeItem }: ItemFormProps & any
         addRecipeItem(recipe_item);
         setRecipeItem('');
     };
+
     return (
         <div className={classNames(styles.root, className)}>
             <form className={styles['item-form']} onSubmit={handleSubmit}>

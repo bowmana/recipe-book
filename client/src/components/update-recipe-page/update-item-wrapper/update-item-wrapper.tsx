@@ -6,6 +6,7 @@ import { UpdateSavedItem } from '../update-saved-item/update-saved-item';
 import { UpdateEditItemForm } from '../update-edit-item-form/update-edit-item-form';
 import { v4 as UUID } from 'uuid';
 import { useParams } from 'react-router-dom';
+import { Dropdown } from '../../util-components/dropdown';
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -26,11 +27,19 @@ interface Recipe {
     recipe_name: string;
     recipe_items: RecipeItem[];
 }
+interface Option {
+    value: string;
+    label: string;
+}
 
 export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const { recipe_id } = useParams<{ recipe_id: string }>();
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
+    const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
+    const [recipe_type, setRecipeType] = useState<Option | null>(null);
+    const [editRecipeCuisine, setEditRecipeCuisine] = useState(false);
+    const [editRecipeType, setEditRecipeType] = useState(false);
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -47,9 +56,17 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 setRecipeName(response.data.recipe_name);
 
                 setRecipeItems(fetchedRecipeItems);
+                setRecipeCuisine({
+                    value: response.data.recipe_cuisine,
+                    label: response.data.recipe_cuisine,
+                });
+                setRecipeType({
+                    value: response.data.recipe_type,
+                    label: response.data.recipe_type,
+                });
 
-                console.log(response.data);
-                console.log(fetchedRecipeItems);
+                console.log(response.data, 'response data on update item wrapper');
+                // console.log(fetchedRecipeItems);
             } catch (error) {
                 console.log('Failed to fetch recipes');
                 console.log(error);
@@ -115,6 +132,8 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 recipe_items: recipe_items.map((item) => {
                     return { recipe_item: item.recipe_item };
                 }),
+                recipe_cuisine: recipe_cuisine ? recipe_cuisine.value : '',
+                recipe_type: recipe_type ? recipe_type.value : '',
             })
             .then((response: AxiosResponse) => {
                 console.log(response);
@@ -132,9 +151,26 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         setRecipeName(e.target.value);
     };
 
+    const addRecipeCuisine = (recipe_cuisine: Option | null) => {
+        setRecipeCuisine(recipe_cuisine);
+        toggleEditRecipeCuisine();
+    };
+
+    const addRecipeType = (recipe_type: Option | null) => {
+        setRecipeType(recipe_type);
+        toggleEditRecipeType();
+    };
+    const toggleEditRecipeCuisine = () => {
+        setEditRecipeCuisine(!editRecipeCuisine);
+    };
+
+    const toggleEditRecipeType = () => {
+        setEditRecipeType(!editRecipeType);
+    };
+
     return (
         <div className={classNames(styles.root, className)}>
-            <Link to="/" className={styles['update-recipe']} onClick={updateRecipe}>
+            <Link to="/home" className={styles['update-recipe']} onClick={updateRecipe}>
                 {' '}
                 Update{' '}
             </Link>
@@ -148,7 +184,77 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 </label>
             </form>
             <h1>Add Items To {recipe_name}</h1>
+
+            <div className={styles['recipe-genre-dropdown']}>
+                {editRecipeCuisine ? (
+                    <Dropdown
+                        initialOptions={[
+                            { value: 'Italian', label: 'Italian' },
+                            { value: 'Mexican', label: 'Mexican' },
+                            { value: 'American', label: 'American' },
+                            { value: 'French', label: 'French' },
+                            { value: 'Chinese', label: 'Chinese' },
+                            { value: 'Japanese', label: 'Japanese' },
+                            { value: 'Indian', label: 'Indian' },
+                            { value: 'Thai', label: 'Thai' },
+                            { value: 'Spanish', label: 'Spanish' },
+                            { value: 'Greek', label: 'Greek' },
+                            { value: 'Lebanese', label: 'Lebanese' },
+                            { value: 'Moroccan', label: 'Moroccan' },
+                            { value: 'Brazilian', label: 'Brazilian' },
+                            { value: 'Korean', label: 'Korean' },
+                            { value: 'Vietnamese', label: 'Vietnamese' },
+                            { value: 'Turkish', label: 'Turkish' },
+                            { value: 'German', label: 'German' },
+                            { value: 'Ethiopian', label: 'Ethiopian' },
+                            { value: 'Peruvian', label: 'Peruvian' },
+                            { value: 'Russian', label: 'Russian' },
+                            { value: 'Jamaican', label: 'Jamaican' },
+                            { value: 'Egyptian', label: 'Egyptian' },
+                            { value: 'British', label: 'British' },
+                            { value: 'Israeli', label: 'Israeli' },
+                            { value: 'Indonesian', label: 'Indonesian' },
+                            { value: 'Irish', label: 'Irish' },
+                            { value: 'Argentine', label: 'Argentine' },
+                            { value: 'Swedish', label: 'Swedish' },
+                            { value: 'Australian', label: 'Australian' },
+                            { value: 'Malaysian', label: 'Malaysian' },
+                        ]}
+                        onChange={addRecipeCuisine}
+                        retrievedSelected={recipe_cuisine}
+                    />
+                ) : (
+                    <div>
+                        <span>{recipe_cuisine ? recipe_cuisine.label : ''}</span>
+                        <button onClick={toggleEditRecipeCuisine}>Edit</button>
+                    </div>
+                )}
+                {editRecipeType ? (
+                    <Dropdown
+                        initialOptions={[
+                            { value: 'Breakfast', label: 'Breakfast' },
+                            { value: 'Lunch', label: 'Lunch' },
+                            { value: 'Dinner', label: 'Dinner' },
+                            { value: 'Dessert', label: 'Dessert' },
+                            { value: 'Snack', label: 'Snack' },
+                            { value: 'Appetizer', label: 'Appetizer' },
+                            { value: 'Drink', label: 'Drink' },
+                            { value: 'Side', label: 'Side' },
+                            { value: 'Sauce', label: 'Sauce' },
+                            { value: 'Marinade', label: 'Marinade' },
+                        ]}
+                        onChange={addRecipeType}
+                        retrievedSelected={recipe_type}
+                    />
+                ) : (
+                    <div>
+                        <span>{recipe_type ? recipe_type.label : ''}</span>
+                        <button onClick={toggleEditRecipeType}>Edit</button>
+                    </div>
+                )}
+            </div>
             <UpdateItemForm addRecipeItem={addRecipeItem} />
+
             {recipe_items && recipe_items.length > 0 ? (
                 recipe_items.map((item, index) =>
                     item.isEditing ? (

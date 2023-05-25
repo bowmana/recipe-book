@@ -1,0 +1,47 @@
+// <div className={classNames(styles.root, className)}>
+// <Select
+//     value={selectedOption}
+//     onChange={handleChange}
+//     isClearable
+//     isSearchable
+//     placeholder="Select or enter an option..."
+//     onInputChange={handleInputChange}
+//     options={options}
+// />
+// {showSubmitButton && (
+//     <div className=" custom-option">
+//         <input
+//             type="text"
+//             value={customOption}
+//             onChange={(event) => setCustomOption(event.target.value)}
+//             placeholder="Enter a custom option"
+//         />
+//         <button onClick={handleCustomOptionSubmit}>Submit</button>
+//     </div>
+// )}
+// </div>
+// );
+// };
+
+//make scss styling to custom-option class
+.custom-option {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 150px;
+    input {
+        margin-right: 10px;
+       
+    }
+    button {
+        background-color: #f5f5f5;
+        border: 1px solid #f5f5f5;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+        &:hover {
+        background-color: #e5e5e5;
+        }
+    }
+    }

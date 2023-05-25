@@ -51,13 +51,13 @@ const userExists = async (user_id: number) => {
 //   );
 
 
-const createRecipe = async (user_id: number, recipe_name: string) => {
+const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
-        INSERT INTO recipe_table (recipe_name)
-        VALUES ($1)
+        INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type)
+        VALUES ($1, $2, $3)
         RETURNING recipe_id
-        `, [recipe_name]);
+        `, [recipe_name, recipe_cuisine, recipe_type]);
 
         const recipe_id = result.rows[0].recipe_id;
         await dbConn.pool.query(`
@@ -65,7 +65,7 @@ const createRecipe = async (user_id: number, recipe_name: string) => {
         VALUES ($1, $2)
         RETURNING recipe_id
         `, [user_id, recipe_id]);
-        return { recipe_id, recipe_name };
+        return { recipe_id, recipe_name, recipe_cuisine, recipe_type };
     } catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createRecipe"');
         console.log(error);
@@ -154,7 +154,7 @@ interface Recipe {
 const getUserRecipes = async (user_id: number) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
-            SELECT recipe_table.recipe_id, recipe_table.recipe_name
+            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type
             FROM recipe_table
             INNER JOIN user_recipes
             ON recipe_table.recipe_id = user_recipes.recipe_id
@@ -202,22 +202,41 @@ const recipeExists = async (recipe_id: number) => {
 
 
 
-const updateRecipeName = async (recipe_id: number, recipe_name: string) => {
+const updateRecipe = async (recipe_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string) => {
     try {
       await dbConn.pool.query(
         `
         UPDATE recipe_table
-        SET recipe_name = $1
-        WHERE recipe_id = $2
+        SET recipe_name = $1, recipe_cuisine = $2, recipe_type = $3
+        WHERE recipe_id = $4
       `,
-        [recipe_name, recipe_id]
+        [recipe_name, recipe_cuisine, recipe_type, recipe_id]
       );
+
+      const updatedRecipeResult = await dbConn.pool.query(
+        `
+        SELECT recipe_name, recipe_cuisine, recipe_type
+        FROM recipe_table
+        WHERE recipe_id = $1
+      `,
+        [recipe_id]
+      );
+
+      const updatedRecipe = updatedRecipeResult.rows[0];
+      return {
+        recipe_id,
+        recipe_name: updatedRecipe.recipe_name,
+        recipe_cuisine: updatedRecipe.recipe_cuisine,
+        recipe_type: updatedRecipe.recipe_type,
+      };
+
     } catch (error) {
-      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "updateRecipeName"');
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "updateRecipe"');
       console.log(error);
       throw error;
     }
   };
+
   
   const deleteRecipeItems = async (recipe_id: number) => {
     try {
@@ -261,18 +280,6 @@ const updateRecipeName = async (recipe_id: number, recipe_name: string) => {
 //     }
 // };
 
-const clearRecipe = async (recipe_id: number) => {
-    try {
-        await dbConn.pool.query(`
-        DELETE FROM recipe_items
-        WHERE recipe_id = $1
-        `, [recipe_id]);
-        
-    } catch (error) {
-        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "clearRecipe"');
-        console.log(error);
-    }
-};
 
 const getRecipeById = async (recipe_id: number) => {
     try {
@@ -293,6 +300,8 @@ const getRecipeById = async (recipe_id: number) => {
       return {
         recipe_id: recipe.recipe_id,
         recipe_name: recipe.recipe_name,
+        recipe_cuisine: recipe.recipe_cuisine,
+        recipe_type: recipe.recipe_type,
       };
     } catch (error) {
       console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getRecipeById"');
@@ -321,6 +330,31 @@ const getRecipeById = async (recipe_id: number) => {
     }
   };
 
+
+  const deleteRecipe = async (recipe_id: number) => {
+    try {
+      await dbConn.pool.query(
+        `
+        DELETE FROM user_recipes
+        WHERE recipe_id = $1
+      `,
+        [recipe_id]
+      );
+  
+      await dbConn.pool.query(
+        `
+        DELETE FROM recipe_table
+        WHERE recipe_id = $1
+      `,
+        [recipe_id]
+      );
+    } catch (error) {
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipe"');
+      console.log(error);
+      throw error;
+    }
+  };
+
 // const createRecipe = async (user_id: number, recipe_name: string, recipe_items: string) => {
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  clearRecipe, updateRecipeName, deleteRecipeItems, getRecipeById, getRecipeItems};
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe };

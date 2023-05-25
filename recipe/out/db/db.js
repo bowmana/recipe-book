@@ -56,7 +56,10 @@ class RecipeDataBaseConnection {
             
             CREATE TABLE IF NOT EXISTS recipe_table (
               recipe_id BIGSERIAL PRIMARY KEY,
-              recipe_name VARCHAR
+              recipe_name VARCHAR,
+              recipe_cuisine VARCHAR,
+              recipe_type VARCHAR
+
             );
             
             CREATE TABLE IF NOT EXISTS user_recipes (
@@ -77,8 +80,6 @@ class RecipeDataBaseConnection {
             );
 
 
-
-            
             `);
             }
             catch (error) {

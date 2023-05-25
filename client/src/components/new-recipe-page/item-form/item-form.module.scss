@@ -10,3 +10,12 @@
 }
 .add-recipe-item {
 }
+
+
+.recipe-dropdowns{
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}

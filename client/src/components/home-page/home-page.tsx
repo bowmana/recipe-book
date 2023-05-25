@@ -8,11 +8,6 @@ export interface HomePageProps {
     className?: string;
 }
 
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-home-pages-and-templates
- */
-
 interface RecipeItem {
     recipe_item: string;
     recipe_item_id: number;
@@ -22,6 +17,8 @@ interface Recipe {
     recipe_items: RecipeItem[];
     recipe_id: number;
     recipe_name: string;
+    recipe_cuisine: string;
+    recipe_type: string;
 }
 
 export const HomePage = ({ className }: HomePageProps) => {
@@ -38,19 +35,6 @@ export const HomePage = ({ className }: HomePageProps) => {
             try {
                 const axiosResponse = await axios.post(url, {}, { withCredentials: true });
                 setUserID(axiosResponse.data.user_id);
-                const fetchRecipes = async () => {
-                    try {
-                        const response = await axios.get(
-                            `http://localhost:4000/${user_id}/getrecipes`
-                        );
-                        setRecipes(response.data);
-                        console.log(response.data);
-                    } catch (error) {
-                        console.log('Failed to fetch recipes');
-                        console.log(error);
-                    }
-                };
-                fetchRecipes();
             } catch (axiosError) {
                 window.location.href = '/login';
             }
@@ -58,38 +42,38 @@ export const HomePage = ({ className }: HomePageProps) => {
 
         auth();
     }, [user_id]);
+    useEffect(() => {
+        if (user_id !== 0) {
+            fetchRecipes();
+        }
+    }, [user_id]);
 
+    const fetchRecipes = async () => {
+        try {
+            const response = await axios.get(`http://localhost:4000/${user_id}/getrecipes`);
+            setRecipes(response.data);
+            console.log(response.data);
+        } catch (error) {
+            console.log('Failed to fetch recipes');
+            console.log(error);
+        }
+    };
+
+    const onRecipeDelete = () => {
+        try {
+            fetchRecipes();
+        } catch (error) {
+            console.log('Failed to fetch recipes');
+            console.log(error);
+        }
+    };
     return (
         <div className={classNames(styles.root, className)}>
             <div>
-                <RecipeCard recipes={recipes} />{' '}
+                <RecipeCard recipes={recipes} onRecipeDelete={onRecipeDelete} />
             </div>
         </div>
     );
 };
-
-//             const recipeKeys = Object.keys(data);
-//             const recipes = recipeKeys.map((key) => {
-//                 return data[key];
-//             });
-//             setRecipes(recipes);
-//             console.log(recipes);
-//         } catch (error) {
-//             console.log(error);
-//         }
-//     };
-
-//     useEffect(() => {
-//         fetchRecipes();
-//     }, []);
-
-//     return (
-//         <div className={classNames(styles.root, className)}>
-//             <div>
-//                 <RecipeCard recipes={recipes} />
-//             </div>
-//         </div>
-//     );
-// };
 
 export default HomePage;

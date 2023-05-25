@@ -29,9 +29,11 @@
     }
     
     interface Recipe {
-        id: string;
+        id: number;
         recipe_name: string;
         recipe_items: RecipeItem[];
+        recipe_cuisine: string;
+        recipe_type: string;
     }
     
 

@@ -8,6 +8,7 @@ import { v4 as UUID } from 'uuid';
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Dropdown } from '../../util-components/dropdown';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
@@ -18,6 +19,10 @@ interface RecipeItem {
     recipe_item_id: string;
     recipe_item: string;
     isEditing: boolean;
+}
+interface Option {
+    value: string;
+    label: string;
 }
 
 /**
@@ -49,12 +54,22 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
+    const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
+    const [recipe_type, setRecipeType] = useState<Option | null>(null);
 
     const addRecipeItem = (recipe_item: string) => {
         const newItem: RecipeItem = { recipe_item_id: UUID(), recipe_item, isEditing: false };
         setRecipeItems([...recipe_items, newItem]);
 
         console.log(recipe_items);
+    };
+
+    const addRecipeCuisine = (recipe_cuisine: Option | null) => {
+        setRecipeCuisine(recipe_cuisine);
+    };
+
+    const addRecipeType = (recipe_type: Option | null) => {
+        setRecipeType(recipe_type);
     };
 
     const deleteRecipeItem = (id: string) => {
@@ -96,6 +111,8 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
             .post(`http://localhost:4000/${user_id}/recipes`, {
                 recipe_name: recipe_name,
                 recipe_items: recipe_items,
+                recipe_cuisine: recipe_cuisine ? recipe_cuisine.value : '',
+                recipe_type: recipe_type ? recipe_type.value : '',
             })
             .then((response: AxiosResponse) => {
                 console.log(response);
@@ -129,7 +146,61 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                 </label>
             </form>
             <h1>Add Items To {recipe_name}</h1>
+
+            <div className={styles['recipe-genre-dropdown']}>
+                <Dropdown
+                    initialOptions={[
+                        { value: 'Italian', label: 'Italian' },
+                        { value: 'Mexican', label: 'Mexican' },
+                        { value: 'American', label: 'American' },
+                        { value: 'French', label: 'French' },
+                        { value: 'Chinese', label: 'Chinese' },
+                        { value: 'Japanese', label: 'Japanese' },
+                        { value: 'Indian', label: 'Indian' },
+                        { value: 'Thai', label: 'Thai' },
+                        { value: 'Spanish', label: 'Spanish' },
+                        { value: 'Greek', label: 'Greek' },
+                        { value: 'Lebanese', label: 'Lebanese' },
+                        { value: 'Moroccan', label: 'Moroccan' },
+                        { value: 'Brazilian', label: 'Brazilian' },
+                        { value: 'Korean', label: 'Korean' },
+                        { value: 'Vietnamese', label: 'Vietnamese' },
+                        { value: 'Turkish', label: 'Turkish' },
+                        { value: 'German', label: 'German' },
+                        { value: 'Ethiopian', label: 'Ethiopian' },
+                        { value: 'Peruvian', label: 'Peruvian' },
+                        { value: 'Russian', label: 'Russian' },
+                        { value: 'Jamaican', label: 'Jamaican' },
+                        { value: 'Egyptian', label: 'Egyptian' },
+                        { value: 'British', label: 'British' },
+                        { value: 'Israeli', label: 'Israeli' },
+                        { value: 'Indonesian', label: 'Indonesian' },
+                        { value: 'Irish', label: 'Irish' },
+                        { value: 'Argentine', label: 'Argentine' },
+                        { value: 'Swedish', label: 'Swedish' },
+                        { value: 'Australian', label: 'Australian' },
+                        { value: 'Malaysian', label: 'Malaysian' },
+                    ]}
+                    onChange={addRecipeCuisine}
+                />
+                <Dropdown
+                    initialOptions={[
+                        { value: 'Breakfast', label: 'Breakfast' },
+                        { value: 'Lunch', label: 'Lunch' },
+                        { value: 'Dinner', label: 'Dinner' },
+                        { value: 'Dessert', label: 'Dessert' },
+                        { value: 'Snack', label: 'Snack' },
+                        { value: 'Appetizer', label: 'Appetizer' },
+                        { value: 'Drink', label: 'Drink' },
+                        { value: 'Side', label: 'Side' },
+                        { value: 'Sauce', label: 'Sauce' },
+                        { value: 'Marinade', label: 'Marinade' },
+                    ]}
+                    onChange={addRecipeType}
+                />
+            </div>
             <ItemForm addRecipeItem={addRecipeItem} />
+
             {recipe_items.map((item, index) =>
                 item.isEditing ? (
                     <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />

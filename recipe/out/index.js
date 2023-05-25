@@ -67,14 +67,15 @@ app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 }));
 app.post("/:user_id/recipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { recipe_name, recipe_items } = req.body;
+    const { recipe_name, recipe_items, recipe_cuisine, recipe_type } = req.body;
+    console.log(recipe_name, recipe_items, recipe_cuisine, recipe_type, "recipe_name, recipe_items, recipe_cuisine, recipe_type");
     const user_id = parseInt(req.params.user_id);
     const userExists = yield helper.userExists(user_id);
     if (!userExists) {
         res.status(404).send("User does not exist");
         return;
     }
-    const recipe = yield helper.createRecipe(user_id, recipe_name);
+    const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type);
     if (!recipe) {
         res.status(500).send("There was an error creating the recipe");
         return;
@@ -89,16 +90,18 @@ app.post("/:user_id/recipes", (req, res) => __awaiter(void 0, void 0, void 0, fu
         data: {
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
+            recipe_cuisine: recipe.recipe_cuisine,
+            recipe_type: recipe.recipe_type,
             recipe_items: recipeItems
         }
     }).catch((err) => {
         console.log(err.message);
     });
-    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_items: recipeItems });
+    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems });
 }));
 app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_items } = req.body;
+    const { recipe_name, recipe_items, recipe_cuisine, recipe_type } = req.body;
     console.log(recipe_items, "recieved recipe_items");
     try {
         const recipeExists = yield helper.recipeExists(recipe_id);
@@ -106,7 +109,7 @@ app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             res.status(404).send("Recipe does not exist for the user");
             return;
         }
-        yield helper.updateRecipeName(recipe_id, recipe_name);
+        const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type);
         yield helper.deleteRecipeItems(recipe_id);
         for (let i = 0; i < recipe_items.length; i++) {
             const { recipe_item } = recipe_items[i];
@@ -114,9 +117,11 @@ app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
         }
         const updatedRecipeItems = yield helper.getRecipeItems(recipe_id);
         res.status(200).send({
-            recipe_id: recipe_id,
-            recipe_name: recipe_name,
+            recipe_id: updatedRecipe.recipe_id,
+            recipe_name: updatedRecipe.recipe_name,
             recipe_items: updatedRecipeItems,
+            recipe_cuisine: updatedRecipe.recipe_cuisine,
+            recipe_type: updatedRecipe.recipe_type
         });
     }
     catch (error) {
@@ -190,10 +195,29 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
             recipe_items: recipeItems,
+            recipe_cuisine: recipe.recipe_cuisine,
+            recipe_type: recipe.recipe_type
         });
     }
     catch (error) {
         res.status(500).send("Error retrieving the recipe");
+    }
+}));
+//   .delete(`http://localhost:4000/recipes/${recipeId}`)
+app.delete("/recipes/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const recipe_id = parseInt(req.params.recipe_id);
+    try {
+        const recipeExists = yield helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        yield helper.deleteRecipeItems(recipe_id);
+        yield helper.deleteRecipe(recipe_id);
+        res.status(200).send("Recipe deleted");
+    }
+    catch (error) {
+        res.status(500).send("Error deleting the recipe");
     }
 }));
 app.listen(port, () => {

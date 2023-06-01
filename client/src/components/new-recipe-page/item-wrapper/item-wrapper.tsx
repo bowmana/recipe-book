@@ -4,6 +4,7 @@ import { ItemForm } from '../item-form/item-form';
 import { Item } from '../item/item';
 import { SavedItem } from '../saved-item/saved-item';
 import { EditItemForm } from '../edit-item-form/edit-item-form';
+import { ImageUpload } from '../../util-components/imageupload';
 import { v4 as UUID } from 'uuid';
 
 import { useState, useEffect } from 'react';
@@ -146,7 +147,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                 </label>
             </form>
             <h1>Add Items To {recipe_name}</h1>
-
+            <ImageUpload />
             <div className={styles['recipe-genre-dropdown']}>
                 <Dropdown
                     initialOptions={[

@@ -53,7 +53,7 @@ class RecipeDataBaseConnection {
               role INT DEFAULT 0,
               token VARCHAR
             );
-            
+           
             CREATE TABLE IF NOT EXISTS recipe_table (
               recipe_id BIGSERIAL PRIMARY KEY,
               recipe_name VARCHAR,
@@ -61,22 +61,28 @@ class RecipeDataBaseConnection {
               recipe_type VARCHAR
 
             );
-            
+           
             CREATE TABLE IF NOT EXISTS user_recipes (
               user_id BIGINT REFERENCES recipe_users_table(user_id),
               recipe_id BIGINT REFERENCES recipe_table(recipe_id),
               PRIMARY KEY (user_id, recipe_id)
             );
-            
+        
             CREATE TABLE IF NOT EXISTS items (
               recipe_item_id BIGSERIAL PRIMARY KEY,
               recipe_item VARCHAR
             );
-            
+        
             CREATE TABLE IF NOT EXISTS recipe_items (
               recipe_id BIGINT REFERENCES recipe_table(recipe_id),
               recipe_item_id BIGINT REFERENCES items(recipe_item_id),
               PRIMARY KEY (recipe_id, recipe_item_id)
+            );
+      
+            CREATE TABLE IF NOT EXISTS recipe_images (
+              recipe_id BIGINT REFERENCES recipe_table(recipe_id),
+              recipe_image_id BIGSERIAL PRIMARY KEY,
+              recipe_image VARCHAR
             );
 
 

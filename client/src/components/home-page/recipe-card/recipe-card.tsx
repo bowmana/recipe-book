@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import styles from './recipe-card.module.scss';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { ImageCycle } from '../../util-components/imagecycle';
 export interface RecipeCardProps {
     className?: string;
     onRecipeDelete: () => void;
@@ -20,6 +20,7 @@ interface Recipe {
     recipe_name: string;
     recipe_cuisine: string;
     recipe_type: string;
+    recipe_images: string[];
 }
 
 interface RecipeCardPropsWithRecipes extends RecipeCardProps {
@@ -51,6 +52,7 @@ const RecipeCard = ({ className, recipes, onRecipeDelete }: RecipeCardPropsWithR
                                     <h2>{recipe.recipe_name}</h2>
                                     <h3>{recipe.recipe_cuisine}</h3>
                                     <h3>{recipe.recipe_type}</h3>
+                                    <ImageCycle imageUrls={recipe.recipe_images} />
 
                                     <Link
                                         to={`/update-recipe/${recipe.recipe_id}`}
@@ -80,6 +82,8 @@ const RecipeCard = ({ className, recipes, onRecipeDelete }: RecipeCardPropsWithR
                                         );
                                     })}
                                 </ul>
+
+                                <ul></ul>
                             </li>
                         </div>
                     );

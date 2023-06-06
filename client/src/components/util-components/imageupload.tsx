@@ -8,11 +8,18 @@ import { all } from 'axios';
 export interface ImageUploadProps {
     className?: string;
     maxImages?: number;
+    addImages?: (images: File[]) => void;
 }
 
-export const ImageUpload = ({ className, maxImages = 5 }: ImageUploadProps) => {
+export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUploadProps) => {
     const [images, setImages] = useState<File[]>([]);
     const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (addImages) {
+            addImages(images);
+        }
+    }, [images]);
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const uploadedFiles = Array.from(event.target.files || []);
@@ -34,6 +41,7 @@ export const ImageUpload = ({ className, maxImages = 5 }: ImageUploadProps) => {
 
         const newImages = [...images, ...updatedImages].slice(0, maxImages);
         updateImages(newImages);
+
         console.log('images', images);
     };
 

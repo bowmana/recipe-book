@@ -19,6 +19,7 @@ interface Recipe {
     recipe_name: string;
     recipe_cuisine: string;
     recipe_type: string;
+    recipe_images: string[];
 }
 
 export const HomePage = ({ className }: HomePageProps) => {
@@ -52,7 +53,7 @@ export const HomePage = ({ className }: HomePageProps) => {
         try {
             const response = await axios.get(`http://localhost:4000/${user_id}/getrecipes`);
             setRecipes(response.data);
-            console.log(response.data);
+            console.log(response.data, 'recipes in home page with images');
         } catch (error) {
             console.log('Failed to fetch recipes');
             console.log(error);

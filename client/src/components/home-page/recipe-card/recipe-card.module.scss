@@ -22,3 +22,16 @@
     justify-content: end;
 }
 
+.recipe-card-images {
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 1rem;
+    justify-content: center;
+}
+
+.recipe-card-image {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    height: 200px;
+    width: 200px;
+}

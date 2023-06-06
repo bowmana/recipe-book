@@ -57,6 +57,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
+    const [images, setImages] = useState<File[]>([]);
 
     const addRecipeItem = (recipe_item: string) => {
         const newItem: RecipeItem = { recipe_item_id: UUID(), recipe_item, isEditing: false };
@@ -106,21 +107,32 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const saveRecipe = async () => {
-        // setIsSaved(true);
+        const formData = new FormData();
 
-        await axios
-            .post(`http://localhost:4000/${user_id}/recipes`, {
-                recipe_name: recipe_name,
-                recipe_items: recipe_items,
-                recipe_cuisine: recipe_cuisine ? recipe_cuisine.value : '',
-                recipe_type: recipe_type ? recipe_type.value : '',
-            })
-            .then((response: AxiosResponse) => {
-                console.log(response);
-            })
-            .catch((error: AxiosError) => {
-                console.log(error);
-            });
+        images.forEach((image) => {
+            formData.append('recipe_images', image);
+        });
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data',
+            },
+        };
+
+        formData.append('recipe_name', recipe_name);
+
+        formData.append('recipe_cuisine', recipe_cuisine ? recipe_cuisine.value : '');
+        formData.append('recipe_type', recipe_type ? recipe_type.value : '');
+        try {
+            const response = await axios.post(
+                `http://localhost:4000/${user_id}/recipes`,
+                formData,
+
+                config
+            );
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     const clearRecipe = () => {
@@ -147,7 +159,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                 </label>
             </form>
             <h1>Add Items To {recipe_name}</h1>
-            <ImageUpload />
+            <ImageUpload maxImages={5} addImages={setImages} />
             <div className={styles['recipe-genre-dropdown']}>
                 <Dropdown
                     initialOptions={[

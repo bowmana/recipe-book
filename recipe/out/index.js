@@ -39,11 +39,15 @@ const axios_1 = __importDefault(require("axios"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helper = __importStar(require("./helper"));
+const s3bucket_1 = require("./db/s3bucket");
+const s3Bucket = new s3bucket_1.S3Bucket();
+s3Bucket.checkConnection();
+const multer_1 = __importDefault(require("multer"));
 const app = (0, express_1.default)();
 const port = 4000;
-app.use(express_1.default.json());
+const upload = (0, multer_1.default)();
 app.use((0, cors_1.default)({ credentials: true, origin: ["http://127.0.0.1:5173"] }));
-const recipes = {};
+app.use(express_1.default.json());
 app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user_id = parseInt(req.params.user_id);
     console.log(user_id, "user_id");
@@ -56,19 +60,19 @@ app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, 
         const userRecipes = yield helper.getUserRecipes(user_id);
         console.log(userRecipes, "userRecipes");
         res.status(200).send(userRecipes);
-        //sends back   {
-        //     recipe_items: [ [Object], [Object] ],
-        //     recipe_id: '19',
-        //     recipe_name: 'abc'
-        //   }
     }
     catch (err) {
         console.log(err);
     }
 }));
-app.post("/:user_id/recipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { recipe_name, recipe_items, recipe_cuisine, recipe_type } = req.body;
-    console.log(recipe_name, recipe_items, recipe_cuisine, recipe_type, "recipe_name, recipe_items, recipe_cuisine, recipe_type");
+//upload the images to s3 bucket
+app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { recipe_name, recipe_cuisine, recipe_type } = req.body;
+    const recipe_items = req.body.recipe_items;
+    // const recipe_items : string[] = req.body.recipe_items;
+    console.log(recipe_items, "recipe_items");
+    console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
+    const recipe_images = req.files;
     const user_id = parseInt(req.params.user_id);
     const userExists = yield helper.userExists(user_id);
     if (!userExists) {
@@ -80,11 +84,25 @@ app.post("/:user_id/recipes", (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.status(500).send("There was an error creating the recipe");
         return;
     }
-    for (let i = 0; i < recipe_items.length; i++) {
-        const { recipe_item } = recipe_items[i];
-        yield helper.createRecipeItem(recipe.recipe_id, recipe_item);
+    const image_urls = [];
+    for (let i = 0; i < recipe_images.length; i++) {
+        const recipe_image = recipe_images[i];
+        const url = yield s3Bucket.uploadFile(recipe_image);
+        if (!url) {
+            res.status(500).send("There was an error uploading the image");
+            return;
+        }
+        image_urls.push(url);
+        try {
+            yield helper.createRecipeImage(recipe.recipe_id, url);
+        }
+        catch (err) {
+            console.log("Error creating recipe image: " + err);
+        }
     }
-    const recipeItems = yield helper.getRecipeItems(recipe.recipe_id);
+    console.log(image_urls, "image_urls");
+    // const recipeItems = await helper.getRecipeItems(recipe.recipe_id);
+    const recipeItems = [];
     yield axios_1.default.post("http://localhost:4005/events", {
         type: "RecipeCreated",
         data: {
@@ -92,12 +110,13 @@ app.post("/:user_id/recipes", (req, res) => __awaiter(void 0, void 0, void 0, fu
             recipe_name: recipe.recipe_name,
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
-            recipe_items: recipeItems
+            recipe_items: recipeItems,
+            recipe_images: image_urls
         }
     }).catch((err) => {
         console.log(err.message);
     });
-    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems });
+    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls });
 }));
 app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);

@@ -5,8 +5,9 @@ import { randomBytes } from "crypto";
 import path from "path";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand} from "@aws-sdk/client-s3";
+import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand, PutBucketPolicyCommand, GetBucketPolicyCommand} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import fs from "fs";
 
 dotenv.config({ path: '../.env' });
 
@@ -36,6 +37,33 @@ export class S3Bucket {
         }
       }
 
+    //   //update poicy to allow public read access
+    //     async updatePolicy(): Promise<void> {
+    //         const policy = {
+    //             Version: "2012-10-17",
+    //             Statement: [
+    //                 {
+    //                     Sid: "AllowPublicRead",
+    //                     Effect: "Allow",
+    //                     Principal: "*",
+    //                     Action: "s3:GetObject",
+    //                     Resource: `arn:aws:s3:::${this.bucketName}/*`
+    //                 }
+    //             ]
+    //         };
+    //         const command = new PutBucketPolicyCommand({
+    //             Bucket: this.bucketName,
+    //             Policy: JSON.stringify(policy)
+    //         });
+    //         try{
+    //         await this.s3.send(command);
+    //         console.log(`S3 bucket "${this.bucketName}" policy updated.`);
+    //         } catch (error) {
+    //             console.error('Failed to update S3 bucket policy:', error);
+    //         }
+    //     }
+
+
  //upload as blob
     async uploadFile(file: Express.Multer.File): Promise<string> {
         const upload = new Upload({
@@ -50,15 +78,25 @@ export class S3Bucket {
         });
         const result = await upload.done() as any;
         const url = result.Location;
+    
+
+
         return url;
     }
+
+
 
     async deleteFile(key: string): Promise<void> {
         const command = new DeleteObjectCommand({
             Bucket: this.bucketName,
             Key: key
         });
+        try{
         await this.s3.send(command);
+        console.log(`S3 bucket "${this.bucketName}" file deleted.`);
+        } catch (error) {
+            console.error('Failed to delete S3 bucket file:', error);
+        }
     }
 
     async getFile(key: string): Promise<GetObjectCommandOutput> {
@@ -69,12 +107,7 @@ export class S3Bucket {
         return await this.s3.send(command);
     }
 
-    async getSignedUrl(key: string): Promise<string> {
-        const command = new GetObjectCommand({
-            Bucket: this.bucketName,
-            Key: key
-        });
-        return await getSignedUrl(this.s3, command, { expiresIn: 3600 });
-    }
+
+
 
   }

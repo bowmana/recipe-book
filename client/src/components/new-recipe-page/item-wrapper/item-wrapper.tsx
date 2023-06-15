@@ -10,6 +10,7 @@ import { v4 as UUID } from 'uuid';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
+import { LoadingModal } from '../../util-components/loadingmodal';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
@@ -58,6 +59,30 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
     const [images, setImages] = useState<File[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
+
+    // useEffect(() => {
+    //     const sendImages = async () => {
+    //         if (images.length > 0) {
+    //             const formData = new FormData();
+    //             images.forEach((image) => {
+    //                 formData.append('images', image);
+    //             });
+    //             try {
+    //                 await axios.post(`http://localhost:4000/${user_id}/uploadimages`, formData, {
+    //                     headers: {
+    //                         'Content-Type': 'multipart/form-data',
+    //                     },
+    //                 });
+    //             } catch (err) {
+    //                 console.log(err);
+    //             }
+    //         }
+    //     };
+
+    //     sendImages();
+    // }, [images]);
 
     const addRecipeItem = (recipe_item: string) => {
         const newItem: RecipeItem = { recipe_item_id: UUID(), recipe_item, isEditing: false };
@@ -107,6 +132,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const saveRecipe = async () => {
+        setIsUploading(true);
         const formData = new FormData();
 
         images.forEach((image) => {
@@ -116,7 +142,16 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
             headers: {
                 'content-type': 'multipart/form-data',
             },
+            onUploadProgress: (progressEvent: any) => {
+                const { loaded, total } = progressEvent;
+                const percent = Math.floor((loaded * 100) / total);
+                setUploadProgress(percent);
+            },
         };
+
+        recipe_items.forEach((item, index) => {
+            formData.append(`recipe_items[${index}]`, item.recipe_item);
+        });
 
         formData.append('recipe_name', recipe_name);
 
@@ -126,12 +161,14 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
             const response = await axios.post(
                 `http://localhost:4000/${user_id}/recipes`,
                 formData,
-
                 config
             );
+            window.location.href = '/home';
+            setIsUploading(false);
             console.log(response);
         } catch (error) {
             console.log(error);
+            setIsUploading(false);
         }
     };
 
@@ -145,10 +182,9 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <Link to="/home" className={styles['save-recipe']} onClick={saveRecipe}>
-                {' '}
-                Save{' '}
-            </Link>
+            <button className={styles['save-recipe']} onClick={saveRecipe}>
+                Save
+            </button>
             <button className={styles['delete-recipe']} onClick={clearRecipe}>
                 Clear
             </button>
@@ -158,6 +194,17 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                     <input type="text" name="name" onChange={updateName} />
                 </label>
             </form>
+
+            {isUploading && (
+                <div className={styles['upload-progress']}>
+                    <LoadingModal
+                        uploadProgress={uploadProgress}
+                        isOpen={isUploading}
+                        onRequestclose={() => {}}
+                    />
+                </div>
+            )}
+
             <h1>Add Items To {recipe_name}</h1>
             <ImageUpload maxImages={5} addImages={setImages} />
             <div className={styles['recipe-genre-dropdown']}>

@@ -127,34 +127,6 @@ interface Recipe {
 
 
 
-//get everything associated with recipes given user_id
-//get name of recipe, recipe_id, recipe_items and their ids
-// const getUserRecipes = async (user_id: number) => {
-//     try {
-//         const result: QueryResult = await dbConn.pool.query(`
-//             SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type
-//             FROM recipe_table
-//             INNER JOIN user_recipes
-//             ON recipe_table.recipe_id = user_recipes.recipe_id
-//             WHERE user_recipes.user_id = $1
-//         `, [user_id]);
-//         const recipes = result.rows;
-//         const recipesWithItems = await Promise.all(
-//             recipes.map(async (recipe: any) => {
-//                 const recipeItems = await getRecipeItems(recipe.recipe_id);
-//                 recipe.recipe_items = recipeItems;
-//                 return recipe;
-//             })
-//         );
-        
-//         return recipesWithItems;
-//     } catch (error) {
-//         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getUserRecipes"');
-//         console.log(error);
-//         throw error;
-//     }
-// };
-
 
 const getUserRecipes = async (user_id: number) => {
     try {
@@ -261,6 +233,24 @@ const updateRecipe = async (recipe_id: number, recipe_name: string, recipe_cuisi
       throw error;
     }
   };
+
+
+  const deleteRecipeImages = async (recipe_id: number) => {
+    try {
+      await dbConn.pool.query(
+        `
+        DELETE FROM recipe_images
+        WHERE recipe_id = $1
+      `,
+        [recipe_id]
+      );
+    } catch (error) {
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipeImages"');
+      console.log(error);
+      throw error;
+    }
+  };
+
 //get recipe name and items by recipe_id
 // const getRecipe = async (recipe_id: number) => {
 //     try {
@@ -384,4 +374,4 @@ const getRecipeById = async (recipe_id: number) => {
 
 // const createRecipe = async (user_id: number, recipe_name: string, recipe_items: string) => {
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages };
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages };

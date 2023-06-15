@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
+exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
 const db_1 = require("./db/db");
 const dbConn = new db_1.RecipeDataBaseConnection();
 dbConn.connect();
@@ -112,32 +112,6 @@ const createRecipeImage = (recipe_id, recipe_image) => __awaiter(void 0, void 0,
     }
 });
 exports.createRecipeImage = createRecipeImage;
-//get everything associated with recipes given user_id
-//get name of recipe, recipe_id, recipe_items and their ids
-// const getUserRecipes = async (user_id: number) => {
-//     try {
-//         const result: QueryResult = await dbConn.pool.query(`
-//             SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type
-//             FROM recipe_table
-//             INNER JOIN user_recipes
-//             ON recipe_table.recipe_id = user_recipes.recipe_id
-//             WHERE user_recipes.user_id = $1
-//         `, [user_id]);
-//         const recipes = result.rows;
-//         const recipesWithItems = await Promise.all(
-//             recipes.map(async (recipe: any) => {
-//                 const recipeItems = await getRecipeItems(recipe.recipe_id);
-//                 recipe.recipe_items = recipeItems;
-//                 return recipe;
-//             })
-//         );
-//         return recipesWithItems;
-//     } catch (error) {
-//         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getUserRecipes"');
-//         console.log(error);
-//         throw error;
-//     }
-// };
 const getUserRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -229,6 +203,20 @@ const deleteRecipeItems = (recipe_id) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.deleteRecipeItems = deleteRecipeItems;
+const deleteRecipeImages = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        DELETE FROM recipe_images
+        WHERE recipe_id = $1
+      `, [recipe_id]);
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipeImages"');
+        console.log(error);
+        throw error;
+    }
+});
+exports.deleteRecipeImages = deleteRecipeImages;
 //get recipe name and items by recipe_id
 // const getRecipe = async (recipe_id: number) => {
 //     try {

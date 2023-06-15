@@ -39,84 +39,153 @@ const axios_1 = __importDefault(require("axios"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helper = __importStar(require("./helper"));
+const client_cloudfront_1 = require("@aws-sdk/client-cloudfront");
 const s3bucket_1 = require("./db/s3bucket");
+const path_1 = __importDefault(require("path"));
 const s3Bucket = new s3bucket_1.S3Bucket();
 s3Bucket.checkConnection();
+// s3Bucket.updatePolicy();
 const multer_1 = __importDefault(require("multer"));
+const ioredis_1 = __importDefault(require("ioredis"));
 const app = (0, express_1.default)();
 const port = 4000;
-const upload = (0, multer_1.default)();
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage: storage });
+const cloudFront = new client_cloudfront_1.CloudFront({
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
+const redisURL = process.env.REDIS_URL || "redis://127.0.0.1:6379";
+const redisClient = new ioredis_1.default(redisURL);
+redisClient.on("error", (err) => {
+    console.error("Error connecting to Redis:", err);
+});
 app.use((0, cors_1.default)({ credentials: true, origin: ["http://127.0.0.1:5173"] }));
 app.use(express_1.default.json());
+const DEFAULT_EXPIRATION = 60 * 60 * 24;
+function getOrSetCache(key, cb) {
+    return new Promise((resolve, reject) => {
+        redisClient.get(key, (err, data) => __awaiter(this, void 0, void 0, function* () {
+            if (err)
+                return reject(err);
+            if (data != null) {
+                console.log('Cached data:', data);
+                try {
+                    const parsedData = JSON.parse(data);
+                    return resolve(parsedData);
+                }
+                catch (error) {
+                    // Handle JSON parsing error
+                    return reject(error);
+                }
+            }
+            const freshData = yield cb();
+            redisClient.setex(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
+            resolve(freshData);
+        }));
+    });
+}
 app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user_id = parseInt(req.params.user_id);
-    console.log(user_id, "user_id");
-    const userExists = helper.userExists(user_id);
-    if (!userExists) {
-        res.status(404).send("User does not exist");
-        return;
-    }
-    try {
-        const userRecipes = yield helper.getUserRecipes(user_id);
-        console.log(userRecipes, "userRecipes");
-        res.status(200).send(userRecipes);
-    }
-    catch (err) {
-        console.log(err);
-    }
-}));
-//upload the images to s3 bucket
-app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { recipe_name, recipe_cuisine, recipe_type } = req.body;
-    const recipe_items = req.body.recipe_items;
-    // const recipe_items : string[] = req.body.recipe_items;
-    console.log(recipe_items, "recipe_items");
-    console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
-    const recipe_images = req.files;
     const user_id = parseInt(req.params.user_id);
     const userExists = yield helper.userExists(user_id);
     if (!userExists) {
         res.status(404).send("User does not exist");
         return;
     }
-    const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type);
-    if (!recipe) {
-        res.status(500).send("There was an error creating the recipe");
-        return;
-    }
-    const image_urls = [];
-    for (let i = 0; i < recipe_images.length; i++) {
-        const recipe_image = recipe_images[i];
-        const url = yield s3Bucket.uploadFile(recipe_image);
-        if (!url) {
-            res.status(500).send("There was an error uploading the image");
+    const cacheKey = `user:${user_id}:recipes`;
+    const cachedData = yield getOrSetCache(cacheKey, () => __awaiter(void 0, void 0, void 0, function* () {
+        const userRecipes = yield helper.getUserRecipes(user_id);
+        if (!userRecipes) {
+            res.status(500).send("There was an error getting the recipes");
             return;
         }
-        image_urls.push(url);
-        try {
+        return userRecipes;
+    }));
+    if (!cachedData) {
+        res.status(500).send("There was an error getting the recipes");
+        return;
+    }
+    res.status(200).send(cachedData);
+}));
+//upload the images to s3 bucket
+app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { recipe_name, recipe_cuisine, recipe_type } = req.body;
+    const recipe_items = req.body.recipe_items;
+    console.log(recipe_items, "recipe_items");
+    console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
+    const recipe_images = req.files;
+    const user_id = parseInt(req.params.user_id);
+    try {
+        const userExists = yield helper.userExists(user_id);
+        if (!userExists) {
+            res.status(404).send("User does not exist");
+            return;
+        }
+        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type);
+        if (!recipe) {
+            res.status(500).send("There was an error creating the recipe");
+            return;
+        }
+        const uploadPromises = recipe_images.map((recipe_image) => __awaiter(void 0, void 0, void 0, function* () {
+            const url = "https://d1uvjvhzktlyb3.cloudfront.net/" + path_1.default.basename(yield s3Bucket.uploadFile(recipe_image));
+            if (!url) {
+                throw new Error("There was an error uploading the image");
+            }
             yield helper.createRecipeImage(recipe.recipe_id, url);
+            return url;
+        }));
+        let image_urls;
+        try {
+            image_urls = yield Promise.all(uploadPromises);
         }
         catch (err) {
-            console.log("Error creating recipe image: " + err);
+            res.status(500).send("There was an error with Promis");
+            return;
         }
+        for (let i = 0; i < recipe_items.length; i++) {
+            const recipe_item = recipe_items[i];
+            try {
+                yield helper.createRecipeItem(recipe.recipe_id, recipe_item);
+            }
+            catch (err) {
+                console.log("Error creating recipe item: " + err);
+            }
+        }
+        const recipeItems = yield helper.getRecipeItems(recipe.recipe_id);
+        console.log(recipeItems, "recipeItems");
+        const cacheKey = `user:${user_id}:recipes`;
+        yield redisClient.del(cacheKey);
+        const cachedData = yield getOrSetCache(cacheKey, () => __awaiter(void 0, void 0, void 0, function* () {
+            const userRecipes = yield helper.getUserRecipes(user_id);
+            if (!userRecipes) {
+                res.status(500).send("There was an error getting the recipes");
+                return;
+            }
+            return userRecipes;
+        }));
+        if (!cachedData) {
+            res.status(500).send("There was an error setting the cache");
+            return;
+        }
+        yield axios_1.default.post("http://localhost:4005/events", {
+            type: "RecipeCreated",
+            data: {
+                recipe_id: recipe.recipe_id,
+                recipe_name: recipe.recipe_name,
+                recipe_cuisine: recipe.recipe_cuisine,
+                recipe_type: recipe.recipe_type,
+                recipe_items: recipeItems,
+                recipe_images: image_urls
+            }
+        });
+        res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls });
     }
-    console.log(image_urls, "image_urls");
-    // const recipeItems = await helper.getRecipeItems(recipe.recipe_id);
-    const recipeItems = [];
-    yield axios_1.default.post("http://localhost:4005/events", {
-        type: "RecipeCreated",
-        data: {
-            recipe_id: recipe.recipe_id,
-            recipe_name: recipe.recipe_name,
-            recipe_cuisine: recipe.recipe_cuisine,
-            recipe_type: recipe.recipe_type,
-            recipe_items: recipeItems,
-            recipe_images: image_urls
-        }
-    }).catch((err) => {
-        console.log(err.message);
-    });
-    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls });
+    catch (err) {
+        console.log(err);
+        res.status(500).send("There was an error creating the recipe");
+    }
 }));
 app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
@@ -231,7 +300,38 @@ app.delete("/recipes/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0,
             res.status(404).send("Recipe does not exist for the user");
             return;
         }
+        const recipeImages = yield helper.getRecipeImages(recipe_id);
+        console.log(recipeImages, "recipeImages");
+        for (let i = 0; i < recipeImages.length; i++) {
+            const { recipe_image } = recipeImages[i];
+            const filename = recipe_image.split("/").pop();
+            console.log(filename, "filename");
+            const invalidationParams = {
+                DistributionId: process.env.DISTRIBUTION_ID,
+                InvalidationBatch: {
+                    CallerReference: `${filename}`,
+                    Paths: {
+                        Quantity: 1,
+                        Items: [`/${filename}`]
+                    }
+                }
+            };
+            const invalidationCommand = new client_cloudfront_1.CreateInvalidationCommand(invalidationParams);
+            try {
+                yield cloudFront.send(invalidationCommand);
+            }
+            catch (error) {
+                console.log(error, "error invalidating");
+            }
+            try {
+                yield s3Bucket.deleteFile(filename);
+            }
+            catch (error) {
+                console.log(error, "error deleting from s3");
+            }
+        }
         yield helper.deleteRecipeItems(recipe_id);
+        yield helper.deleteRecipeImages(recipe_id);
         yield helper.deleteRecipe(recipe_id);
         res.status(200).send("Recipe deleted");
     }

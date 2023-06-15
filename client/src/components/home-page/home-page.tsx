@@ -36,6 +36,7 @@ export const HomePage = ({ className }: HomePageProps) => {
             try {
                 const axiosResponse = await axios.post(url, {}, { withCredentials: true });
                 setUserID(axiosResponse.data.user_id);
+                fetchRecipes();
             } catch (axiosError) {
                 window.location.href = '/login';
             }

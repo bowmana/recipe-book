@@ -44,6 +44,7 @@ export const ImageCycle = ({ className, imageUrls }: ImageCycleProps) => {
                         src={imageUrl}
                         alt={`Image ${index + 1}`}
                         style={{ maxWidth: '100%', maxHeight: '50px' }}
+                        loading="lazy"
                     />
                     <button onClick={() => setCurrentImageIndex(index)}>Select</button>
                 </div>

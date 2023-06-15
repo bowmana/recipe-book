@@ -41,7 +41,6 @@ const lib_storage_1 = require("@aws-sdk/lib-storage");
 const crypto_1 = require("crypto");
 const path_1 = __importDefault(require("path"));
 const client_s3_1 = require("@aws-sdk/client-s3");
-const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 dotenv.config({ path: '../.env' });
 class S3Bucket {
     constructor() {
@@ -67,6 +66,31 @@ class S3Bucket {
             }
         });
     }
+    //   //update poicy to allow public read access
+    //     async updatePolicy(): Promise<void> {
+    //         const policy = {
+    //             Version: "2012-10-17",
+    //             Statement: [
+    //                 {
+    //                     Sid: "AllowPublicRead",
+    //                     Effect: "Allow",
+    //                     Principal: "*",
+    //                     Action: "s3:GetObject",
+    //                     Resource: `arn:aws:s3:::${this.bucketName}/*`
+    //                 }
+    //             ]
+    //         };
+    //         const command = new PutBucketPolicyCommand({
+    //             Bucket: this.bucketName,
+    //             Policy: JSON.stringify(policy)
+    //         });
+    //         try{
+    //         await this.s3.send(command);
+    //         console.log(`S3 bucket "${this.bucketName}" policy updated.`);
+    //         } catch (error) {
+    //             console.error('Failed to update S3 bucket policy:', error);
+    //         }
+    //     }
     //upload as blob
     uploadFile(file) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -90,7 +114,13 @@ class S3Bucket {
                 Bucket: this.bucketName,
                 Key: key
             });
-            yield this.s3.send(command);
+            try {
+                yield this.s3.send(command);
+                console.log(`S3 bucket "${this.bucketName}" file deleted.`);
+            }
+            catch (error) {
+                console.error('Failed to delete S3 bucket file:', error);
+            }
         });
     }
     getFile(key) {
@@ -100,15 +130,6 @@ class S3Bucket {
                 Key: key
             });
             return yield this.s3.send(command);
-        });
-    }
-    getSignedUrl(key) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const command = new client_s3_1.GetObjectCommand({
-                Bucket: this.bucketName,
-                Key: key
-            });
-            return yield (0, s3_request_presigner_1.getSignedUrl)(this.s3, command, { expiresIn: 3600 });
         });
     }
 }

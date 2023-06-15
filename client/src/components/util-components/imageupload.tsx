@@ -1,9 +1,7 @@
 import React, { useEffect, ChangeEvent, useState } from 'react';
-import Select from 'react-select';
 
 import classNames from 'classnames';
 import styles from './imageupload.module.scss';
-import { all } from 'axios';
 
 export interface ImageUploadProps {
     className?: string;
@@ -40,6 +38,7 @@ export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUpload
         });
 
         const newImages = [...images, ...updatedImages].slice(0, maxImages);
+
         updateImages(newImages);
 
         console.log('images', images);

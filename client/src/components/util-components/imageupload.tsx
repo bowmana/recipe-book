@@ -7,11 +7,18 @@ export interface ImageUploadProps {
     className?: string;
     maxImages?: number;
     addImages?: (images: File[]) => void;
+    initialImage?: string;
 }
 
-export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUploadProps) => {
+export const ImageUpload = ({
+    className,
+    maxImages = 5,
+    addImages,
+    initialImage,
+}: ImageUploadProps) => {
     const [images, setImages] = useState<File[]>([]);
     const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
+    const [showInitialImage, setShowInitialImage] = useState<boolean>(true);
 
     useEffect(() => {
         if (addImages) {
@@ -20,6 +27,7 @@ export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUpload
     }, [images]);
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setShowInitialImage(false);
         const uploadedFiles = Array.from(event.target.files || []);
         const validImages = uploadedFiles.filter((file) => file.type.includes('image/'));
         const existingImages = images.map((image) => ({
@@ -90,6 +98,10 @@ export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUpload
                 }
                 return prevIndex;
             });
+
+            if (updatedImages.length === 0) {
+                setShowInitialImage(true);
+            }
         }
     };
 
@@ -122,24 +134,34 @@ export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUpload
         // Clear the images state
         setImages([]);
         setCurrentImageIndex(null);
+        setShowInitialImage(true);
     };
     return (
-        <div>
+        <div className={classNames(styles['image-upload'], className)}>
             <input
                 type="file"
                 accept="image/png, image/jpeg"
                 onChange={handleImageUpload}
                 multiple
             />
-            <div>
+            {showInitialImage && initialImage && (
+                <img
+                    className={styles['initial-image']}
+                    src={initialImage}
+                    alt="Initial Image"
+                    style={{ maxWidth: '100%', maxHeight: '200px' }}
+                />
+            )}
+            <div className={styles['image-preview-container']}>
                 {images.length > 0 && currentImageIndex !== null && (
                     <img
+                        className={styles['current-image']}
                         src={URL.createObjectURL(images[currentImageIndex])}
                         alt={`Image ${currentImageIndex + 1}`}
                         style={{ maxWidth: '100%', maxHeight: '200px' }}
                     />
                 )}
-                <div>
+                <div className={styles['image-preview-controls']}>
                     {currentImageIndex !== null && (
                         <>
                             <button onClick={handlePrevImage}>Prev</button>
@@ -154,6 +176,7 @@ export const ImageUpload = ({ className, maxImages = 5, addImages }: ImageUpload
             {images.map((image, index) => (
                 <div key={index}>
                     <img
+                        className={styles['image-preview']}
                         src={URL.createObjectURL(image)}
                         alt={`Image ${index + 1}`}
                         style={{ maxWidth: '100%', maxHeight: '50px' }}

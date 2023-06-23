@@ -6,13 +6,14 @@ import { SavedItem } from '../saved-item/saved-item';
 import { EditItemForm } from '../edit-item-form/edit-item-form';
 import { ImageUpload } from '../../util-components/imageupload';
 import { v4 as UUID } from 'uuid';
-
+import defaultImage from '../../../assets/images/default.png';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
 import { LoadingModal } from '../../util-components/loadingmodal';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
+import { url } from 'inspector';
 
 export interface ItemWrapperProps {
     className?: string;
@@ -182,97 +183,108 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <button className={styles['save-recipe']} onClick={saveRecipe}>
-                Save
-            </button>
-            <button className={styles['delete-recipe']} onClick={clearRecipe}>
-                Clear
-            </button>
-            <form>
-                <label>
-                    Recipe Name:
-                    <input type="text" name="name" onChange={updateName} />
-                </label>
-            </form>
-
-            {isUploading && (
-                <div className={styles['upload-progress']}>
-                    <LoadingModal
-                        uploadProgress={uploadProgress}
-                        isOpen={isUploading}
-                        onRequestclose={() => {}}
-                    />
+            <div className={styles['recipe-card']}>
+                <div className={styles['recipe-card-header']}>
+                    <form>
+                        <label>
+                            Recipe Name:
+                            <input type="text" name="name" onChange={updateName} />
+                        </label>
+                    </form>
+                    <button className={styles['save-recipe']} onClick={saveRecipe}>
+                        Save
+                    </button>
+                    <button className={styles['clear-recipe']} onClick={clearRecipe}>
+                        Clear
+                    </button>
                 </div>
-            )}
 
-            <h1>Add Items To {recipe_name}</h1>
-            <ImageUpload maxImages={5} addImages={setImages} />
-            <div className={styles['recipe-genre-dropdown']}>
-                <Dropdown
-                    initialOptions={[
-                        { value: 'Italian', label: 'Italian' },
-                        { value: 'Mexican', label: 'Mexican' },
-                        { value: 'American', label: 'American' },
-                        { value: 'French', label: 'French' },
-                        { value: 'Chinese', label: 'Chinese' },
-                        { value: 'Japanese', label: 'Japanese' },
-                        { value: 'Indian', label: 'Indian' },
-                        { value: 'Thai', label: 'Thai' },
-                        { value: 'Spanish', label: 'Spanish' },
-                        { value: 'Greek', label: 'Greek' },
-                        { value: 'Lebanese', label: 'Lebanese' },
-                        { value: 'Moroccan', label: 'Moroccan' },
-                        { value: 'Brazilian', label: 'Brazilian' },
-                        { value: 'Korean', label: 'Korean' },
-                        { value: 'Vietnamese', label: 'Vietnamese' },
-                        { value: 'Turkish', label: 'Turkish' },
-                        { value: 'German', label: 'German' },
-                        { value: 'Ethiopian', label: 'Ethiopian' },
-                        { value: 'Peruvian', label: 'Peruvian' },
-                        { value: 'Russian', label: 'Russian' },
-                        { value: 'Jamaican', label: 'Jamaican' },
-                        { value: 'Egyptian', label: 'Egyptian' },
-                        { value: 'British', label: 'British' },
-                        { value: 'Israeli', label: 'Israeli' },
-                        { value: 'Indonesian', label: 'Indonesian' },
-                        { value: 'Irish', label: 'Irish' },
-                        { value: 'Argentine', label: 'Argentine' },
-                        { value: 'Swedish', label: 'Swedish' },
-                        { value: 'Australian', label: 'Australian' },
-                        { value: 'Malaysian', label: 'Malaysian' },
-                    ]}
-                    onChange={addRecipeCuisine}
-                />
-                <Dropdown
-                    initialOptions={[
-                        { value: 'Breakfast', label: 'Breakfast' },
-                        { value: 'Lunch', label: 'Lunch' },
-                        { value: 'Dinner', label: 'Dinner' },
-                        { value: 'Dessert', label: 'Dessert' },
-                        { value: 'Snack', label: 'Snack' },
-                        { value: 'Appetizer', label: 'Appetizer' },
-                        { value: 'Drink', label: 'Drink' },
-                        { value: 'Side', label: 'Side' },
-                        { value: 'Sauce', label: 'Sauce' },
-                        { value: 'Marinade', label: 'Marinade' },
-                    ]}
-                    onChange={addRecipeType}
-                />
+                {isUploading && (
+                    <div className={styles['upload-progress']}>
+                        <LoadingModal
+                            uploadProgress={uploadProgress}
+                            isOpen={isUploading}
+                            onRequestclose={() => {}}
+                        />
+                    </div>
+                )}
+                <div className={styles['recipe-card-line-separator']}> </div>
+                <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} />
+
+                <div className={styles['recipe-genre-dropdown']}>
+                    <h1 className={styles['pick-a-text']}>Pick a recipe cuisine</h1>
+                    <div className={styles['dropdown-container']}>
+                        <Dropdown
+                            initialOptions={[
+                                { value: 'Italian', label: 'Italian' },
+                                { value: 'Mexican', label: 'Mexican' },
+                                { value: 'American', label: 'American' },
+                                { value: 'French', label: 'French' },
+                                { value: 'Chinese', label: 'Chinese' },
+                                { value: 'Japanese', label: 'Japanese' },
+                                { value: 'Indian', label: 'Indian' },
+                                { value: 'Thai', label: 'Thai' },
+                                { value: 'Spanish', label: 'Spanish' },
+                                { value: 'Greek', label: 'Greek' },
+                                { value: 'Lebanese', label: 'Lebanese' },
+                                { value: 'Moroccan', label: 'Moroccan' },
+                                { value: 'Brazilian', label: 'Brazilian' },
+                                { value: 'Korean', label: 'Korean' },
+                                { value: 'Vietnamese', label: 'Vietnamese' },
+                                { value: 'Turkish', label: 'Turkish' },
+                                { value: 'German', label: 'German' },
+                                { value: 'Ethiopian', label: 'Ethiopian' },
+                                { value: 'Peruvian', label: 'Peruvian' },
+                                { value: 'Russian', label: 'Russian' },
+                                { value: 'Jamaican', label: 'Jamaican' },
+                                { value: 'Egyptian', label: 'Egyptian' },
+                                { value: 'British', label: 'British' },
+                                { value: 'Israeli', label: 'Israeli' },
+                                { value: 'Indonesian', label: 'Indonesian' },
+                                { value: 'Irish', label: 'Irish' },
+                                { value: 'Argentine', label: 'Argentine' },
+                                { value: 'Swedish', label: 'Swedish' },
+                                { value: 'Australian', label: 'Australian' },
+                                { value: 'Malaysian', label: 'Malaysian' },
+                            ]}
+                            onChange={addRecipeCuisine}
+                        />
+                    </div>
+                    <h1 className={styles['pick-a-text']}>Pick a recipe type</h1>
+                    <div className={styles['dropdown-container']}>
+                        <Dropdown
+                            initialOptions={[
+                                { value: 'Breakfast', label: 'Breakfast' },
+                                { value: 'Lunch', label: 'Lunch' },
+                                { value: 'Dinner', label: 'Dinner' },
+                                { value: 'Dessert', label: 'Dessert' },
+                                { value: 'Snack', label: 'Snack' },
+                                { value: 'Appetizer', label: 'Appetizer' },
+                                { value: 'Drink', label: 'Drink' },
+                                { value: 'Side', label: 'Side' },
+                                { value: 'Sauce', label: 'Sauce' },
+                                { value: 'Marinade', label: 'Marinade' },
+                            ]}
+                            onChange={addRecipeType}
+                        />
+                    </div>
+                </div>
+
+                <ItemForm addRecipeItem={addRecipeItem} />
+
+                {recipe_items.map((item, index) =>
+                    item.isEditing ? (
+                        <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
+                    ) : (
+                        <Item
+                            recipe_item={item}
+                            key={index}
+                            deleteRecipeItem={deleteRecipeItem}
+                            editRecipeItem={editRecipeItem}
+                        />
+                    )
+                )}
             </div>
-            <ItemForm addRecipeItem={addRecipeItem} />
-
-            {recipe_items.map((item, index) =>
-                item.isEditing ? (
-                    <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
-                ) : (
-                    <Item
-                        recipe_item={item}
-                        key={index}
-                        deleteRecipeItem={deleteRecipeItem}
-                        editRecipeItem={editRecipeItem}
-                    />
-                )
-            )}
         </div>
     );
 };

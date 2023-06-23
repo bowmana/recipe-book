@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import classNames from 'classnames';
+import styles from './imagecycle.module.scss';
 
 export interface ImageCycleProps {
     className?: string;
@@ -21,24 +23,28 @@ export const ImageCycle = ({ className, imageUrls }: ImageCycleProps) => {
     };
 
     return (
-        <div className={className}>
+        <div className={classNames(styles.root, className)}>
             {imageUrls.length > 0 && (
-                <img
-                    src={imageUrls[currentImageIndex]}
-                    alt={`Image ${currentImageIndex + 1}`}
-                    style={{ maxWidth: '100%', maxHeight: '200px' }}
-                />
+                <div className={styles['image-container']}>
+                    <img
+                        className={styles['current-image']}
+                        src={imageUrls[currentImageIndex]}
+                        alt={`Image ${currentImageIndex + 1}`}
+                    />
+
+                    <div className={styles['button-container']}>
+                        {imageUrls.length > 1 && (
+                            <>
+                                <button onClick={handlePrevImage}>Prev</button>
+                                <span>{`${currentImageIndex + 1}/${imageUrls.length}`}</span>
+                                <button onClick={handleNextImage}>Next</button>
+                            </>
+                        )}
+                    </div>
+                </div>
             )}
-            <div>
-                {imageUrls.length > 1 && (
-                    <>
-                        <button onClick={handlePrevImage}>Prev</button>
-                        <span>{`${currentImageIndex + 1}/${imageUrls.length}`}</span>
-                        <button onClick={handleNextImage}>Next</button>
-                    </>
-                )}
-            </div>
-            {imageUrls.map((imageUrl, index) => (
+
+            {/* {imageUrls.map((imageUrl, index) => (
                 <div key={index}>
                     <img
                         src={imageUrl}
@@ -48,7 +54,7 @@ export const ImageCycle = ({ className, imageUrls }: ImageCycleProps) => {
                     />
                     <button onClick={() => setCurrentImageIndex(index)}>Select</button>
                 </div>
-            ))}
+            ))} */}
         </div>
     );
 };

@@ -17,6 +17,19 @@ s3Bucket.checkConnection();
 import multer from "multer";
 import  Redis from "ioredis";
 
+interface CachedRecipeItem {
+    recipe_item: string;
+    recipe_item_id: number;
+  }
+  
+  interface CachedRecipe {
+    recipe_items: CachedRecipeItem[];
+    recipe_id: number;
+    recipe_name: string;
+    recipe_cuisine: string;
+    recipe_type: string;
+    recipe_images: string[];
+  }
 
 
 const app: Express = express();
@@ -40,35 +53,42 @@ redisClient.on("error", (err) => {
 
 
 
-
-
-
-
 app.use(cors({ credentials: true, origin: ["http://127.0.0.1:5173"] }));
 app.use(express.json());
 
 const DEFAULT_EXPIRATION = 60 * 60 * 24;
 
-function getOrSetCache(key : string, cb : () => Promise<any>) {
+
+
+
+function getOrSetCache(key: string, cb: () => Promise<CachedRecipe[]>): Promise<CachedRecipe[]> {
     return new Promise((resolve, reject) => {
-        redisClient.get(key, async (err, data) => {
-            if (err) return reject(err);
-            if (data != null) {
-                console.log('Cached data:', data); 
-                try {
-                    const parsedData = JSON.parse(data);
-                    return resolve(parsedData);
-                } catch (error) {
-                    // Handle JSON parsing error
-                    return reject(error);
-                }
-            }
-            const freshData = await cb();
-            redisClient.setex(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
-            resolve(freshData);
-        });
+      redisClient.get(key, async (err, data) => {
+        if (err) return reject(err);
+        if (data != null) {
+          console.log('Cached data:', data);
+          try {
+            const parsedData = JSON.parse(data) as CachedRecipe[];
+            return resolve(parsedData);
+          } catch (error) {
+            // Handle JSON parsing error
+            return reject(error);
+          }
+        }
+        const freshData = await cb();
+        if (!freshData || freshData.length === 0) {
+          // Handle empty fresh data here
+          // For example, you can return an empty array
+          return resolve([]);
+        }
+        redisClient.setex(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
+        resolve(freshData);
+      });
     });
-}
+  }
+  
+
+
 app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
     const user_id: number = parseInt(req.params.user_id);
     const userExists = await helper.userExists(user_id);
@@ -76,25 +96,35 @@ app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
         res.status(404).send("User does not exist");
         return;
     }
+
+    // const page: number = parseInt(req.query.page as string) || 1;
+    // const limit: number = parseInt(req.query.limit as string) || 5;
+    const page: number = parseInt(req.query.page as string);
+    const limit: number = parseInt(req.query.limit as string);
+    console.log(page, "page");
+    console.log(limit, "limit");
     const cacheKey = `user:${user_id}:recipes`;
-    const cachedData = await getOrSetCache(cacheKey, async () => {
+    console.log(cacheKey, "cacheKey");
+    const cachedData= await getOrSetCache(cacheKey, async (): Promise<CachedRecipe[]> => {
    
 
         const userRecipes = await helper.getUserRecipes(user_id);
+        console.log(userRecipes, "userRecipes-1");
         if (!userRecipes) {
             res.status(500).send("There was an error getting the recipes");
-            return;
+            return [];
         }
+        
 
+        console.log(userRecipes, "userRecipes-2");
         return userRecipes;
     });
 
-    if(!cachedData) {
-        res.status(500).send("There was an error getting the recipes");
-        return;
-    }
-
-    res.status(200).send(cachedData);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const results = cachedData.slice(startIndex, endIndex);
+    const totalCount = cachedData.length;
+    res.status(200).json({recipes: results, totalCount });
 });
 
 
@@ -162,11 +192,11 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     console.log(recipeItems, "recipeItems");
     const cacheKey = `user:${user_id}:recipes`;
     await redisClient.del(cacheKey);
-    const cachedData = await getOrSetCache(cacheKey, async () => {
+    const cachedData = await getOrSetCache(cacheKey, async (): Promise<CachedRecipe[]> => {
         const userRecipes = await helper.getUserRecipes(user_id);
         if (!userRecipes) {
             res.status(500).send("There was an error getting the recipes");
-            return;
+            return [];
         }
         return userRecipes;
     });
@@ -331,8 +361,14 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
 
 
 //   .delete(`http://localhost:4000/recipes/${recipeId}`)
-app.delete("/recipes/delete/:recipe_id", async (req: Request, res: Response) => {
+app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Response) => {
     const recipe_id: number = parseInt(req.params.recipe_id);
+    const user_id: number = parseInt(req.params.user_id);
+
+    if(!user_id || !recipe_id){
+        res.status(400).send("user_id or recipe_id is missing");
+        return;
+    }
 
     try {
         const recipeExists = await helper.recipeExists(recipe_id);
@@ -362,22 +398,42 @@ app.delete("/recipes/delete/:recipe_id", async (req: Request, res: Response) => 
             const invalidationCommand = new CreateInvalidationCommand(invalidationParams);
             try{
             await cloudFront.send(invalidationCommand);
+            console.log("invalidated");
             }catch(error){
                 console.log(error,"error invalidating");
             }
             try{
             await s3Bucket.deleteFile(filename);
+            console.log("deleted from s3");
             }catch(error){
 
                 console.log(error,"error deleting from s3");
             }
         }
 
+        
+
         await helper.deleteRecipeItems(recipe_id);
         await helper.deleteRecipeImages(recipe_id);
+        await helper.deleteUserRecipe(user_id, recipe_id);
         await helper.deleteRecipe(recipe_id);
         
         
+            const cacheKey = `user:${user_id}:recipes`;
+    await redisClient.del(cacheKey);
+    const cachedData = await getOrSetCache(cacheKey, async (): Promise<CachedRecipe[]> => {
+        const userRecipes = await helper.getUserRecipes(user_id);
+        if (!userRecipes) {
+            res.status(500).send("There was an error getting the recipes");
+            return [];
+        }
+        return userRecipes;
+    });
+
+    if(!cachedData) {
+        res.status(500).send("There was an error setting the cache");
+        return;
+    }
 
 
 

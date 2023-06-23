@@ -14,6 +14,7 @@
   -webkit-text-size-adjust: 100%;
 }
 
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -30,6 +31,9 @@ body {
   justify-content: center;
   min-width: 320px;
   min-height: 100vh;
+    background-image: url("../../client//src/assets/images/Watercolor-Fruits-Pattern2.png");
+  background-repeat: repeat;
+ 
 }
 
 h1 {

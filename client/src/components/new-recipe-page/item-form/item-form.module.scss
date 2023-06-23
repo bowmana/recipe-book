@@ -1,21 +1,73 @@
-.root {
-}
-.item-form {
-  display: grid;
-  justify-items: center;
-}
-.input-box {
-  border: 1px solid black;
-  border-radius: 10px;
-}
-.add-recipe-item {
-}
 
 
-// .recipe-dropdowns{
-//   display: grid;
-//   grid-auto-flow: column;
-//   grid-gap: 1rem;
-//   justify-content: center;
-//   margin-bottom: 1rem;
-// }
+
+// return (
+//   <div className={classNames(styles.root, className)}>
+//       <form className={styles['item-form']} onSubmit={handleSubmit}>
+//           <input
+//               className={styles['input-box']}
+//               type="text"
+//               onChange={(e) => setRecipeItem(e.target.value)}
+//               placeholder="add ingredient"
+//               value={recipe_item}
+//           />
+//           <button className={styles['add-recipe-item']}>Add Ingredient</button>
+//       </form>
+//   </div>
+// );
+// };
+
+
+.root{
+
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #266d67;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    border: 1rem solid #1c685e;
+    border-radius: 15px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+   
+}
+
+.item-form{
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+    // background-color: #266d67;
+    // box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    // border: 1rem solid #1c685e;
+    // border-radius: 15px;
+    // box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+}
+
+.input-box{
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #266d67;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    border: 1rem solid #1c685e;
+    border-radius: 15px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+}
+
+.add-recipe-item{
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #266d67;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    border: 1rem solid #1c685e;
+    border-radius: 15px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+}

@@ -1,6 +1,7 @@
 
 import * as dotenv from "dotenv";
 import { Upload} from "@aws-sdk/lib-storage";
+
 import { randomBytes } from "crypto";
 import path from "path";
 import multer from "multer";
@@ -37,31 +38,7 @@ export class S3Bucket {
         }
       }
 
-    //   //update poicy to allow public read access
-    //     async updatePolicy(): Promise<void> {
-    //         const policy = {
-    //             Version: "2012-10-17",
-    //             Statement: [
-    //                 {
-    //                     Sid: "AllowPublicRead",
-    //                     Effect: "Allow",
-    //                     Principal: "*",
-    //                     Action: "s3:GetObject",
-    //                     Resource: `arn:aws:s3:::${this.bucketName}/*`
-    //                 }
-    //             ]
-    //         };
-    //         const command = new PutBucketPolicyCommand({
-    //             Bucket: this.bucketName,
-    //             Policy: JSON.stringify(policy)
-    //         });
-    //         try{
-    //         await this.s3.send(command);
-    //         console.log(`S3 bucket "${this.bucketName}" policy updated.`);
-    //         } catch (error) {
-    //             console.error('Failed to update S3 bucket policy:', error);
-    //         }
-    //     }
+
 
 
  //upload as blob

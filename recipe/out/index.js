@@ -82,6 +82,11 @@ function getOrSetCache(key, cb) {
                 }
             }
             const freshData = yield cb();
+            if (!freshData || freshData.length === 0) {
+                // Handle empty fresh data here
+                // For example, you can return an empty array
+                return resolve([]);
+            }
             redisClient.setex(key, DEFAULT_EXPIRATION, JSON.stringify(freshData));
             resolve(freshData);
         }));
@@ -94,20 +99,29 @@ app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, 
         res.status(404).send("User does not exist");
         return;
     }
+    // const page: number = parseInt(req.query.page as string) || 1;
+    // const limit: number = parseInt(req.query.limit as string) || 5;
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    console.log(page, "page");
+    console.log(limit, "limit");
     const cacheKey = `user:${user_id}:recipes`;
+    console.log(cacheKey, "cacheKey");
     const cachedData = yield getOrSetCache(cacheKey, () => __awaiter(void 0, void 0, void 0, function* () {
         const userRecipes = yield helper.getUserRecipes(user_id);
+        console.log(userRecipes, "userRecipes-1");
         if (!userRecipes) {
             res.status(500).send("There was an error getting the recipes");
-            return;
+            return [];
         }
+        console.log(userRecipes, "userRecipes-2");
         return userRecipes;
     }));
-    if (!cachedData) {
-        res.status(500).send("There was an error getting the recipes");
-        return;
-    }
-    res.status(200).send(cachedData);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const results = cachedData.slice(startIndex, endIndex);
+    const totalCount = cachedData.length;
+    res.status(200).json({ recipes: results, totalCount });
 }));
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -161,7 +175,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
             const userRecipes = yield helper.getUserRecipes(user_id);
             if (!userRecipes) {
                 res.status(500).send("There was an error getting the recipes");
-                return;
+                return [];
             }
             return userRecipes;
         }));
@@ -292,8 +306,13 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 }));
 //   .delete(`http://localhost:4000/recipes/${recipeId}`)
-app.delete("/recipes/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.delete("/recipes/:user_id/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
+    const user_id = parseInt(req.params.user_id);
+    if (!user_id || !recipe_id) {
+        res.status(400).send("user_id or recipe_id is missing");
+        return;
+    }
     try {
         const recipeExists = yield helper.recipeExists(recipe_id);
         if (!recipeExists) {
@@ -319,12 +338,14 @@ app.delete("/recipes/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0,
             const invalidationCommand = new client_cloudfront_1.CreateInvalidationCommand(invalidationParams);
             try {
                 yield cloudFront.send(invalidationCommand);
+                console.log("invalidated");
             }
             catch (error) {
                 console.log(error, "error invalidating");
             }
             try {
                 yield s3Bucket.deleteFile(filename);
+                console.log("deleted from s3");
             }
             catch (error) {
                 console.log(error, "error deleting from s3");
@@ -332,7 +353,22 @@ app.delete("/recipes/delete/:recipe_id", (req, res) => __awaiter(void 0, void 0,
         }
         yield helper.deleteRecipeItems(recipe_id);
         yield helper.deleteRecipeImages(recipe_id);
+        yield helper.deleteUserRecipe(user_id, recipe_id);
         yield helper.deleteRecipe(recipe_id);
+        const cacheKey = `user:${user_id}:recipes`;
+        yield redisClient.del(cacheKey);
+        const cachedData = yield getOrSetCache(cacheKey, () => __awaiter(void 0, void 0, void 0, function* () {
+            const userRecipes = yield helper.getUserRecipes(user_id);
+            if (!userRecipes) {
+                res.status(500).send("There was an error getting the recipes");
+                return [];
+            }
+            return userRecipes;
+        }));
+        if (!cachedData) {
+            res.status(500).send("There was an error setting the cache");
+            return;
+        }
         res.status(200).send("Recipe deleted");
     }
     catch (error) {

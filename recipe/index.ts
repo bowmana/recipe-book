@@ -56,6 +56,9 @@ redisClient.on("error", (err) => {
 app.use(cors({ credentials: true, origin: ["http://127.0.0.1:5173"] }));
 app.use(express.json());
 
+
+
+
 const DEFAULT_EXPIRATION = 60 * 60 * 24;
 
 
@@ -227,6 +230,41 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     }
 });
 
+
+app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
+    const user_id: number = parseInt(req.params.user_id);
+    const query: string = req.query.query as string;
+    const cacheKey = `user:${user_id}:recipes`;
+  
+    redisClient.get(cacheKey, (err, data) => {
+      if (err) {
+        console.error("Error retrieving cache data:", err);
+        res.status(500).send("Error retrieving cache data");
+        return;
+      }
+  
+      if (data) {
+        try {
+          const cachedData = JSON.parse(data) as CachedRecipe[];
+          const filteredRecipes : CachedRecipe[] = cachedData.filter(
+            (recipe) =>
+              recipe.recipe_name.toLowerCase().includes(query) ||
+              recipe.recipe_cuisine.toLowerCase().includes(query) ||
+              recipe.recipe_type.toLowerCase().includes(query)
+          );
+          console.log("Cached data:", cachedData);
+            console.log("Filtered data:", filteredRecipes);
+          res.status(200).json(filteredRecipes);
+        } catch (error) {
+          console.error("Error parsing cache data:", error);
+          res.status(500).send("Error parsing cache data");
+        }
+      } else {
+        res.status(404).send("Cache data not found");
+      }
+    });
+  });
+  
 
 
 

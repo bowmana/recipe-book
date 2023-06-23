@@ -201,6 +201,36 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
         res.status(500).send("There was an error creating the recipe");
     }
 }));
+app.get("/:user_id/cacheData", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    const query = req.query.query;
+    const cacheKey = `user:${user_id}:recipes`;
+    redisClient.get(cacheKey, (err, data) => {
+        if (err) {
+            console.error("Error retrieving cache data:", err);
+            res.status(500).send("Error retrieving cache data");
+            return;
+        }
+        if (data) {
+            try {
+                const cachedData = JSON.parse(data);
+                const filteredRecipes = cachedData.filter((recipe) => recipe.recipe_name.toLowerCase().includes(query) ||
+                    recipe.recipe_cuisine.toLowerCase().includes(query) ||
+                    recipe.recipe_type.toLowerCase().includes(query));
+                console.log("Cached data:", cachedData);
+                console.log("Filtered data:", filteredRecipes);
+                res.status(200).json(filteredRecipes);
+            }
+            catch (error) {
+                console.error("Error parsing cache data:", error);
+                res.status(500).send("Error parsing cache data");
+            }
+        }
+        else {
+            res.status(404).send("Cache data not found");
+        }
+    });
+}));
 app.put("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
     const { recipe_name, recipe_items, recipe_cuisine, recipe_type } = req.body;

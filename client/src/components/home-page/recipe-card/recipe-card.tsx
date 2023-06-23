@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import classNames from 'classnames';
 import styles from './recipe-card.module.scss';
 import { Link } from 'react-router-dom';
@@ -37,17 +37,21 @@ const RecipeCard = ({
 }: RecipeCardPropsWithRecipes) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
-    const handleSearch = () => {
-        // Filter the recipes based on the search query
-
+    useEffect(() => {
+        handleSearch();
+    }, []);
+    const handleSearch = async () => {
         const query = searchQuery.toLowerCase();
-        const fRecipes = recipes.filter(
-            (recipe) =>
-                recipe.recipe_name.toLowerCase().includes(query) ||
-                recipe.recipe_cuisine.toLowerCase().includes(query) ||
-                recipe.recipe_type.toLowerCase().includes(query)
-        );
-        setFilteredRecipes(fRecipes);
+        try {
+            const response = await axios.get(`http://localhost:4000/${user_id}/cacheData`, {
+                params: {
+                    query: query,
+                },
+            });
+            setFilteredRecipes(response.data);
+        } catch (error) {
+            console.log(error);
+        }
     };
     const clearSearch = () => {
         setSearchQuery('');

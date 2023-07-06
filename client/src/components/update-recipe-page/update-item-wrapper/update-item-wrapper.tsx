@@ -7,6 +7,8 @@ import { UpdateEditItemForm } from '../update-edit-item-form/update-edit-item-fo
 import { v4 as UUID } from 'uuid';
 import { useParams } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
+import { ImageUpload } from '../../util-components/imageupload';
+// import { LoadingModal } from '../../util-components/loadingmodal';
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -19,6 +21,7 @@ export interface ItemWrapperProps {
 interface RecipeItem {
     recipe_item_id: number | null;
     recipe_item: string;
+    portion_size: string;
     isEditing: boolean;
 }
 
@@ -37,9 +40,13 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
+    const [images, setImages] = useState<File[]>([]);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
     const [editRecipeCuisine, setEditRecipeCuisine] = useState(false);
     const [editRecipeType, setEditRecipeType] = useState(false);
+    const [recipe_images, setRecipeImages] = useState<string[]>([]);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -50,10 +57,13 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     (item: RecipeItem) => ({
                         recipe_item_id: item.recipe_item_id,
                         recipe_item: item.recipe_item,
+                        portion_size: item.portion_size,
                         isEditing: false, // Add the "isEditing" property
                     })
                 );
                 setRecipeName(response.data.recipe_name);
+
+                setRecipeImages(response.data.recipe_images);
 
                 setRecipeItems(fetchedRecipeItems);
                 setRecipeCuisine({
@@ -75,23 +85,23 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         fetchRecipes();
     }, [recipe_id]);
 
-    const addRecipeItem = async (recipe_item: string) => {
-        try {
-            const newItem: RecipeItem = { recipe_item_id: null, recipe_item, isEditing: false };
-            const response = await axios.post(
-                `http://localhost:4000/recipes/${recipe_id}/additem`,
-                {
-                    recipe_item,
-                }
-            );
-            newItem.recipe_item_id = response.data.recipe_item_id;
-            setRecipeItems([...recipe_items, newItem]);
-            console.log(recipe_items, 'new item added');
-        } catch (error) {
-            console.log('Failed to add recipe item');
-            console.log(error);
-        }
-    };
+    // const addRecipeItem = async (recipe_item: string) => {
+    //     try {
+    //         const newItem: RecipeItem = { recipe_item_id: null, recipe_item, isEditing: false };
+    //         const response = await axios.post(
+    //             `http://localhost:4000/recipes/${recipe_id}/additem`,
+    //             {
+    //                 recipe_item,
+    //             }
+    //         );
+    //         newItem.recipe_item_id = response.data.recipe_item_id;
+    //         setRecipeItems([...recipe_items, newItem]);
+    //         console.log(recipe_items, 'new item added');
+    //     } catch (error) {
+    //         console.log('Failed to add recipe item');
+    //         console.log(error);
+    //     }
+    // };
 
     const deleteRecipeItem = (id: number) => {
         const updatedRecipeItems = recipe_items.filter((item) => item.recipe_item_id !== id);
@@ -111,13 +121,14 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         );
     };
 
-    const saveRecipeItem = (recipe_item: string, id: number) => {
+    const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: number) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,
                           recipe_item,
+                          portion_size: recipe_portion,
                           isEditing: !item.isEditing,
                       }
                     : item;
@@ -126,21 +137,42 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const updateRecipe = async () => {
-        await axios
-            .put(`http://localhost:4000/recipes/${recipe_id}`, {
-                recipe_name,
-                recipe_items: recipe_items.map((item) => {
-                    return { recipe_item: item.recipe_item };
-                }),
-                recipe_cuisine: recipe_cuisine ? recipe_cuisine.value : '',
-                recipe_type: recipe_type ? recipe_type.value : '',
-            })
-            .then((response: AxiosResponse) => {
-                console.log(response);
-            })
-            .catch((error: AxiosError) => {
-                console.log(error);
-            });
+        setIsUploading(true);
+        const formData = new FormData();
+
+        images.forEach((image) => {
+            formData.append('recipe_images', image);
+        });
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data',
+            },
+            onUploadProgress: (progressEvent: any) => {
+                const { loaded, total } = progressEvent;
+                const percent = Math.floor((loaded * 100) / total);
+                setUploadProgress(percent);
+            },
+        };
+        formData.append('recipe_name', recipe_name);
+        formData.append('recipe_cuisine', recipe_cuisine?.value || '');
+        formData.append('recipe_type', recipe_type?.value || '');
+        formData.append('recipe_items', JSON.stringify(recipe_items));
+
+        try {
+            console.log(formData, 'yoooooooooooooooo');
+            const response = await axios.put(
+                `http://localhost:4000/recipes/${recipe_id}`,
+                formData,
+                config
+            );
+            window.location.href = '/home';
+            setIsUploading(false);
+            console.log(response);
+        } catch (error) {
+            console.log(formData, 'yeeeeeeeeeeeeeeer');
+            console.log(error);
+            setIsUploading(false);
+        }
     };
 
     const clearRecipe = () => {
@@ -170,10 +202,10 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <Link to="/home" className={styles['update-recipe']} onClick={updateRecipe}>
+            <button className={styles['save-recipe']} onClick={updateRecipe}>
                 {' '}
-                Update{' '}
-            </Link>
+                Update
+            </button>
             <button className={styles['delete-recipe']} onClick={clearRecipe}>
                 Clear
             </button>
@@ -185,6 +217,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             </form>
             <h1>Add Items To {recipe_name}</h1>
 
+            <ImageUpload maxImages={5} addImages={setImages} retrievedImages={recipe_images} />
             <div className={styles['recipe-genre-dropdown']}>
                 {editRecipeCuisine ? (
                     <Dropdown
@@ -253,7 +286,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     </div>
                 )}
             </div>
-            <UpdateItemForm addRecipeItem={addRecipeItem} />
+            {/* <UpdateItemForm addRecipeItem={addRecipeItem} /> */}
 
             {recipe_items && recipe_items.length > 0 ? (
                 recipe_items.map((item, index) =>

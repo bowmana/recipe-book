@@ -19,8 +19,6 @@ export class RecipeDataBaseConnection {
         }
     }
 
-    
-
 
 
     connect = async () => {
@@ -40,7 +38,8 @@ export class RecipeDataBaseConnection {
               recipe_id BIGSERIAL PRIMARY KEY,
               recipe_name VARCHAR,
               recipe_cuisine VARCHAR,
-              recipe_type VARCHAR
+              recipe_type VARCHAR,
+              recipe_description TEXT
 
             );
            
@@ -52,7 +51,8 @@ export class RecipeDataBaseConnection {
         
             CREATE TABLE IF NOT EXISTS items (
               recipe_item_id BIGSERIAL PRIMARY KEY,
-              recipe_item VARCHAR
+              recipe_item VARCHAR,
+              portion_size VARCHAR
             );
         
             CREATE TABLE IF NOT EXISTS recipe_items (

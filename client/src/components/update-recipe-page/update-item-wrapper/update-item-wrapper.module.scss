@@ -1,13 +1,91 @@
 .root {
+  display: grid;
+  grid-auto-flow: row;
+  grid-gap: 2rem;
+  padding: 1rem;
+  background-color: #266d67;
+  box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+
 }
-.update-recipe {
+
+.recipe-card{
+  border: 1rem solid #1c685e;
+  border-radius: 15px;
+  box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
 }
-.delete-recipe {
+.recipe-card-header {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 1rem;
+ 
+  align-items: center;
+  border: 5px solid #e2bd98;
+  background-color: #e7e6de;
+  border-radius: 10px 10px 0 0;
+  padding: 2rem;
+  margin: 0;
+
 }
-.recipe-genre-dropdown{
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 1rem;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
+.recipe-card-header label{
+  font-size: 2rem;
+  font-weight: 400;
+  color: #bd6160;
+  text-align: center;
+  border: 5px solid #e2bd98;
+  background-color: #e7e6de;
+  padding: 1rem;
+
+  border-radius: 10px 10px 0 0;
+  max-width: 500px;
+  overflow-wrap: break-word;
+}
+
+//text box for recipe name
+.recipe-card-header input{
+  font-size: 2rem;
+  font-weight: 400;
+  color: #bd6160;
+  text-align: center;
+  border: none;
+  background-color: #e7e6de;
+  max-width: 500px;
+  overflow-wrap: break-word;
+
+
+}
+
+.recipe-card-line-separator {
+  border: 8px solid #e2bd98;
+ 
+}
+
+
+
+.recipe-genre-dropdown {
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  background-color: #d17f74;
+  padding: 1rem;
+  border-left: 5px solid #e2bd98;
+  border-right: 5px solid #e2bd98;
+
+}
+
+
+.form-container{
+  background-color: #e7e6de;
+  border-radius: 0 0 15px 15px;
+  border-left: 5px solid #e2bd98;
+  border-right: 5px solid #e2bd98;
+  border-bottom: 5px solid #e2bd98;
+  
+}
+
+.recipe-card-bottom{
+  border-radius: 0 0 10px 10px;
+  border: 1rem solid #d17f74;
+
+}

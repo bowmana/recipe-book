@@ -3,7 +3,7 @@
     display: grid;
     grid-auto-flow: row;
     grid-gap: 2rem;
-   
+    
     padding: 1rem;
     background-color: #266d67;
     box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
@@ -17,7 +17,7 @@
     
   
    
- 
+    
     box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
     
 }
@@ -43,21 +43,10 @@
     list-style-type: none;
     border: 5px solid #e2bd98;
     background-color: #e7e6de;
-  
+    
     border-radius: 15px 15px 15px 15px;
 }
 
-// .recipe-card-li h3{
-//     margin: 0;
-//     font-size: 2rem;
-//     font-weight: 400;
-//     color: #bd6160;
-//     text-align: center;
-//     border: 5px solid #e2bd98;
-//     background-color: #e7e6de;
-//     padding: 1rem;
-//     border-radius: 10px 10px 0 0;
-// }
 
 
 .recipe-card-header {
@@ -110,6 +99,9 @@ ul.recipe-card-ingredients {
 .recipe-card-content{
     
     background-color: #d17f74;
+    
+ 
+
 }
 
 
@@ -124,7 +116,65 @@ ul.recipe-card-ingredients {
 .recipe-card-item{
     margin : 0;
 }
-.recipe-card-buttons button {
+
+.recipe-card-bottom{
+    border-radius: 0 0 10px 10px;
+    border: 1rem solid #d17f74;
+
+}
+
+
+.search-container {
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 1rem;
+    justify-content: center;
+    padding: 1rem;
+    margin: 1rem;
+    background-color: #e7e6de;
+    border-radius: 10px;
+    border: 5px solid #e2bd98;
+}
+
+.search-bar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 1rem;
+    justify-content: center;
+    padding: 1rem;
+    margin: 1rem;
+    background-color: #e7e6de;
+    border-radius: 10px;
+    border: 5px solid #e2bd98;
+    
+}
+
+.search-bar input {
+    padding: 1rem;
+
+    border: 5px solid #e2bd98;
+    border-radius: 5px;
+    background-color: #e7e6de;
+    color: #bd6160;
+    font-size: 1.5rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background-color 300ms;
+    
+}
+
+.search-bar input:focus {
+    outline: none;
+    background-color: #d17f74;
+}
+
+.search-bar input::placeholder {
+    color: #bd6160;
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.search-buttons button {
     padding: 1rem;
     border: 5px solid #e2bd98;
     border-radius: 5px;
@@ -135,8 +185,23 @@ ul.recipe-card-ingredients {
     cursor: pointer;
     transition: background-color 300ms;
 }
-.recipe-card-bottom{
-    border-radius: 0 0 15px 15px;
-    border: 1rem solid #d17f74;
 
+.search-buttons button:hover {
+    background-color: #d17f74;
+}
+
+.recipe-card-description{
+    margin: 0;
+
+    font-size: 1.5rem;
+
+    color: #bd6160;
+    text-align: start;
+    max-width: 750px;
+    
+  
+    background-color: #e7e6de;
+   
+ 
+    overflow-wrap: break-word;
 }

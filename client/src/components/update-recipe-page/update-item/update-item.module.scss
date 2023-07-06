@@ -1,6 +1,62 @@
 .root {
+  
+
+
+ 
+  
+
 }
-.recipe-item {
+.recipe-item-even {
   display: grid;
   grid-auto-flow: column;
+  background-color: #e2bd98;
+  margin : 0;
+
+  color: #bd6160;
+
+}
+
+.recipe-item-odd {
+  display: grid;
+  grid-auto-flow: column;
+  background-color: #e7e6de;
+  margin : 0;
+  color: #bd6160;
+  
+}
+
+.delete-recipe-item-even{
+
+ 
+  background-color: #e2bd98;
+}
+
+.delete-recipe-item-odd{
+ 
+  background-color: #e7e6de;
+}
+
+.edit-recipe-item-even{
+ 
+  background-color: #e2bd98;
+}
+
+.edit-recipe-item-odd{
+ 
+  background-color: #e7e6de;
+}
+.recipe-ingredients-list{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+ 
+  text-align: center;
+ 
+  border: 5px solid #e2bd98;
+
+  background-color: #e7e6de;
+  padding: 1rem;
+  margin: 0;
 }

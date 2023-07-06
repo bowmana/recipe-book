@@ -19,6 +19,7 @@ import  Redis from "ioredis";
 
 interface CachedRecipeItem {
     recipe_item: string;
+    portion_size: string;
     recipe_item_id: number;
   }
   
@@ -53,7 +54,9 @@ redisClient.on("error", (err) => {
 
 
 
-app.use(cors({ credentials: true, origin: ["http://127.0.0.1:5173"] }));
+app.use(cors({ credentials: true, origin: ["http://127.0.0.1:5173"] 
+
+}));
 app.use(express.json());
 
 
@@ -132,13 +135,13 @@ app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
 
 
 
-
-
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
-    const { recipe_name, recipe_cuisine, recipe_type }: { recipe_name: string, recipe_cuisine: string, recipe_type: string } = req.body;
-    const recipe_items: string[] = req.body.recipe_items;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description}: { recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string } = req.body;
+    const recipe_items: RecipeItem[] = req.body.recipe_items;
+    console.log(recipe_description, "recipe_description")
+    
 
     console.log(recipe_items, "recipe_items");
     console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
@@ -156,7 +159,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     }
 
 
-    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type)
+    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description)
     if (!recipe) {
         res.status(500).send("There was an error creating the recipe");
         return;
@@ -180,10 +183,10 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
       }
   
     for (let i = 0; i < recipe_items.length; i++) {
-        const recipe_item = recipe_items[i];
+        const { recipe_item, portion_size }: { recipe_item: string, portion_size: string } = recipe_items[i];
         try {
 
-            await helper.createRecipeItem(recipe.recipe_id, recipe_item);
+            await helper.createRecipeItem(recipe.recipe_id, recipe_item, portion_size);
         }
         catch (err) {
             console.log("Error creating recipe item: " + err);
@@ -229,11 +232,17 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
         res.status(500).send("There was an error creating the recipe");
     }
 });
-
+// params: {
+//     query: query,
+//     recipe_cuisine: recipe_cuisine?.value,
+//     recipe_type: recipe_type?.value,
+// },
 
 app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
     const user_id: number = parseInt(req.params.user_id);
-    const query: string = req.query.query as string;
+    
+    const { recipe_name, recipe_cuisine, recipe_type } = req.query as { recipe_name: string, recipe_cuisine: string, recipe_type: string };
+    console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
     const cacheKey = `user:${user_id}:recipes`;
   
     redisClient.get(cacheKey, (err, data) => {
@@ -246,12 +255,50 @@ app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
       if (data) {
         try {
           const cachedData = JSON.parse(data) as CachedRecipe[];
-          const filteredRecipes : CachedRecipe[] = cachedData.filter(
-            (recipe) =>
-              recipe.recipe_name.toLowerCase().includes(query) ||
-              recipe.recipe_cuisine.toLowerCase().includes(query) ||
-              recipe.recipe_type.toLowerCase().includes(query)
-          );
+          let filteredRecipes : CachedRecipe[];
+          if (recipe_name && recipe_cuisine && recipe_type) {
+            filteredRecipes = cachedData.filter(
+              (recipe) =>
+                recipe.recipe_name.toLowerCase().includes(recipe_name.toLowerCase()) &&
+                recipe.recipe_cuisine.toLowerCase().includes(recipe_cuisine.toLowerCase()) &&
+                recipe.recipe_type.toLowerCase().includes(recipe_type.toLowerCase())
+            );
+          } else if (recipe_name && recipe_cuisine) {
+            filteredRecipes = cachedData.filter(
+              (recipe) =>
+                recipe.recipe_name.toLowerCase().includes(recipe_name.toLowerCase()) &&
+                recipe.recipe_cuisine.toLowerCase().includes(recipe_cuisine.toLowerCase())
+            );
+          } else if (recipe_name && recipe_type) {
+            filteredRecipes = cachedData.filter(
+              (recipe) =>
+                recipe.recipe_name.toLowerCase().includes(recipe_name.toLowerCase()) &&
+                recipe.recipe_type.toLowerCase().includes(recipe_type.toLowerCase())
+            );
+          } else if (recipe_cuisine && recipe_type) {
+            filteredRecipes = cachedData.filter(
+              (recipe) =>
+                recipe.recipe_cuisine.toLowerCase().includes(recipe_cuisine.toLowerCase()) &&
+                recipe.recipe_type.toLowerCase().includes(recipe_type.toLowerCase())
+            );
+          } else if (recipe_name) {
+            filteredRecipes = cachedData.filter((recipe) =>
+              recipe.recipe_name.toLowerCase().includes(recipe_name.toLowerCase())
+            );
+          } else if (recipe_cuisine) {
+            filteredRecipes = cachedData.filter((recipe) =>
+              recipe.recipe_cuisine.toLowerCase().includes(recipe_cuisine.toLowerCase())
+            );
+          } else if (recipe_type) {
+            filteredRecipes = cachedData.filter((recipe) =>
+              recipe.recipe_type.toLowerCase().includes(recipe_type.toLowerCase())
+            );
+          } else {
+            filteredRecipes = cachedData;
+          }
+          
+
+
           console.log("Cached data:", cachedData);
             console.log("Filtered data:", filteredRecipes);
           res.status(200).json(filteredRecipes);
@@ -268,11 +315,12 @@ app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
 
 
 
-app.put("/recipes/:recipe_id", async (req: Request, res: Response) => {
+app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
     const recipe_id: number = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_items, recipe_cuisine, recipe_type }: { recipe_name: string; recipe_items: RecipeItem[], recipe_cuisine: string, recipe_type: string } = req.body;
-    console.log(recipe_items, "recieved recipe_items")
+    const { recipe_name, recipe_cuisine, recipe_type }: { recipe_name: string; recipe_cuisine: string, recipe_type: string } = req.body;
+    const recipe_items: RecipeItem[] = req.body.recipe_items;
+    console.log(recipe_items, "recipe_items");
 
     try {
         const recipeExists = await helper.recipeExists(recipe_id);
@@ -281,13 +329,109 @@ app.put("/recipes/:recipe_id", async (req: Request, res: Response) => {
             return;
         }
 
-        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type);
+        const recipe_images: Express.Multer.File[] = req.files as Express.Multer.File[];
 
+     
+    
+
+    
+        const recipeImages = await helper.getRecipeImages(recipe_id);
+
+
+        const recipeImagesToDelete = recipeImages.filter((recipeImage) => {
+            return !recipe_images.some((recipe_image) => {
+                return path.basename(recipeImage.recipe_image) === recipe_image.originalname;
+            });
+        });
+
+        for (let i = 0; i < recipeImagesToDelete.length; i++) {
+          const { recipe_image } = recipeImages[i];
+          const filename = recipe_image.split("/").pop();
+          console.log(filename, "filename");
+          const invalidationParams = {
+              DistributionId: process.env.DISTRIBUTION_ID,
+              InvalidationBatch: {
+            
+                  CallerReference: `${filename}`,
+                  Paths: {
+                      Quantity: 1,
+                      Items: [`/${filename}`]
+                  }
+              }
+          };
+          const invalidationCommand = new CreateInvalidationCommand(invalidationParams);
+          try{
+          await cloudFront.send(invalidationCommand);
+          console.log("invalidated");
+          }catch(error){
+              console.log(error,"error invalidating");
+          }
+          try{
+          await s3Bucket.deleteFile(filename);
+          //delete from sql
+          await helper.deleteRecipeImage(recipe_id, recipe_image);
+          console.log("deleted from s3");
+          }catch(error){
+
+              console.log(error,"error deleting from s3");
+          }
+      
+
+      }
+    //   async uploadFile(file: Express.Multer.File): Promise<string> {
+    //     const upload = new Upload({
+    //         client: this.s3,
+    //         params: {
+    //             Bucket: this.bucketName,
+    //             Key: randomBytes(16).toString("hex") + path.extname(file.originalname),
+    //             Body: file.buffer,
+    //             ContentType: file.mimetype,
+             
+    //         }
+    //     });
+    //     const result = await upload.done() as any;
+    //     const url = result.Location;
+    
+
+
+    //     return url;
+    // }
+
+        const uploadPromises = recipe_images.map(async (recipe_image) => {
+          const cloudFrontDomain = "https://d1uvjvhzktlyb3.cloudfront.net/";
+
+          const imageExists = await helper.imageExists(recipe_id, cloudFrontDomain + path.basename(recipe_image.originalname));
+          if (imageExists) {
+              console.log("image exists", cloudFrontDomain + path.basename(recipe_image.originalname));
+              return;;
+          }
+          console.log("new image added")
+          const url = "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.uploadFile(recipe_image));
+          if (!url) {
+            throw new Error("There was an error uploading the image");
+          }
+          await helper.createRecipeImage(recipe_id, url);
+          return url;
+        });
+        
+        try {
+          await Promise.all(uploadPromises);
+
+
+
+        } catch (err) {
+          res.status(500).send("There was an error with Promis");
+          return;
+        }
+    
+
+        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, "dummy_recipe_description");
+      
         await helper.deleteRecipeItems(recipe_id);
 
         for (let i = 0; i < recipe_items.length; i++) {
-            const { recipe_item } = recipe_items[i];
-            await helper.createRecipeItem(recipe_id, recipe_item);
+            const { recipe_item, portion_size } : { recipe_item: string, portion_size: string } = recipe_items[i];
+            await helper.createRecipeItem(recipe_id, recipe_item, portion_size);
         }
 
         const updatedRecipeItems = await helper.getRecipeItems(recipe_id);
@@ -305,29 +449,65 @@ app.put("/recipes/:recipe_id", async (req: Request, res: Response) => {
 });
 
 
+const deleteRecipeImages = async (recipe_id: number) => {
+    const recipeImages = await helper.getRecipeImages(recipe_id);
+    console.log(recipeImages, "recipeImages");
+    for (let i = 0; i < recipeImages.length; i++) {
+      const { recipe_image } = recipeImages[i];
+      const filename = recipe_image.split("/").pop();
+      console.log(filename, "filename");
+      const invalidationParams = {
+          DistributionId: process.env.DISTRIBUTION_ID,
+          InvalidationBatch: {
+        
+              CallerReference: `${filename}`,
+              Paths: {
+                  Quantity: 1,
+                  Items: [`/${filename}`]
+              }
+          }
+      };
+      const invalidationCommand = new CreateInvalidationCommand(invalidationParams);
+      try{
+      await cloudFront.send(invalidationCommand);
+      console.log("invalidated");
+      }catch(error){
+          console.log(error,"error invalidating");
+      }
+      try{
+      await s3Bucket.deleteFile(filename);
+      console.log("deleted from s3");
+      }catch(error){
 
-app.post("/recipes/:recipe_id/additem", async (req: Request, res: Response) => {
-    const recipe_id: number = parseInt(req.params.recipe_id);
-    const { recipe_item }: { recipe_item: string } = req.body;
+          console.log(error,"error deleting from s3");
+      }
+  }
+}
 
-    try {
-        const recipeExists = await helper.recipeExists(recipe_id);
-        if (!recipeExists) {
-            res.status(404).send("Recipe does not exist for the user");
-            return;
-        }
 
-        const recipeItem = await helper.createRecipeItem(recipe_id, recipe_item);
-        if (!recipeItem) {
-            res.status(500).send("There was an error adding the recipe item");
-            return;
-        }
-        console.log(recipeItem, "recipeItem");
-        res.status(201).send(recipeItem);
-    } catch (error) {
-        res.status(500).send("Error adding the recipe item");
-    }
-});
+// app.post("/recipes/:recipe_id/additem", async (req: Request, res: Response) => {
+//     const recipe_id: number = parseInt(req.params.recipe_id);
+//     const { recipe_item }: { recipe_item: string } = req.body;
+
+
+//     try {
+//         const recipeExists = await helper.recipeExists(recipe_id);
+//         if (!recipeExists) {
+//             res.status(404).send("Recipe does not exist for the user");
+//             return;
+//         }
+
+//         const recipeItem = await helper.createRecipeItem(recipe_id, recipe_item);
+//         if (!recipeItem) {
+//             res.status(500).send("There was an error adding the recipe item");
+//             return;
+//         }
+//         console.log(recipeItem, "recipeItem");
+//         res.status(201).send(recipeItem);
+//     } catch (error) {
+//         res.status(500).send("Error adding the recipe item");
+//     }
+// });
 
 
 
@@ -385,12 +565,15 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
         }
 
         const recipeItems = await helper.getRecipeItems(recipe_id);
+        const recipeImages = await helper.getRecipeImages(recipe_id);
+        console.log(recipeImages, "recipeImages")
         res.status(200).send({
             recipe_id: recipe.recipe_id,
             recipe_name: recipe.recipe_name,
             recipe_items: recipeItems,
             recipe_cuisine: recipe.recipe_cuisine,
-            recipe_type: recipe.recipe_type
+            recipe_type: recipe.recipe_type,
+            recipe_images: recipeImages
         });
     } catch (error) {
         res.status(500).send("Error retrieving the recipe");
@@ -415,41 +598,7 @@ app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Resp
             return;
         }
      
-
-        const recipeImages = await helper.getRecipeImages(recipe_id);
-        console.log(recipeImages, "recipeImages");
-        for (let i = 0; i < recipeImages.length; i++) {
-            const { recipe_image } = recipeImages[i];
-            const filename = recipe_image.split("/").pop();
-            console.log(filename, "filename");
-            const invalidationParams = {
-                DistributionId: process.env.DISTRIBUTION_ID,
-                InvalidationBatch: {
-              
-                    CallerReference: `${filename}`,
-                    Paths: {
-                        Quantity: 1,
-                        Items: [`/${filename}`]
-                    }
-                }
-            };
-            const invalidationCommand = new CreateInvalidationCommand(invalidationParams);
-            try{
-            await cloudFront.send(invalidationCommand);
-            console.log("invalidated");
-            }catch(error){
-                console.log(error,"error invalidating");
-            }
-            try{
-            await s3Bucket.deleteFile(filename);
-            console.log("deleted from s3");
-            }catch(error){
-
-                console.log(error,"error deleting from s3");
-            }
-        }
-
-        
+       deleteRecipeImages(recipe_id);
 
         await helper.deleteRecipeItems(recipe_id);
         await helper.deleteRecipeImages(recipe_id);

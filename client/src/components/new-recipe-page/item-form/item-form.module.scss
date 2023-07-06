@@ -1,73 +1,112 @@
 
 
 
-// return (
-//   <div className={classNames(styles.root, className)}>
-//       <form className={styles['item-form']} onSubmit={handleSubmit}>
-//           <input
-//               className={styles['input-box']}
-//               type="text"
-//               onChange={(e) => setRecipeItem(e.target.value)}
-//               placeholder="add ingredient"
-//               value={recipe_item}
-//           />
-//           <button className={styles['add-recipe-item']}>Add Ingredient</button>
-//       </form>
-//   </div>
-// );
-// };
-
 
 .root{
 
-    display: grid;
-    grid-auto-flow: row;
-    grid-gap: 2rem;
+
     justify-content: center;
-    padding: 1rem;
     background-color: #266d67;
-    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
-    border: 1rem solid #1c685e;
-    border-radius: 15px;
-    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+    
    
 }
 
 .item-form{
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    // grid-gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background-color: #d17f74;
+
+
+}
+
+
+
+.add-recipe-item{
+
+    justify-content: center;
+    
+    margin: 1rem;
+    background-color: #e7e6de;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    border: 1rem solid #1c685e;
+    border-radius: 15px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+    //set font color to default placeholder color
+    color: black;
+
+    
+}
+
+.text-area{
+    display: block;
     grid-auto-flow: row;
     grid-gap: 2rem;
     justify-content: center;
     padding: 1rem;
-    // background-color: #266d67;
-    // box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
-    // border: 1rem solid #1c685e;
-    // border-radius: 15px;
-    // box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+   
+    border: 1rem solid #1c685e;
+    border-radius: 15px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+   width: 400px;
+   max-width: 400px;
+
+
+   // Set minimum and maximum heights to control the expansion
+   min-height: 100px;  // Adjust this value as needed
+   max-height: 400px;  // Adjust this value as needed
+ 
+    margin: 1rem;
+
+    background-color: #e7e6de;
+    font-size: 1.5rem;
+
+
 }
 
 .input-box{
-    display: grid;
-    grid-auto-flow: row;
-    grid-gap: 2rem;
-    justify-content: center;
-    padding: 1rem;
-    background-color: #266d67;
-    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
-    border: 1rem solid #1c685e;
-    border-radius: 15px;
-    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+  margin: 1rem;
+  padding: 1.75rem;
+  background-color: #e7e6de;
+  border-radius: 10px;
+  border: 5px solid #e2bd98;
+  color: #bd6160;
+  font-size: 1.5rem;
+}
+.input-box::placeholder{
+  color: #bd6160;
 }
 
-.add-recipe-item{
+  .input-container {
     display: grid;
-    grid-auto-flow: row;
-    grid-gap: 2rem;
+    grid-auto-flow: column;
+    grid-gap: 1rem;
+    align-items: center;
     justify-content: center;
+    background-color: #d17f74;
     padding: 1rem;
-    background-color: #266d67;
-    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
-    border: 1rem solid #1c685e;
-    border-radius: 15px;
-    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
-}
+  }
+
+
+.text-area::-webkit-scrollbar {
+    width: 8px; /* Set the width of the scrollbar */
+  }
+  
+  .text-area::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Set the background color of the track */
+  }
+  
+  .text-area::-webkit-scrollbar-thumb {
+    background-color: #888; /* Set the color of the scrollbar thumb */
+  }
+  
+  .text-area::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Set the color of the scrollbar thumb on hover */
+  }
+
+
+
+ 

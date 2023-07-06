@@ -1,25 +1,22 @@
 .root {
+  
+    
 }
 
 
-.input-box {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1.2rem;
-    padding: 0.5rem;
-    width: 100%;
-}
 
-.add-recipe-item {
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    color: #333;
-    font-size: 1.2rem;
-    padding: 0.5rem;
-    width: 100%;
-}
-
+.input-box{
+    margin: 1rem;
+    padding: 1.75rem;
+    background-color: #e7e6de;
+    border-radius: 10px;
+    border: 5px solid #e2bd98;
+    color: #bd6160;
+    font-size: 1.5rem;
+  }
+  .input-box::placeholder{
+    color: #bd6160;
+  }
 .item-form {
     display: grid;
     grid-auto-flow: column;

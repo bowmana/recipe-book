@@ -21,6 +21,7 @@ export interface ItemWrapperProps {
 interface RecipeItem {
     recipe_item_id: string;
     recipe_item: string;
+    portion_size: string;
     isEditing: boolean;
 }
 interface Option {
@@ -56,37 +57,22 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     }, []);
 
     const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
+
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
     const [images, setImages] = useState<File[]>([]);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [recipe_description, setRecipeDescription] = useState<string>('');
 
-    // useEffect(() => {
-    //     const sendImages = async () => {
-    //         if (images.length > 0) {
-    //             const formData = new FormData();
-    //             images.forEach((image) => {
-    //                 formData.append('images', image);
-    //             });
-    //             try {
-    //                 await axios.post(`http://localhost:4000/${user_id}/uploadimages`, formData, {
-    //                     headers: {
-    //                         'Content-Type': 'multipart/form-data',
-    //                     },
-    //                 });
-    //             } catch (err) {
-    //                 console.log(err);
-    //             }
-    //         }
-    //     };
-
-    //     sendImages();
-    // }, [images]);
-
-    const addRecipeItem = (recipe_item: string) => {
-        const newItem: RecipeItem = { recipe_item_id: UUID(), recipe_item, isEditing: false };
+    const addRecipeItem = (recipe_item: string, portion_size: string) => {
+        const newItem: RecipeItem = {
+            recipe_item_id: UUID(),
+            recipe_item,
+            portion_size,
+            isEditing: false,
+        };
         setRecipeItems([...recipe_items, newItem]);
 
         console.log(recipe_items);
@@ -105,12 +91,17 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         setRecipeItems(updatedRecipeItems);
     };
 
+    const addRecipeDescription = (recipe_description: string) => {
+        setRecipeDescription(recipe_description);
+    };
+
     const editRecipeItem = (id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,
+
                           isEditing: !item.isEditing,
                       }
                     : item;
@@ -118,13 +109,15 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         );
     };
 
-    const saveRecipeItem = (recipe_item: string, id: string) => {
+    const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,
                           recipe_item,
+                          portion_size: recipe_portion,
+
                           isEditing: !item.isEditing,
                       }
                     : item;
@@ -151,13 +144,15 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         };
 
         recipe_items.forEach((item, index) => {
-            formData.append(`recipe_items[${index}]`, item.recipe_item);
+            formData.append(`recipe_items[${index}][recipe_item]`, item.recipe_item);
+            formData.append(`recipe_items[${index}][portion_size]`, item.portion_size);
         });
 
         formData.append('recipe_name', recipe_name);
 
         formData.append('recipe_cuisine', recipe_cuisine ? recipe_cuisine.value : '');
         formData.append('recipe_type', recipe_type ? recipe_type.value : '');
+        formData.append('recipe_description', recipe_description ? recipe_description : '');
         try {
             const response = await axios.post(
                 `http://localhost:4000/${user_id}/recipes`,
@@ -191,10 +186,10 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                             <input type="text" name="name" onChange={updateName} />
                         </label>
                     </form>
-                    <button className={styles['save-recipe']} onClick={saveRecipe}>
+                    <button className={styles['recipe-card-buttons']} onClick={saveRecipe}>
                         Save
                     </button>
-                    <button className={styles['clear-recipe']} onClick={clearRecipe}>
+                    <button className={styles['recipe-card-buttons']} onClick={clearRecipe}>
                         Clear
                     </button>
                 </div>
@@ -209,12 +204,15 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                     </div>
                 )}
                 <div className={styles['recipe-card-line-separator']}> </div>
+
                 <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} />
+                <div className={styles['recipe-card-line-separator']}> </div>
 
                 <div className={styles['recipe-genre-dropdown']}>
-                    <h1 className={styles['pick-a-text']}>Pick a recipe cuisine</h1>
                     <div className={styles['dropdown-container']}>
+                        <h2> Pick a Cuisine </h2>
                         <Dropdown
+                            className="cuisine-dropdown"
                             initialOptions={[
                                 { value: 'Italian', label: 'Italian' },
                                 { value: 'Mexican', label: 'Mexican' },
@@ -248,11 +246,14 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                                 { value: 'Malaysian', label: 'Malaysian' },
                             ]}
                             onChange={addRecipeCuisine}
+                            place_holder="Select a cuisine"
                         />
                     </div>
-                    <h1 className={styles['pick-a-text']}>Pick a recipe type</h1>
+
                     <div className={styles['dropdown-container']}>
+                        <h2>Pick a recipe type </h2>
                         <Dropdown
+                            className="type-dropdown"
                             initialOptions={[
                                 { value: 'Breakfast', label: 'Breakfast' },
                                 { value: 'Lunch', label: 'Lunch' },
@@ -266,24 +267,31 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                                 { value: 'Marinade', label: 'Marinade' },
                             ]}
                             onChange={addRecipeType}
+                            place_holder="Select a recipe type"
                         />
                     </div>
                 </div>
+                <div className={styles['recipe-card-line-separator']}> </div>
+                <div className={styles['form-container']}>
+                    <ItemForm
+                        addRecipeItem={addRecipeItem}
+                        addRecipeDescription={addRecipeDescription}
+                    />
 
-                <ItemForm addRecipeItem={addRecipeItem} />
-
-                {recipe_items.map((item, index) =>
-                    item.isEditing ? (
-                        <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
-                    ) : (
-                        <Item
-                            recipe_item={item}
-                            key={index}
-                            deleteRecipeItem={deleteRecipeItem}
-                            editRecipeItem={editRecipeItem}
-                        />
-                    )
-                )}
+                    {recipe_items.map((item, index) =>
+                        item.isEditing ? (
+                            <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
+                        ) : (
+                            <Item
+                                recipe_item={item}
+                                index={index}
+                                deleteRecipeItem={deleteRecipeItem}
+                                editRecipeItem={editRecipeItem}
+                            />
+                        )
+                    )}
+                    <div className={styles['recipe-card-bottom']}> </div>
+                </div>
             </div>
         </div>
     );

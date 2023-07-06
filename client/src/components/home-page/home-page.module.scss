@@ -1,0 +1,55 @@
+// return (
+//     <div className={classNames(styles.root, className)}>
+//         <div>
+//             <RecipeCard recipes={recipes} onRecipeDelete={onRecipeDelete} user_id={user_id} />
+//         </div>
+//         <div className={styles['pagination-container']}>
+//             <button
+//                 onClick={goToPreviousPage}
+//                 className={styles['pagination-button']}
+//                 disabled={currentPage === 1}
+//             >
+//                 Previous
+//             </button>
+//             {Array.from({ length: totalPages }).map((_, index) => (
+//                 <button
+//                     key={index + 1}
+//                     onClick={() => goToPage(index + 1)}
+//                     className={classNames(styles['pagination-button'], {
+//                         [styles['pagination-button-active']]: index + 1 === currentPage,
+//                     })}
+//                 >
+//                     {index + 1}
+//                 </button>
+//             ))}
+//             <button
+//                 onClick={goToNextPage}
+//                 className={styles['pagination-button']}
+//                 disabled={currentPage === totalPages}
+//             >
+//                 Next
+//             </button>
+//         </div>
+//     </div>
+// );
+// };
+.root{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+ 
+   
+}
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem;
+    padding: 1rem;
+    background-color: #e7e6de;
+    border-radius: 10px;
+    border: 5px solid #e2bd98;
+    position: sticky;
+   
+  }

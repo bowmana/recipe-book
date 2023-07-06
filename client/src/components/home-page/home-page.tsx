@@ -11,6 +11,7 @@ export interface HomePageProps {
 interface RecipeItem {
     recipe_item: string;
     recipe_item_id: number;
+    portion_size: string;
 }
 
 interface Recipe {
@@ -19,6 +20,7 @@ interface Recipe {
     recipe_name: string;
     recipe_cuisine: string;
     recipe_type: string;
+    recipe_description: string;
     recipe_images: string[];
 }
 

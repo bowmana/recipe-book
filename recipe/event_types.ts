@@ -24,6 +24,7 @@
       interface RecipeItem {
         
         recipe_item: string;
+        portion_size: string;
         recipe_item_id: number;
 
     }

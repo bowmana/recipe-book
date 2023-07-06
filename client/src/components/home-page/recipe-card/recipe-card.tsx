@@ -4,15 +4,21 @@ import styles from './recipe-card.module.scss';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { ImageCycle } from '../../util-components/imagecycle';
+import { Dropdown } from '../../util-components/dropdown';
 
 export interface RecipeCardProps {
     className?: string;
     onRecipeDelete: () => void;
     user_id: number;
 }
+interface Option {
+    value: string;
+    label: string;
+}
 
 interface RecipeItem {
     recipe_item: string;
+    portion_size: string;
     recipe_item_id: number;
 }
 
@@ -22,6 +28,7 @@ interface Recipe {
     recipe_name: string;
     recipe_cuisine: string;
     recipe_type: string;
+    recipe_description: string;
     recipe_images: string[];
 }
 
@@ -35,17 +42,21 @@ const RecipeCard = ({
     onRecipeDelete,
     user_id,
 }: RecipeCardPropsWithRecipes) => {
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchRecipeName, setSearchRecipeName] = useState('');
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+    const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
+    const [recipe_type, setRecipeType] = useState<Option | null>(null);
     useEffect(() => {
         handleSearch();
     }, []);
     const handleSearch = async () => {
-        const query = searchQuery.toLowerCase();
+        const recipe_name = searchRecipeName.toLowerCase();
         try {
             const response = await axios.get(`http://localhost:4000/${user_id}/cacheData`, {
                 params: {
-                    query: query,
+                    recipe_name: recipe_name,
+                    recipe_cuisine: recipe_cuisine?.value,
+                    recipe_type: recipe_type?.value,
                 },
             });
             setFilteredRecipes(response.data);
@@ -54,7 +65,7 @@ const RecipeCard = ({
         }
     };
     const clearSearch = () => {
-        setSearchQuery('');
+        setSearchRecipeName('');
         setFilteredRecipes([]);
     };
 
@@ -71,19 +82,89 @@ const RecipeCard = ({
                 console.log(error);
             });
     };
+    const addRecipeCuisine = (recipe_cuisine: Option | null) => {
+        setRecipeCuisine(recipe_cuisine);
+    };
+
+    const addRecipeType = (recipe_type: Option | null) => {
+        setRecipeType(recipe_type);
+    };
 
     return (
         <div className={classNames(styles.root, className)}>
             <h1>Recipes</h1>
-            <div className={styles['search-bar']}>
-                <input
-                    type="text"
-                    placeholder="Search by name, cuisine, or meal category"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button onClick={() => handleSearch()}>Search</button>
-                <button onClick={() => clearSearch()}>Clear</button>
+            <div className={styles['search-container']}>
+                <div className={styles['search-bar']}>
+                    <input
+                        type="text"
+                        placeholder="Search by name, cuisine, or meal category"
+                        value={searchRecipeName}
+                        onChange={(e) => setSearchRecipeName(e.target.value)}
+                    />
+
+                    <div className={styles['recipe-genre-dropdown']}>
+                        <h1 className={styles['pick-a-text']}>Search by recipe cuisine</h1>
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Italian', label: 'Italian' },
+                                    { value: 'Mexican', label: 'Mexican' },
+                                    { value: 'American', label: 'American' },
+                                    { value: 'French', label: 'French' },
+                                    { value: 'Chinese', label: 'Chinese' },
+                                    { value: 'Japanese', label: 'Japanese' },
+                                    { value: 'Indian', label: 'Indian' },
+                                    { value: 'Thai', label: 'Thai' },
+                                    { value: 'Spanish', label: 'Spanish' },
+                                    { value: 'Greek', label: 'Greek' },
+                                    { value: 'Lebanese', label: 'Lebanese' },
+                                    { value: 'Moroccan', label: 'Moroccan' },
+                                    { value: 'Brazilian', label: 'Brazilian' },
+                                    { value: 'Korean', label: 'Korean' },
+                                    { value: 'Vietnamese', label: 'Vietnamese' },
+                                    { value: 'Turkish', label: 'Turkish' },
+                                    { value: 'German', label: 'German' },
+                                    { value: 'Ethiopian', label: 'Ethiopian' },
+                                    { value: 'Peruvian', label: 'Peruvian' },
+                                    { value: 'Russian', label: 'Russian' },
+                                    { value: 'Jamaican', label: 'Jamaican' },
+                                    { value: 'Egyptian', label: 'Egyptian' },
+                                    { value: 'British', label: 'British' },
+                                    { value: 'Israeli', label: 'Israeli' },
+                                    { value: 'Indonesian', label: 'Indonesian' },
+                                    { value: 'Irish', label: 'Irish' },
+                                    { value: 'Argentine', label: 'Argentine' },
+                                    { value: 'Swedish', label: 'Swedish' },
+                                    { value: 'Australian', label: 'Australian' },
+                                    { value: 'Malaysian', label: 'Malaysian' },
+                                ]}
+                                onChange={addRecipeCuisine}
+                            />
+                        </div>
+                        <h1 className={styles['pick-a-text']}>Search by recipe type</h1>
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Breakfast', label: 'Breakfast' },
+                                    { value: 'Lunch', label: 'Lunch' },
+                                    { value: 'Dinner', label: 'Dinner' },
+                                    { value: 'Dessert', label: 'Dessert' },
+                                    { value: 'Snack', label: 'Snack' },
+                                    { value: 'Appetizer', label: 'Appetizer' },
+                                    { value: 'Drink', label: 'Drink' },
+                                    { value: 'Side', label: 'Side' },
+                                    { value: 'Sauce', label: 'Sauce' },
+                                    { value: 'Marinade', label: 'Marinade' },
+                                ]}
+                                onChange={addRecipeType}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles['search-buttons']}>
+                        <button onClick={() => handleSearch()}>Search</button>
+                        <button onClick={() => clearSearch()}>Clear</button>
+                    </div>
+                </div>
             </div>
 
             {(recipes.length > 0 || filteredRecipes.length > 0
@@ -130,10 +211,17 @@ const RecipeCard = ({
                                             <h3 className={styles['recipe-card-item']}>
                                                 {item.recipe_item}
                                             </h3>
+                                            <h3 className={styles['recipe-card-portion']}>
+                                                {item.portion_size}
+                                            </h3>
                                         </li>
                                     );
                                 })}
                             </ul>{' '}
+                            <div className={styles['recipe-card-line-separator']}> </div>
+                            <div className={styles['recipe-card-description']}>
+                                <h3>{recipe.recipe_description}</h3>
+                            </div>
                             <div className={styles['recipe-card-bottom']}> </div>
                         </li>
                     </div>

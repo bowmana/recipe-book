@@ -11,7 +11,6 @@ import { ImageUpload } from '../../util-components/imageupload';
 // import { LoadingModal } from '../../util-components/loadingmodal';
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
@@ -47,6 +46,26 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_images, setRecipeImages] = useState<string[]>([]);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [user_id, setUserID] = useState(0);
+    useEffect(() => {
+        const auth = async () => {
+            const url =
+                process.env.NODE_ENV === 'production'
+                    ? 'http://localhost:4001/auth' // Change if actually deployed to real web server
+                    : 'http://localhost:4001/auth';
+
+            await axios
+                .post(url, {}, { withCredentials: true })
+                .then((axiosResponse: AxiosResponse) => {
+                    setUserID(axiosResponse.data.user_id);
+                })
+                .catch((axiosError: AxiosError) => {
+                    window.location.href = '/login';
+                });
+        };
+
+        auth();
+    }, []);
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -153,15 +172,17 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 setUploadProgress(percent);
             },
         };
+        recipe_items.forEach((item, index) => {
+            formData.append(`recipe_items[${index}][recipe_item]`, item.recipe_item);
+            formData.append(`recipe_items[${index}][portion_size]`, item.portion_size);
+        });
         formData.append('recipe_name', recipe_name);
         formData.append('recipe_cuisine', recipe_cuisine?.value || '');
         formData.append('recipe_type', recipe_type?.value || '');
-        formData.append('recipe_items', JSON.stringify(recipe_items));
 
         try {
-            console.log(formData, 'yoooooooooooooooo');
             const response = await axios.put(
-                `http://localhost:4000/recipes/${recipe_id}`,
+                `http://localhost:4000/${user_id}/recipes/${recipe_id}`,
                 formData,
                 config
             );
@@ -169,7 +190,6 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             setIsUploading(false);
             console.log(response);
         } catch (error) {
-            console.log(formData, 'yeeeeeeeeeeeeeeer');
             console.log(error);
             setIsUploading(false);
         }

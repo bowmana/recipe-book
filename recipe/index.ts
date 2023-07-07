@@ -232,11 +232,6 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
         res.status(500).send("There was an error creating the recipe");
     }
 });
-// params: {
-//     query: query,
-//     recipe_cuisine: recipe_cuisine?.value,
-//     recipe_type: recipe_type?.value,
-// },
 
 app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
     const user_id: number = parseInt(req.params.user_id);
@@ -315,12 +310,13 @@ app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
 
 
 
-app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Request, res: Response) => {
+app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
     const recipe_id: number = parseInt(req.params.recipe_id);
     const { recipe_name, recipe_cuisine, recipe_type }: { recipe_name: string; recipe_cuisine: string, recipe_type: string } = req.body;
     const recipe_items: RecipeItem[] = req.body.recipe_items;
-    console.log(recipe_items, "recipe_items");
+    const user_id: number = parseInt(req.params.user_id);
+   
 
     try {
         const recipeExists = await helper.recipeExists(recipe_id);
@@ -330,7 +326,7 @@ app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Reques
         }
 
         const recipe_images: Express.Multer.File[] = req.files as Express.Multer.File[];
-
+        console.log(recipe_images, "recipe_images yoo");
      
     
 
@@ -338,15 +334,18 @@ app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Reques
         const recipeImages = await helper.getRecipeImages(recipe_id);
 
 
-        const recipeImagesToDelete = recipeImages.filter((recipeImage) => {
-            return !recipe_images.some((recipe_image) => {
-                return path.basename(recipeImage.recipe_image) === recipe_image.originalname;
-            });
-        });
+        function getMissingImages() {
+          // Extract the image URLs from recipe_images
+          const existingImages = recipeImages.map((image) => image.recipe_image);
+          const newImages = recipe_images.map((image) => image.originalname);
+          const deletedImages = existingImages.filter((url) => !newImages.includes(url.split("/").pop()));
+          return deletedImages;
+        }
+        const recipeImagesToDelete = getMissingImages();
+    
 
         for (let i = 0; i < recipeImagesToDelete.length; i++) {
-          const { recipe_image } = recipeImages[i];
-          const filename = recipe_image.split("/").pop();
+          const filename = recipeImagesToDelete[i].split("/").pop();
           console.log(filename, "filename");
           const invalidationParams = {
               DistributionId: process.env.DISTRIBUTION_ID,
@@ -368,8 +367,8 @@ app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Reques
           }
           try{
           await s3Bucket.deleteFile(filename);
-          //delete from sql
-          await helper.deleteRecipeImage(recipe_id, recipe_image);
+          
+          await helper.deleteRecipeImage(recipe_id, recipeImagesToDelete[i]);
           console.log("deleted from s3");
           }catch(error){
 
@@ -378,24 +377,7 @@ app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Reques
       
 
       }
-    //   async uploadFile(file: Express.Multer.File): Promise<string> {
-    //     const upload = new Upload({
-    //         client: this.s3,
-    //         params: {
-    //             Bucket: this.bucketName,
-    //             Key: randomBytes(16).toString("hex") + path.extname(file.originalname),
-    //             Body: file.buffer,
-    //             ContentType: file.mimetype,
-             
-    //         }
-    //     });
-    //     const result = await upload.done() as any;
-    //     const url = result.Location;
-    
 
-
-    //     return url;
-    // }
 
         const uploadPromises = recipe_images.map(async (recipe_image) => {
           const cloudFrontDomain = "https://d1uvjvhzktlyb3.cloudfront.net/";
@@ -435,6 +417,22 @@ app.put("/recipes/:recipe_id", upload.array("recipe_images"), async (req: Reques
         }
 
         const updatedRecipeItems = await helper.getRecipeItems(recipe_id);
+
+        const cacheKey = `user:${user_id}:recipes`;
+        await redisClient.del(cacheKey);
+        const cachedData = await getOrSetCache(cacheKey, async (): Promise<CachedRecipe[]> => {
+            const userRecipes = await helper.getUserRecipes(user_id);
+            if (!userRecipes) {
+                res.status(500).send("There was an error getting the recipes");
+                return [];
+            }
+            return userRecipes;
+        });
+    
+        if(!cachedData) {
+            res.status(500).send("There was an error setting the cache");
+            return;
+        }
 
         res.status(200).send({
             recipe_id: updatedRecipe.recipe_id,

@@ -24,22 +24,29 @@ export const ImageUpload = ({
     const [showInitialImage, setShowInitialImage] = useState<boolean>(true);
 
     useEffect(() => {
-        if (addImages) {
-            addImages(images);
-        }
-    }, [images]);
-    useEffect(() => {
         if (retrievedImages && retrievedImages.length > 0) {
             const updatedImages = retrievedImages.map((image) => {
                 const imageUrl = image.recipe_image;
-                const dummyFile = new File([], imageUrl, { type: 'image/jpeg' });
-                return dummyFile;
-            });
-            updateImages(updatedImages);
 
-            console.log(images, 'images');
+                const imageFile = fetch(imageUrl, { mode: 'no-cors' })
+                    .then((res) => res.blob())
+                    .then((blob) => {
+                        const file = new File([blob], imageUrl, { type: 'image/jpeg' });
+                        return file;
+                    });
+                return imageFile;
+            });
+            Promise.all(updatedImages).then((images) => {
+                updateImages(images);
+            });
         }
     }, [retrievedImages]);
+    useEffect(() => {
+        if (addImages) {
+            console.log('refreshing images', images);
+            addImages(images);
+        }
+    }, [images]);
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         setShowInitialImage(false);
         const uploadedFiles = Array.from(event.target.files || []);
@@ -85,9 +92,7 @@ export const ImageUpload = ({
         if (currentImageIndex !== null) {
             const updatedImages = [...images];
             const deletedImage = updatedImages.splice(currentImageIndex, 1)[0];
-            const deletedImageURL = URL.createObjectURL(deletedImage);
-            URL.revokeObjectURL(deletedImageURL);
-
+            console.log('deletedImage', deletedImage.name);
             const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
             if (fileInput) {
                 const files = Array.from(fileInput.files || []);
@@ -105,8 +110,8 @@ export const ImageUpload = ({
                     fileInput.files = dataTransfer.files;
                 }
             }
-
             setImages(updatedImages);
+            console.log('updatedImages', updatedImages);
             setCurrentImageIndex((prevIndex) => {
                 if (prevIndex === null || prevIndex >= updatedImages.length) {
                     return updatedImages.length > 0 ? 0 : null;
@@ -121,7 +126,6 @@ export const ImageUpload = ({
     };
 
     const handleNextImage = () => {
-        console.log(images, 'images');
         setCurrentImageIndex((prevIndex) =>
             prevIndex === null || prevIndex === images.length - 1 ? 0 : prevIndex + 1
         );
@@ -176,10 +180,11 @@ export const ImageUpload = ({
                         <img
                             className={styles['current-image']}
                             src={
-                                retrievedImages &&
-                                retrievedImages[currentImageIndex] &&
-                                retrievedImages[currentImageIndex].recipe_image
-                                    ? retrievedImages[currentImageIndex].recipe_image
+                                //if image is cloudfront url, use that, else use local url
+                                images[currentImageIndex].name.includes(
+                                    'd1uvjvhzktlyb3.cloudfront.net/'
+                                )
+                                    ? images[currentImageIndex].name
                                     : URL.createObjectURL(images[currentImageIndex])
                             }
                             alt={`Image ${currentImageIndex + 1}`}
@@ -203,12 +208,9 @@ export const ImageUpload = ({
                 <div key={index}>
                     <img
                         className={styles['image-preview']}
-                        // src={URL.createObjectURL(image)}
                         src={
-                            retrievedImages &&
-                            retrievedImages[index] &&
-                            retrievedImages[index].recipe_image
-                                ? retrievedImages[index].recipe_image
+                            image.name.includes('d1uvjvhzktlyb3.cloudfront.net/')
+                                ? image.name
                                 : URL.createObjectURL(image)
                         }
                         alt={`Image ${index + 1}`}

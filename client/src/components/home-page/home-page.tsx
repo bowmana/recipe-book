@@ -2,26 +2,11 @@ import classNames from 'classnames';
 import styles from './home-page.module.scss';
 import { useEffect, useState } from 'react';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import RecipeCard from './recipe-card/recipe-card';
+import ManyRecipeCards from './recipe-card/many-recipe-cards';
+import { Recipe, RecipeItem } from '../types';
 
 export interface HomePageProps {
     className?: string;
-}
-
-interface RecipeItem {
-    recipe_item: string;
-    recipe_item_id: number;
-    portion_size: string;
-}
-
-interface Recipe {
-    recipe_items: RecipeItem[];
-    recipe_id: number;
-    recipe_name: string;
-    recipe_cuisine: string;
-    recipe_type: string;
-    recipe_description: string;
-    recipe_images: string[];
 }
 
 export const HomePage = ({ className }: HomePageProps) => {
@@ -110,7 +95,11 @@ export const HomePage = ({ className }: HomePageProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <div>
-                <RecipeCard recipes={recipes} onRecipeDelete={onRecipeDelete} user_id={user_id} />
+                <ManyRecipeCards
+                    recipes={recipes}
+                    onRecipeDelete={onRecipeDelete}
+                    user_id={user_id}
+                />
             </div>
             <div className={styles['pagination-container']}>
                 <button

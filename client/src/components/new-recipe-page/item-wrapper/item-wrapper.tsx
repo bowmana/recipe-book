@@ -13,25 +13,12 @@ import { Dropdown } from '../../util-components/dropdown';
 import { LoadingModal } from '../../util-components/loadingmodal';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
+import { EditableRecipeItem, Option } from '../../types';
 
 export interface ItemWrapperProps {
     className?: string;
 }
-interface RecipeItem {
-    recipe_item_id: string;
-    recipe_item: string;
-    portion_size: string;
-    isEditing: boolean;
-}
-interface Option {
-    value: string;
-    label: string;
-}
 
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-wrappers-and-templates
- */
 export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [user_id, setUserID] = useState(0);
 
@@ -55,7 +42,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         auth();
     }, []);
 
-    const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
+    const [recipe_items, setRecipeItems] = useState<EditableRecipeItem[]>([]);
 
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
@@ -66,7 +53,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_description, setRecipeDescription] = useState<string>('');
 
     const addRecipeItem = (recipe_item: string, portion_size: string) => {
-        const newItem: RecipeItem = {
+        const newItem: EditableRecipeItem = {
             recipe_item_id: UUID(),
             recipe_item,
             portion_size,
@@ -96,7 +83,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const editRecipeItem = (id: string) => {
         setRecipeItems(
-            recipe_items.map((item: RecipeItem) => {
+            recipe_items.map((item: EditableRecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,
@@ -110,7 +97,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
-            recipe_items.map((item: RecipeItem) => {
+            recipe_items.map((item: EditableRecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,

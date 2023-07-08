@@ -2,15 +2,9 @@ import classNames from 'classnames';
 import styles from './item.module.scss';
 
 import React from 'react';
-
+import { EditableRecipeItem } from '../types';
 export interface ItemProps {
     className?: string;
-}
-interface RecipeItem {
-    recipe_item_id: string;
-    recipe_item: string;
-    portion_size: string;
-    isEditing: boolean;
 }
 
 export const Item = ({
@@ -19,7 +13,7 @@ export const Item = ({
     deleteRecipeItem,
     editRecipeItem,
     index,
-}: ItemProps & RecipeItem & { index: number } & any) => {
+}: ItemProps & EditableRecipeItem & { index: number } & any) => {
     return (
         <div className={classNames(styles.root, className)}>
             <ul className={styles['recipe-ingredients-list']}>

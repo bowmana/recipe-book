@@ -4,13 +4,10 @@ import styles from './edit-item-form.module.scss';
 import React from 'react';
 import { useState } from 'react';
 import { Dropdown } from '../util-components/dropdown';
+import { Option } from '../types';
 
 export interface EditItemFormProps {
     className?: string;
-}
-interface Option {
-    value: string;
-    label: string;
 }
 
 /**

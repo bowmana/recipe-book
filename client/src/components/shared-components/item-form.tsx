@@ -3,6 +3,7 @@ import styles from './item-form.module.scss';
 import React from 'react';
 import { useState } from 'react';
 import { Dropdown } from '../util-components/dropdown';
+import { Option } from '../types';
 
 export interface ItemFormProps {
     className?: string;
@@ -10,10 +11,7 @@ export interface ItemFormProps {
     addRecipeDescription: (recipe_description: string) => void;
     recipeDescription: string;
 }
-interface Option {
-    value: string;
-    label: string;
-}
+
 export const ItemForm = ({
     className,
     addRecipeItem,

@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
 import { ImageUpload } from '../../util-components/imageupload';
 // import { LoadingModal } from '../../util-components/loadingmodal';
-
+import { EditableRecipeItem, Option } from '../../types';
 import { useState, useEffect } from 'react';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
@@ -17,26 +17,10 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 export interface ItemWrapperProps {
     className?: string;
 }
-interface RecipeItem {
-    recipe_item_id: string;
-    recipe_item: string;
-    portion_size: string;
-    isEditing: boolean;
-}
-
-interface Recipe {
-    recipe_id: number;
-    recipe_name: string;
-    recipe_items: RecipeItem[];
-}
-interface Option {
-    value: string;
-    label: string;
-}
 
 export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const { recipe_id } = useParams<{ recipe_id: string }>();
-    const [recipe_items, setRecipeItems] = useState<RecipeItem[]>([]);
+    const [recipe_items, setRecipeItems] = useState<EditableRecipeItem[]>([]);
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [images, setImages] = useState<File[]>([]);
@@ -74,7 +58,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 const response = await axios.get(`http://localhost:4000/recipes/${recipe_id}`);
                 console.log(response.data, 'recipe data');
                 const fetchedRecipeItems = (response.data.recipe_items || []).map(
-                    (item: RecipeItem) => ({
+                    (item: EditableRecipeItem) => ({
                         recipe_item_id: item.recipe_item_id,
                         recipe_item: item.recipe_item,
                         portion_size: item.portion_size,
@@ -111,19 +95,13 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const addRecipeItem = async (recipe_item: string, portion_size: string) => {
         try {
-            const newItem: RecipeItem = {
+            const newItem: EditableRecipeItem = {
                 recipe_item_id: UUID(),
                 recipe_item,
                 portion_size,
                 isEditing: false,
             };
-            // const response = await axios.post(
-            //     `http://localhost:4000/recipes/${recipe_id}/additem`,
-            //     {
-            //         recipe_item,
-            //     }
-            // );
-            // newItem.recipe_item_id = response.data.recipe_item_id;
+
             setRecipeItems([...recipe_items, newItem]);
             console.log(recipe_items, 'new item added');
         } catch (error) {
@@ -142,7 +120,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     };
     const editRecipeItem = (id: string) => {
         setRecipeItems(
-            recipe_items.map((item: RecipeItem) => {
+            recipe_items.map((item: EditableRecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,
@@ -155,7 +133,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
 
     const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
-            recipe_items.map((item: RecipeItem) => {
+            recipe_items.map((item: EditableRecipeItem) => {
                 return item.recipe_item_id === id
                     ? {
                           ...item,

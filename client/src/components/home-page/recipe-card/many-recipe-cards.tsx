@@ -71,6 +71,27 @@ const ManyRecipeCards = ({
     const addRecipeType = (recipe_type: Option | null) => {
         setRecipeType(recipe_type);
     };
+    const shareRecipe = async (recipe: Recipe) => {
+        try {
+            //post to event bus
+            const response = await axios.post('http://localhost:4005/events', {
+                type: 'RecipeShared',
+                data: {
+                    recipe_id: recipe.recipe_id,
+                    recipe_name: recipe.recipe_name,
+                    recipe_cuisine: recipe.recipe_cuisine,
+                    recipe_type: recipe.recipe_type,
+                    recipe_description: recipe.recipe_description,
+                    recipe_items: recipe.recipe_items,
+                    recipe_images: recipe.recipe_images,
+                    user_id: user_id,
+                },
+            });
+            console.log(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div className={classNames(styles.root, className)}>
@@ -151,7 +172,10 @@ const ManyRecipeCards = ({
 
             {recipes.length > 0 || filteredRecipes.length > 0
                 ? (filteredRecipes.length > 0 ? filteredRecipes : recipes).map((recipe) => (
-                      <RecipeCard recipe={recipe} deleteRecipe={deleteRecipe} />
+                      <>
+                          <RecipeCard recipe={recipe} deleteRecipe={deleteRecipe} />
+                          <button onClick={() => shareRecipe(recipe)}>Share</button>
+                      </>
                   ))
                 : null}
         </div>

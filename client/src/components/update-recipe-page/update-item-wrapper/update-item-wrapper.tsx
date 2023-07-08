@@ -8,7 +8,7 @@ import { v4 as UUID } from 'uuid';
 import { useParams } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
 import { ImageUpload } from '../../util-components/imageupload';
-// import { LoadingModal } from '../../util-components/loadingmodal';
+import { LoadingModal } from '../../util-components/loadingmodal';
 import { EditableRecipeItem, Option } from '../../types';
 import { useState, useEffect } from 'react';
 
@@ -147,6 +147,18 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const updateRecipe = async () => {
+        if (!recipe_name) {
+            alert('Please enter a recipe name');
+            return;
+        }
+        if (recipe_name.length > 50) {
+            alert('Please enter a recipe name less than 50 characters');
+            return;
+        }
+        if (recipe_name.length < 3) {
+            alert('Please enter a recipe name more than 3 characters');
+            return;
+        }
         setIsUploading(true);
         const formData = new FormData();
 
@@ -214,112 +226,136 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <button className={styles['save-recipe']} onClick={updateRecipe}>
-                {' '}
-                Update
-            </button>
-            <button className={styles['delete-recipe']} onClick={clearRecipe}>
-                Clear
-            </button>
-            <form>
-                <label>
-                    Recipe Name:
-                    <input type="text" name="name" onChange={updateName} />
-                </label>
-            </form>
-            <h1>Add Items To {recipe_name}</h1>
-
-            <ImageUpload maxImages={5} addImages={setImages} retrievedImages={recipe_images} />
-            <div className={styles['recipe-genre-dropdown']}>
-                {editRecipeCuisine ? (
-                    <Dropdown
-                        initialOptions={[
-                            { value: 'Italian', label: 'Italian' },
-                            { value: 'Mexican', label: 'Mexican' },
-                            { value: 'American', label: 'American' },
-                            { value: 'French', label: 'French' },
-                            { value: 'Chinese', label: 'Chinese' },
-                            { value: 'Japanese', label: 'Japanese' },
-                            { value: 'Indian', label: 'Indian' },
-                            { value: 'Thai', label: 'Thai' },
-                            { value: 'Spanish', label: 'Spanish' },
-                            { value: 'Greek', label: 'Greek' },
-                            { value: 'Lebanese', label: 'Lebanese' },
-                            { value: 'Moroccan', label: 'Moroccan' },
-                            { value: 'Brazilian', label: 'Brazilian' },
-                            { value: 'Korean', label: 'Korean' },
-                            { value: 'Vietnamese', label: 'Vietnamese' },
-                            { value: 'Turkish', label: 'Turkish' },
-                            { value: 'German', label: 'German' },
-                            { value: 'Ethiopian', label: 'Ethiopian' },
-                            { value: 'Peruvian', label: 'Peruvian' },
-                            { value: 'Russian', label: 'Russian' },
-                            { value: 'Jamaican', label: 'Jamaican' },
-                            { value: 'Egyptian', label: 'Egyptian' },
-                            { value: 'British', label: 'British' },
-                            { value: 'Israeli', label: 'Israeli' },
-                            { value: 'Indonesian', label: 'Indonesian' },
-                            { value: 'Irish', label: 'Irish' },
-                            { value: 'Argentine', label: 'Argentine' },
-                            { value: 'Swedish', label: 'Swedish' },
-                            { value: 'Australian', label: 'Australian' },
-                            { value: 'Malaysian', label: 'Malaysian' },
-                        ]}
-                        onChange={addRecipeCuisine}
-                        retrievedSelected={recipe_cuisine}
-                    />
-                ) : (
-                    <div>
-                        <span>{recipe_cuisine ? recipe_cuisine.label : ''}</span>
-                        <button onClick={toggleEditRecipeCuisine}>Edit</button>
-                    </div>
-                )}
-                {editRecipeType ? (
-                    <Dropdown
-                        initialOptions={[
-                            { value: 'Breakfast', label: 'Breakfast' },
-                            { value: 'Lunch', label: 'Lunch' },
-                            { value: 'Dinner', label: 'Dinner' },
-                            { value: 'Dessert', label: 'Dessert' },
-                            { value: 'Snack', label: 'Snack' },
-                            { value: 'Appetizer', label: 'Appetizer' },
-                            { value: 'Drink', label: 'Drink' },
-                            { value: 'Side', label: 'Side' },
-                            { value: 'Sauce', label: 'Sauce' },
-                            { value: 'Marinade', label: 'Marinade' },
-                        ]}
-                        onChange={addRecipeType}
-                        retrievedSelected={recipe_type}
-                    />
-                ) : (
-                    <div>
-                        <span>{recipe_type ? recipe_type.label : ''}</span>
-                        <button onClick={toggleEditRecipeType}>Edit</button>
-                    </div>
-                )}
-            </div>
-            <ItemForm
-                addRecipeItem={addRecipeItem}
-                recipeDescription={recipe_description}
-                addRecipeDescription={addRecipeDescription}
-            />
-
-            {recipe_items && recipe_items.length > 0 ? (
-                recipe_items.map((item, index) =>
-                    item.isEditing ? (
-                        <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
-                    ) : (
-                        <Item
-                            recipe_item={item}
-                            key={index}
-                            deleteRecipeItem={deleteRecipeItem}
-                            editRecipeItem={editRecipeItem}
+            <div className={styles['recipe-card']}>
+                <div className={styles['recipe-card-header']}>
+                    <form>
+                        <label>
+                            Recipe Name:
+                            <input type="text" name="name" onChange={updateName} />
+                        </label>
+                    </form>
+                    <button className={styles['recipe-card-buttons']} onClick={updateRecipe}>
+                        Update
+                    </button>
+                    <button className={styles['recipe-card-buttons']} onClick={clearRecipe}>
+                        Clear
+                    </button>
+                </div>
+                {isUploading && (
+                    <div className={styles['upload-progress']}>
+                        <LoadingModal
+                            uploadProgress={uploadProgress}
+                            isOpen={isUploading}
+                            onRequestclose={() => {}}
                         />
-                    )
-                )
-            ) : (
-                <h1>There are no items in this recipe</h1>
-            )}
+                    </div>
+                )}
+                <div className={styles['recipe-card-line-separator']}> </div>
+                <ImageUpload maxImages={5} addImages={setImages} retrievedImages={recipe_images} />
+                <div className={styles['recipe-card-line-separator']}> </div>
+                <div className={styles['recipe-genre-dropdown']}>
+                    {editRecipeCuisine ? (
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Italian', label: 'Italian' },
+                                    { value: 'Mexican', label: 'Mexican' },
+                                    { value: 'American', label: 'American' },
+                                    { value: 'French', label: 'French' },
+                                    { value: 'Chinese', label: 'Chinese' },
+                                    { value: 'Japanese', label: 'Japanese' },
+                                    { value: 'Indian', label: 'Indian' },
+                                    { value: 'Thai', label: 'Thai' },
+                                    { value: 'Spanish', label: 'Spanish' },
+                                    { value: 'Greek', label: 'Greek' },
+                                    { value: 'Lebanese', label: 'Lebanese' },
+                                    { value: 'Moroccan', label: 'Moroccan' },
+                                    { value: 'Brazilian', label: 'Brazilian' },
+                                    { value: 'Korean', label: 'Korean' },
+                                    { value: 'Vietnamese', label: 'Vietnamese' },
+                                    { value: 'Turkish', label: 'Turkish' },
+                                    { value: 'German', label: 'German' },
+                                    { value: 'Ethiopian', label: 'Ethiopian' },
+                                    { value: 'Peruvian', label: 'Peruvian' },
+                                    { value: 'Russian', label: 'Russian' },
+                                    { value: 'Jamaican', label: 'Jamaican' },
+                                    { value: 'Egyptian', label: 'Egyptian' },
+                                    { value: 'British', label: 'British' },
+                                    { value: 'Israeli', label: 'Israeli' },
+                                    { value: 'Indonesian', label: 'Indonesian' },
+                                    { value: 'Irish', label: 'Irish' },
+                                    { value: 'Argentine', label: 'Argentine' },
+                                    { value: 'Swedish', label: 'Swedish' },
+                                    { value: 'Australian', label: 'Australian' },
+                                    { value: 'Malaysian', label: 'Malaysian' },
+                                ]}
+                                onChange={addRecipeCuisine}
+                                retrievedSelected={recipe_cuisine}
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <span>{recipe_cuisine ? recipe_cuisine.label : ''}</span>
+                            <button onClick={toggleEditRecipeCuisine}>Edit</button>
+                        </div>
+                    )}
+                    {editRecipeType ? (
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Breakfast', label: 'Breakfast' },
+                                    { value: 'Lunch', label: 'Lunch' },
+                                    { value: 'Dinner', label: 'Dinner' },
+                                    { value: 'Dessert', label: 'Dessert' },
+                                    { value: 'Snack', label: 'Snack' },
+                                    { value: 'Appetizer', label: 'Appetizer' },
+                                    { value: 'Drink', label: 'Drink' },
+                                    { value: 'Side', label: 'Side' },
+                                    { value: 'Sauce', label: 'Sauce' },
+                                    { value: 'Marinade', label: 'Marinade' },
+                                ]}
+                                onChange={addRecipeType}
+                                retrievedSelected={recipe_type}
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <span>{recipe_type ? recipe_type.label : ''}</span>
+                            <button onClick={toggleEditRecipeType}>Edit</button>
+                        </div>
+                    )}
+                </div>
+                <div className={styles['recipe-card-line-separator']}> </div>
+                <div className={styles['form-container']}>
+                    <ItemForm
+                        addRecipeItem={addRecipeItem}
+                        recipeDescription={recipe_description}
+                        addRecipeDescription={addRecipeDescription}
+                    />
+
+                    {recipe_items && recipe_items.length > 0 ? (
+                        recipe_items.map((item, index) =>
+                            item.isEditing ? (
+                                <EditItemForm
+                                    key={index}
+                                    editRecipeItem={saveRecipeItem}
+                                    item={item}
+                                />
+                            ) : (
+                                <Item
+                                    recipe_item={item}
+                                    key={index}
+                                    deleteRecipeItem={deleteRecipeItem}
+                                    editRecipeItem={editRecipeItem}
+                                />
+                            )
+                        )
+                    ) : (
+                        <h1>There are no items in this recipe</h1>
+                    )}
+                    <div className={styles['recipe-card-bottom']}> </div>
+                </div>
+            </div>
         </div>
     );
 };

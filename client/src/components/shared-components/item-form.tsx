@@ -19,12 +19,16 @@ export const ItemForm = ({
     recipeDescription,
 }: ItemFormProps & any) => {
     const [recipe_item, setRecipeItem] = useState('' as string);
-    //portion is the value of the dropdown
     const [portion, setPortion] = useState<Option | null>(null);
     const [recipe_description, setRecipeDescription] = useState('' as string);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!recipe_item) {
+            alert('Please enter an ingredient');
+            //make this a modal of some sort
+            return;
+        }
         addRecipeItem(recipe_item, portion?.value);
 
         setRecipeItem('');

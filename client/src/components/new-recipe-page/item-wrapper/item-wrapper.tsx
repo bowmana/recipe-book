@@ -112,7 +112,20 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const saveRecipe = async () => {
+        if (!recipe_name) {
+            alert('Please enter a recipe name');
+            return;
+        }
+        if (recipe_name.length > 50) {
+            alert('Please enter a recipe name less than 50 characters');
+            return;
+        }
+        if (recipe_name.length < 3) {
+            alert('Please enter a recipe name more than 3 characters');
+            return;
+        }
         setIsUploading(true);
+
         const formData = new FormData();
 
         images.forEach((image) => {

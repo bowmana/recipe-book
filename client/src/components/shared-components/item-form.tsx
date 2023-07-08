@@ -2,12 +2,13 @@ import classNames from 'classnames';
 import styles from './item-form.module.scss';
 import React from 'react';
 import { useState } from 'react';
-import { Dropdown } from '../../util-components/dropdown';
+import { Dropdown } from '../util-components/dropdown';
 
 export interface ItemFormProps {
     className?: string;
     addRecipeItem: (recipe_item: string, portion_size: string) => void;
     addRecipeDescription: (recipe_description: string) => void;
+    recipeDescription: string;
 }
 interface Option {
     value: string;
@@ -17,6 +18,7 @@ export const ItemForm = ({
     className,
     addRecipeItem,
     addRecipeDescription,
+    recipeDescription,
 }: ItemFormProps & any) => {
     const [recipe_item, setRecipeItem] = useState('' as string);
     //portion is the value of the dropdown
@@ -50,7 +52,7 @@ export const ItemForm = ({
                 <h2>Add description</h2>
                 <textarea
                     className={styles['text-area']}
-                    value={recipe_description}
+                    value={recipeDescription || recipe_description}
                     onChange={handleDescription}
                     placeholder="add description"
                 />

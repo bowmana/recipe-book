@@ -1,15 +1,11 @@
 import classNames from 'classnames';
-import styles from './update-edit-item-form.module.scss';
+import styles from './edit-item-form.module.scss';
 
 import React from 'react';
 import { useState } from 'react';
-import { Dropdown } from '../../util-components/dropdown';
+import { Dropdown } from '../util-components/dropdown';
 
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-forms-and-templates
- */
-export interface UpdateEditItemFormProps {
+export interface EditItemFormProps {
     className?: string;
 }
 interface Option {
@@ -21,11 +17,7 @@ interface Option {
  * This component was created using Codux's Default new component template.
  * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-item-forms-and-templates
  */
-export const UpdateEditItemForm = ({
-    className,
-    editRecipeItem,
-    item,
-}: UpdateEditItemFormProps & any) => {
+export const EditItemForm = ({ className, editRecipeItem, item }: EditItemFormProps & any) => {
     const [recipe_item, setRecipeItem] = useState(item.recipe_item as string);
     const [portion, setPortion] = useState<Option | null>({
         value: item.portion_size,

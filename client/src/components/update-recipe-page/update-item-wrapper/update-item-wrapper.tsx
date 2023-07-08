@@ -1,9 +1,9 @@
 import classNames from 'classnames';
 import styles from './update-item-wrapper.module.scss';
-import { UpdateItemForm } from '../update-item-form/update-item-form';
-import { UpdateItem } from '../update-item/update-item';
-import { UpdateSavedItem } from '../update-saved-item/update-saved-item';
-import { UpdateEditItemForm } from '../update-edit-item-form/update-edit-item-form';
+import { EditItemForm } from '../../shared-components/edit-item-form';
+import { Item } from '../../shared-components/item';
+
+import { ItemForm } from '../../shared-components/item-form';
 import { v4 as UUID } from 'uuid';
 import { useParams } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
@@ -320,7 +320,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     </div>
                 )}
             </div>
-            <UpdateItemForm
+            <ItemForm
                 addRecipeItem={addRecipeItem}
                 recipeDescription={recipe_description}
                 addRecipeDescription={addRecipeDescription}
@@ -329,13 +329,9 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             {recipe_items && recipe_items.length > 0 ? (
                 recipe_items.map((item, index) =>
                     item.isEditing ? (
-                        <UpdateEditItemForm
-                            key={index}
-                            editRecipeItem={saveRecipeItem}
-                            item={item}
-                        />
+                        <EditItemForm key={index} editRecipeItem={saveRecipeItem} item={item} />
                     ) : (
-                        <UpdateItem
+                        <Item
                             recipe_item={item}
                             key={index}
                             deleteRecipeItem={deleteRecipeItem}

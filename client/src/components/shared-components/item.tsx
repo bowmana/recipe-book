@@ -13,10 +13,6 @@ interface RecipeItem {
     isEditing: boolean;
 }
 
-/**
- * This component was created using Codux's Default new component template.
- * To create custom component templates, see https://help.codux.com/kb/en/article/configuration-for-items-and-templates
- */
 export const Item = ({
     className,
     recipe_item,

@@ -203,11 +203,6 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
         res.status(500).send("There was an error creating the recipe");
     }
 }));
-// params: {
-//     query: query,
-//     recipe_cuisine: recipe_cuisine?.value,
-//     recipe_type: recipe_type?.value,
-// },
 app.get("/:user_id/cacheData", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user_id = parseInt(req.params.user_id);
     const { recipe_name, recipe_cuisine, recipe_type } = req.query;
@@ -268,10 +263,9 @@ app.get("/:user_id/cacheData", (req, res) => __awaiter(void 0, void 0, void 0, f
 }));
 app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_cuisine, recipe_type } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description } = req.body;
     const recipe_items = req.body.recipe_items;
     const user_id = parseInt(req.params.user_id);
-    // console.log(recipe_items, "recipe_items");
     try {
         const recipeExists = yield helper.recipeExists(recipe_id);
         if (!recipeExists) {
@@ -289,10 +283,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
             return deletedImages;
         }
         const recipeImagesToDelete = getMissingImages();
-        console.log(recipeImagesToDelete, "recipeImagesToDelete");
         for (let i = 0; i < recipeImagesToDelete.length; i++) {
-            // const { recipe_image } = recipeImages[i];
-            // const filename = recipe_image.split("/").pop();
             const filename = recipeImagesToDelete[i].split("/").pop();
             console.log(filename, "filename");
             const invalidationParams = {
@@ -315,7 +306,6 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
             }
             try {
                 yield s3Bucket.deleteFile(filename);
-                //delete from sql
                 yield helper.deleteRecipeImage(recipe_id, recipeImagesToDelete[i]);
                 console.log("deleted from s3");
             }
@@ -346,7 +336,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
             res.status(500).send("There was an error with Promis");
             return;
         }
-        const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, "dummy_recipe_description");
+        const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description);
         yield helper.deleteRecipeItems(recipe_id);
         for (let i = 0; i < recipe_items.length; i++) {
             const { recipe_item, portion_size } = recipe_items[i];
@@ -483,6 +473,7 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             recipe_items: recipeItems,
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
+            recipe_description: recipe.recipe_description,
             recipe_images: recipeImages
         });
     }

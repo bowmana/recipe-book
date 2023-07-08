@@ -239,10 +239,12 @@ const deleteRecipeImages = (recipe_id) => __awaiter(void 0, void 0, void 0, func
 exports.deleteRecipeImages = deleteRecipeImages;
 const deleteRecipeImage = (recipe_id, recipe_image) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield dbConn.pool.query(`
+        const res = yield dbConn.pool.query(`
         DELETE FROM recipe_images
         WHERE recipe_id = $1 AND recipe_image = $2
       `, [recipe_id, recipe_image]);
+        const deletedImage = res.rows[0];
+        console.log(deletedImage), "deleted from db";
     }
     catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipeImage"');
@@ -318,7 +320,7 @@ exports.deleteUserRecipe = deleteUserRecipe;
 const getRecipeItems = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
-        SELECT items.recipe_item, items.portion_size
+        SELECT items.recipe_item, items.portion_size, items.recipe_item_id
         FROM items
         INNER JOIN recipe_items
         ON items.recipe_item_id = recipe_items.recipe_item_id

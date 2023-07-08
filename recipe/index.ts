@@ -313,7 +313,7 @@ app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
 app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
     const recipe_id: number = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_cuisine, recipe_type }: { recipe_name: string; recipe_cuisine: string, recipe_type: string } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description}: { recipe_name: string; recipe_cuisine: string, recipe_type: string, recipe_description: string} = req.body;
     const recipe_items: RecipeItem[] = req.body.recipe_items;
     const user_id: number = parseInt(req.params.user_id);
    
@@ -407,7 +407,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
         }
     
 
-        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, "dummy_recipe_description");
+        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description);
       
         await helper.deleteRecipeItems(recipe_id);
 
@@ -561,7 +561,7 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
             res.status(404).send("Recipe not found");
             return;
         }
-
+  
         const recipeItems = await helper.getRecipeItems(recipe_id);
         const recipeImages = await helper.getRecipeImages(recipe_id);
         console.log(recipeImages, "recipeImages")
@@ -571,6 +571,7 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
             recipe_items: recipeItems,
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
+            recipe_description: recipe.recipe_description,
             recipe_images: recipeImages
         });
     } catch (error) {

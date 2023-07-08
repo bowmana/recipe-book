@@ -265,14 +265,18 @@ const updateRecipe = async (recipe_id: number, recipe_name: string, recipe_cuisi
 
   const deleteRecipeImage = async (recipe_id: number, recipe_image: string) => {
     try {
-      await dbConn.pool.query(
+      const res = await dbConn.pool.query(
         `
         DELETE FROM recipe_images
         WHERE recipe_id = $1 AND recipe_image = $2
       `,
         [recipe_id, recipe_image]
       );
-    } catch (error) {
+      const deletedImage = res.rows[0];
+      console.log(deletedImage), "deleted from db";
+    }
+     
+    catch (error) {
       console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipeImage"');
       console.log(error);
       throw error;
@@ -343,7 +347,9 @@ const deleteUserRecipe = async (user_id: number, recipe_id: number) => {
         DELETE FROM user_recipes
         WHERE user_id = $1 AND recipe_id = $2
         `, [user_id, recipe_id]);
-    } catch (error) {
+    } 
+    
+    catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteRecipe"');
         console.log(error);
         throw error;
@@ -353,12 +359,13 @@ const deleteUserRecipe = async (user_id: number, recipe_id: number) => {
 const getRecipeItems = async (recipe_id: number) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
-        SELECT items.recipe_item, items.portion_size
+        SELECT items.recipe_item, items.portion_size, items.recipe_item_id
         FROM items
         INNER JOIN recipe_items
         ON items.recipe_item_id = recipe_items.recipe_item_id
         WHERE recipe_items.recipe_id = $1
         `, [recipe_id]);
+   
         return result.rows;
     } catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getRecipeItems"');

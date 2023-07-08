@@ -18,7 +18,7 @@ export interface ItemWrapperProps {
     className?: string;
 }
 interface RecipeItem {
-    recipe_item_id: number | null;
+    recipe_item_id: string;
     recipe_item: string;
     portion_size: string;
     isEditing: boolean;
@@ -43,6 +43,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
     const [editRecipeCuisine, setEditRecipeCuisine] = useState(false);
     const [editRecipeType, setEditRecipeType] = useState(false);
+    const [recipe_description, setRecipeDescription] = useState<string>('');
     const [recipe_images, setRecipeImages] = useState<string[]>([]);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -80,11 +81,14 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                         isEditing: false, // Add the "isEditing" property
                     })
                 );
+
+                setRecipeDescription(response.data.recipe_description);
                 setRecipeName(response.data.recipe_name);
 
                 setRecipeImages(response.data.recipe_images);
 
                 setRecipeItems(fetchedRecipeItems);
+
                 setRecipeCuisine({
                     value: response.data.recipe_cuisine,
                     label: response.data.recipe_cuisine,
@@ -95,6 +99,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 });
 
                 console.log(response.data, 'response data on update item wrapper');
+                console.log(recipe_items, 'recipe items yooo');
                 // console.log(fetchedRecipeItems);
             } catch (error) {
                 console.log('Failed to fetch recipes');
@@ -104,30 +109,38 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         fetchRecipes();
     }, [recipe_id]);
 
-    // const addRecipeItem = async (recipe_item: string) => {
-    //     try {
-    //         const newItem: RecipeItem = { recipe_item_id: null, recipe_item, isEditing: false };
-    //         const response = await axios.post(
-    //             `http://localhost:4000/recipes/${recipe_id}/additem`,
-    //             {
-    //                 recipe_item,
-    //             }
-    //         );
-    //         newItem.recipe_item_id = response.data.recipe_item_id;
-    //         setRecipeItems([...recipe_items, newItem]);
-    //         console.log(recipe_items, 'new item added');
-    //     } catch (error) {
-    //         console.log('Failed to add recipe item');
-    //         console.log(error);
-    //     }
-    // };
+    const addRecipeItem = async (recipe_item: string, portion_size: string) => {
+        try {
+            const newItem: RecipeItem = {
+                recipe_item_id: UUID(),
+                recipe_item,
+                portion_size,
+                isEditing: false,
+            };
+            // const response = await axios.post(
+            //     `http://localhost:4000/recipes/${recipe_id}/additem`,
+            //     {
+            //         recipe_item,
+            //     }
+            // );
+            // newItem.recipe_item_id = response.data.recipe_item_id;
+            setRecipeItems([...recipe_items, newItem]);
+            console.log(recipe_items, 'new item added');
+        } catch (error) {
+            console.log('Failed to add recipe item');
+            console.log(error);
+        }
+    };
 
-    const deleteRecipeItem = (id: number) => {
+    const deleteRecipeItem = (id: string) => {
         const updatedRecipeItems = recipe_items.filter((item) => item.recipe_item_id !== id);
         setRecipeItems(updatedRecipeItems);
     };
 
-    const editRecipeItem = (id: number) => {
+    const addRecipeDescription = (recipe_description: string) => {
+        setRecipeDescription(recipe_description);
+    };
+    const editRecipeItem = (id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
                 return item.recipe_item_id === id
@@ -140,7 +153,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         );
     };
 
-    const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: number) => {
+    const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
             recipe_items.map((item: RecipeItem) => {
                 return item.recipe_item_id === id
@@ -179,6 +192,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         formData.append('recipe_name', recipe_name);
         formData.append('recipe_cuisine', recipe_cuisine?.value || '');
         formData.append('recipe_type', recipe_type?.value || '');
+        formData.append('recipe_description', recipe_description);
 
         try {
             const response = await axios.put(
@@ -306,7 +320,11 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     </div>
                 )}
             </div>
-            {/* <UpdateItemForm addRecipeItem={addRecipeItem} /> */}
+            <UpdateItemForm
+                addRecipeItem={addRecipeItem}
+                recipeDescription={recipe_description}
+                addRecipeDescription={addRecipeDescription}
+            />
 
             {recipe_items && recipe_items.length > 0 ? (
                 recipe_items.map((item, index) =>

@@ -403,26 +403,6 @@ const deleteRecipeImages = (recipe_id) => __awaiter(void 0, void 0, void 0, func
         }
     }
 });
-// app.post("/recipes/:recipe_id/additem", async (req: Request, res: Response) => {
-//     const recipe_id: number = parseInt(req.params.recipe_id);
-//     const { recipe_item }: { recipe_item: string } = req.body;
-//     try {
-//         const recipeExists = await helper.recipeExists(recipe_id);
-//         if (!recipeExists) {
-//             res.status(404).send("Recipe does not exist for the user");
-//             return;
-//         }
-//         const recipeItem = await helper.createRecipeItem(recipe_id, recipe_item);
-//         if (!recipeItem) {
-//             res.status(500).send("There was an error adding the recipe item");
-//             return;
-//         }
-//         console.log(recipeItem, "recipeItem");
-//         res.status(201).send(recipeItem);
-//     } catch (error) {
-//         res.status(500).send("Error adding the recipe item");
-//     }
-// });
 app.post('/events', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const event = req.body;
     console.log('Received Event', event.type);
@@ -518,6 +498,52 @@ app.delete("/recipes/:user_id/delete/:recipe_id", (req, res) => __awaiter(void 0
     }
     catch (error) {
         res.status(500).send("Error deleting the recipe");
+    }
+}));
+//-------------------------------------Recipe social --------------------------------------------------
+app.post("/recipes/:user_id/share/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    const recipe_id = parseInt(req.params.recipe_id);
+    //insert into shared_recipes table and social_recipes table
+    try {
+        const recipeExists = yield helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        const recipeShared = yield helper.recipeShared(user_id, recipe_id);
+        if (recipeShared) {
+            console.log("Recipe already shared");
+            // res.status(400).send("Recipe already shared");
+            return;
+        }
+        yield helper.insertSocialRecipe(user_id, recipe_id);
+        res.status(200).send("Recipe shared");
+    }
+    catch (error) {
+        res.status(500).send("Error sharing the recipe");
+    }
+}));
+app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log(req.query, "req.query");
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const socialRecipes = yield helper.getPaginatedSocialRecipes(offset, limit);
+        console.log(socialRecipes, "socialRecipes");
+        const totalCount = yield helper.getTotalSocialRecipesCount();
+        console.log(totalCount, "totalCount");
+        const totalPages = Math.ceil(totalCount / limit);
+        console.log(totalPages, "totalPages");
+        res.status(200).send({
+            recipes: socialRecipes,
+            total_count: totalCount,
+            total_pages: totalPages,
+        });
+    }
+    catch (error) {
+        res.status(500).send("Error retrieving the social recipes");
     }
 }));
 app.listen(port, () => {

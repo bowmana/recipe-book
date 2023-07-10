@@ -15,7 +15,7 @@ export const Nav = ({ className }: NavProps) => {
         <div className={classNames(styles.root, className)}>
             <nav>
                 <Link to="/home">My Recipes</Link> | <Link to="/new-recipe">New Recipe</Link> |{' '}
-                <Link to="/profile">Profile</Link>
+                <Link to="/social-feed">Social Feed</Link> |<Link to="/profile">Profile</Link> |{' '}
             </nav>
         </div>
     );

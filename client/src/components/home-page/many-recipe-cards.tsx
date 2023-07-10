@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import styles from './many-recipe-cards.module.scss';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ImageCycle } from '../../util-components/imagecycle';
-import { Dropdown } from '../../util-components/dropdown';
-import { RecipeCard } from './recipe-card';
-import { Recipe, Option } from '../../types';
+import { ImageCycle } from '../util-components/imagecycle';
+import { Dropdown } from '../util-components/dropdown';
+import { RecipeCard } from '../recipe-card/recipe-card';
+import { Recipe, Option } from '../types';
 
 export interface ManyRecipeCardsProps {
     className?: string;
@@ -73,20 +73,20 @@ const ManyRecipeCards = ({
     };
     const shareRecipe = async (recipe: Recipe) => {
         try {
-            //post to event bus
-            const response = await axios.post('http://localhost:4005/events', {
-                type: 'RecipeShared',
-                data: {
-                    recipe_id: recipe.recipe_id,
-                    recipe_name: recipe.recipe_name,
-                    recipe_cuisine: recipe.recipe_cuisine,
-                    recipe_type: recipe.recipe_type,
-                    recipe_description: recipe.recipe_description,
-                    recipe_items: recipe.recipe_items,
-                    recipe_images: recipe.recipe_images,
-                    user_id: user_id,
-                },
-            });
+            const recipe_id = recipe.recipe_id;
+            const response = await axios.post(
+                `http://localhost:4000/recipes/${user_id}/share/${recipe_id}`,
+                {
+                    data: {
+                        recipe_name: recipe.recipe_name,
+                        recipe_cuisine: recipe.recipe_cuisine,
+                        recipe_type: recipe.recipe_type,
+                        recipe_description: recipe.recipe_description,
+                        recipe_items: recipe.recipe_items,
+                        recipe_images: recipe.recipe_images,
+                    },
+                }
+            );
             console.log(response.data);
         } catch (error) {
             console.log(error);

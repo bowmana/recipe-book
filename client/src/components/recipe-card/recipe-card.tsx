@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ImageCycle } from '../../util-components/imagecycle';
+import { ImageCycle } from '../util-components/imagecycle';
 import styles from './recipe-card.module.scss';
-import { Recipe, RecipeItem } from '../../types';
+import { Recipe, RecipeItem } from '../types';
 
 interface RecipeCardItemProps {
     recipe: Recipe;
-    deleteRecipe: (recipe_id: number) => void;
+    deleteRecipe?: (recipe_id: number) => void;
 }
 
 export const RecipeCard = ({ recipe, deleteRecipe }: RecipeCardItemProps) => {
@@ -28,15 +28,17 @@ export const RecipeCard = ({ recipe, deleteRecipe }: RecipeCardItemProps) => {
                             {' '}
                             edit{' '}
                         </Link>
-                        <button
-                            className={styles['delete-recipe']}
-                            onClick={() => {
-                                deleteRecipe(recipe.recipe_id);
-                            }}
-                        >
-                            {' '}
-                            delete{' '}
-                        </button>
+                        {deleteRecipe && (
+                            <button
+                                className={styles['delete-recipe']}
+                                onClick={() => {
+                                    deleteRecipe(recipe.recipe_id);
+                                }}
+                            >
+                                {' '}
+                                delete{' '}
+                            </button>
+                        )}
                     </div>
                     <ImageCycle imageUrls={recipe.recipe_images} />
                 </div>

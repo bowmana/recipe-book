@@ -483,31 +483,6 @@ const deleteRecipeImages = async (recipe_id: number) => {
 }
 
 
-// app.post("/recipes/:recipe_id/additem", async (req: Request, res: Response) => {
-//     const recipe_id: number = parseInt(req.params.recipe_id);
-//     const { recipe_item }: { recipe_item: string } = req.body;
-
-
-//     try {
-//         const recipeExists = await helper.recipeExists(recipe_id);
-//         if (!recipeExists) {
-//             res.status(404).send("Recipe does not exist for the user");
-//             return;
-//         }
-
-//         const recipeItem = await helper.createRecipeItem(recipe_id, recipe_item);
-//         if (!recipeItem) {
-//             res.status(500).send("There was an error adding the recipe item");
-//             return;
-//         }
-//         console.log(recipeItem, "recipeItem");
-//         res.status(201).send(recipeItem);
-//     } catch (error) {
-//         res.status(500).send("Error adding the recipe item");
-//     }
-// });
-
-
 
 
 app.post('/events', async (req: Request, res: Response) => {
@@ -629,6 +604,57 @@ app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Resp
         res.status(500).send("Error deleting the recipe");
     }
 });
+
+
+
+//-------------------------------------Recipe social --------------------------------------------------
+app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Response) => {
+    const user_id: number = parseInt(req.params.user_id);
+    const recipe_id: number = parseInt(req.params.recipe_id);
+    //insert into shared_recipes table and social_recipes table
+    try {
+        const recipeExists = await helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        const recipeShared = await helper.recipeShared(user_id, recipe_id);
+        if (recipeShared) {
+         
+          console.log("Recipe already shared");
+           
+            return;
+        }
+    
+        await helper.insertSocialRecipe(user_id, recipe_id);
+        res.status(200).send("Recipe shared");
+    } catch (error) {
+        res.status(500).send("Error sharing the recipe");
+    }
+});
+
+app.get("/social-recipes", async (req: Request, res: Response) => {
+  try {
+    console.log(req.query, "req.query");
+    const page: number = parseInt(req.query.page as string) || 1;
+    const limit: number = parseInt(req.query.limit as string) || 10;
+    const offset: number = (page - 1) * limit;
+    const socialRecipes = await helper.getPaginatedSocialRecipes(offset, limit);
+    console.log(socialRecipes, "socialRecipes");
+    const totalCount = await helper.getTotalSocialRecipesCount();
+    console.log(totalCount, "totalCount");
+    const totalPages = Math.ceil(totalCount / limit);
+    console.log(totalPages, "totalPages");
+    res.status(200).send({
+      recipes: socialRecipes,
+      total_count: totalCount,
+      total_pages: totalPages,
+    });
+  } catch (error) {
+    res.status(500).send("Error retrieving the social recipes");
+  }
+});
+
 
 
 app.listen(port, () => {

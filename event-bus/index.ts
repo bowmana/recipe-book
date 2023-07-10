@@ -37,19 +37,19 @@ app.post("/events", async (req, res) => {
         }
 
     }
-    if (event.type === "RecipeShared") {
+    // if (event.type === "RecipeShared") {
 
-        try{
-            if(!event.data.recipe_id || !event.data.recipe_name || !event.data.recipe_cuisine || !event.data.recipe_type || !event.data.recipe_description || !event.data.recipe_items || !event.data.recipe_images || !event.data.user_id) {
-                res.status(400).send('recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, recipe_items, recipe_images, or user_id is missing');
-            }
+    //     try{
+    //         if(!event.data.recipe_id || !event.data.recipe_name || !event.data.recipe_cuisine || !event.data.recipe_type || !event.data.recipe_description || !event.data.recipe_items || !event.data.recipe_images || !event.data.user_id) {
+    //             res.status(400).send('recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, recipe_items, recipe_images, or user_id is missing');
+    //         }
             
-            await axios.post("http://localhost:4003/events", event);
-        }
-        catch (err) {
-            console.log(err);
-        }
-    }
+    //         await axios.post("http://localhost:4003/events", event);
+    //     }
+    //     catch (err) {
+    //         console.log(err);
+    //     }
+    // }
 
 
     res.status(200).send({});

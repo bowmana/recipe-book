@@ -1,15 +1,9 @@
-import classNames from 'classnames';
-import styles from './home-page.module.scss';
-import { useEffect, useState } from 'react';
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import ManyRecipeCards from './many-recipe-cards';
-import { Recipe, RecipeItem } from '../types';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Recipe } from '../types';
+import { RecipeCard } from '../recipe-card/recipe-card';
 
-export interface HomePageProps {
-    className?: string;
-}
-
-export const HomePage = ({ className }: HomePageProps) => {
+export const SocialFeed = () => {
     const [user_id, setUserID] = useState(0);
     const [recipes, setRecipes] = useState<Recipe[]>([]);
 
@@ -43,30 +37,21 @@ export const HomePage = ({ className }: HomePageProps) => {
 
     const fetchRecipes = async (page: number, limit: number) => {
         try {
-            const response = await axios.get(
-                `http://localhost:4000/${user_id}/getrecipes?page=${page}&limit=${limit}`
-            );
-            const { recipes, totalCount } = response.data;
+            const url =
+                process.env.NODE_ENV === 'production'
+                    ? `http://localhost:4000/social-recipes?page=${page}&limit=${limit}`
+                    : `http://localhost:4000/social-recipes?page=${page}&limit=${limit}`;
+
+            const axiosResponse = await axios.get(url, { withCredentials: true });
+
+            const { recipes, totalCount } = axiosResponse.data;
+
             setRecipes(recipes);
-            // setAllRecipes(recipes);
+            console.log(axiosResponse, 'recipes in social feed');
             setTotalCount(totalCount);
-            console.log(response.data, 'recipes in home page with images');
-        } catch (error) {
+        } catch (axiosError) {
             console.log('Failed to fetch recipes');
-            console.log(error);
-        }
-    };
-
-    const onRecipeDelete = () => {
-        try {
-            if (currentPage > Math.ceil(totalCount / recipesPerPage)) {
-                setCurrentPage(currentPage - 1);
-            }
-
-            fetchRecipes(currentPage, recipesPerPage);
-        } catch (error) {
-            console.log('Failed to fetch recipes');
-            console.log(error);
+            console.log(axiosError);
         }
     };
 
@@ -89,47 +74,35 @@ export const HomePage = ({ className }: HomePageProps) => {
     };
 
     const goToPage = (page: number) => {
-        setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+        setCurrentPage(page);
+        fetchRecipes(page, recipesPerPage);
     };
 
     return (
-        <div className={classNames(styles.root, className)}>
-            <div>
-                <ManyRecipeCards
-                    recipes={recipes}
-                    onRecipeDelete={onRecipeDelete}
-                    user_id={user_id}
-                />
+        <div className="social-feed">
+            <h1>Recipes from other users</h1>
+            <div className="social-feed__recipes">
+                {recipes.map((recipe) => (
+                    <RecipeCard key={recipe.recipe_id} recipe={recipe} />
+                ))}
             </div>
-            <div className={styles['pagination-container']}>
-                <button
-                    onClick={goToPreviousPage}
-                    className={styles['pagination-button']}
-                    disabled={currentPage === 1}
-                >
+            <div className="pagination">
+                <button onClick={goToPreviousPage} disabled={currentPage === 1}>
                     Previous
                 </button>
                 {Array.from({ length: totalPages }).map((_, index) => (
                     <button
-                        key={index + 1}
+                        key={index}
                         onClick={() => goToPage(index + 1)}
-                        className={classNames(styles['pagination-button'], {
-                            [styles['pagination-button-active']]: index + 1 === currentPage,
-                        })}
+                        className={currentPage === index + 1 ? 'active' : ''}
                     >
                         {index + 1}
                     </button>
                 ))}
-                <button
-                    onClick={goToNextPage}
-                    className={styles['pagination-button']}
-                    disabled={currentPage === totalPages}
-                >
+                <button onClick={goToNextPage} disabled={currentPage === totalPages}>
                     Next
                 </button>
             </div>
         </div>
     );
 };
-
-export default HomePage;

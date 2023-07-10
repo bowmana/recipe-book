@@ -87,6 +87,13 @@ class RecipeDataBaseConnection {
               recipe_image VARCHAR
             );
 
+ 
+            CREATE TABLE IF NOT EXISTS social_table (
+              user_id BIGINT REFERENCES recipe_users_table(user_id),
+              recipe_id BIGINT REFERENCES recipe_table(recipe_id),
+              PRIMARY KEY (user_id, recipe_id)
+            );
+
 
             `);
             }

@@ -132,6 +132,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
     console.log(recipe_items, "recipe_items");
     console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
     const recipe_images = req.files;
+    console.log(recipe_images, "recipe_images");
     const user_id = parseInt(req.params.user_id);
     try {
         const userExists = yield helper.userExists(user_id);
@@ -145,7 +146,15 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
             return;
         }
         const uploadPromises = recipe_images.map((recipe_image) => __awaiter(void 0, void 0, void 0, function* () {
-            const url = "https://d1uvjvhzktlyb3.cloudfront.net/" + path_1.default.basename(yield s3Bucket.uploadFile(recipe_image));
+            const getUrl = () => __awaiter(void 0, void 0, void 0, function* () {
+                if (yield s3Bucket.fileExists(recipe_image.originalname)) {
+                    return "https://d1uvjvhzktlyb3.cloudfront.net/" + path_1.default.basename(yield s3Bucket.duplicateFile(recipe_image.originalname)); //in the case where we add a recipe TO personal recipes FROM social recipes
+                }
+                else {
+                    return "https://d1uvjvhzktlyb3.cloudfront.net/" + path_1.default.basename(yield s3Bucket.uploadFile(recipe_image)); //in the case where we simply add a recipe TO personal recipes
+                }
+            });
+            const url = yield getUrl();
             if (!url) {
                 throw new Error("There was an error uploading the image");
             }
@@ -475,10 +484,14 @@ app.delete("/recipes/:user_id/delete/:recipe_id", (req, res) => __awaiter(void 0
             res.status(404).send("Recipe does not exist for the user");
             return;
         }
+        if (yield helper.recipeShared(user_id, recipe_id)) {
+            console.log("recipe deleted, shared");
+            yield helper.deleteSocialRecipe(user_id, recipe_id);
+        }
+        yield helper.deleteUserRecipe(user_id, recipe_id);
         deleteRecipeImages(recipe_id);
         yield helper.deleteRecipeItems(recipe_id);
         yield helper.deleteRecipeImages(recipe_id);
-        yield helper.deleteUserRecipe(user_id, recipe_id);
         yield helper.deleteRecipe(recipe_id);
         const cacheKey = `user:${user_id}:recipes`;
         yield redisClient.del(cacheKey);
@@ -514,7 +527,6 @@ app.post("/recipes/:user_id/share/:recipe_id", (req, res) => __awaiter(void 0, v
         const recipeShared = yield helper.recipeShared(user_id, recipe_id);
         if (recipeShared) {
             console.log("Recipe already shared");
-            // res.status(400).send("Recipe already shared");
             return;
         }
         yield helper.insertSocialRecipe(user_id, recipe_id);
@@ -544,6 +556,47 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
     catch (error) {
         res.status(500).send("Error retrieving the social recipes");
+    }
+}));
+app.get("/:user_id/getsharedrecipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const sharedRecipes = yield helper.getPaginatedSharedRecipes(user_id, offset, limit);
+        const totalCount = yield helper.getTotalSharedRecipesCount(user_id);
+        const totalPages = Math.ceil(totalCount / limit);
+        res.status(200).send({
+            recipes: sharedRecipes,
+            total_count: totalCount,
+            total_pages: totalPages
+        });
+    }
+    catch (error) {
+        res.status(500).send("Error retrieving the shared recipes");
+    }
+}));
+// await axios.delete(`http://localhost:4000/${user_id}/deletesharedrecipe/${recipe_id}`
+app.delete("/:user_id/deletesharedrecipe/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    const recipe_id = parseInt(req.params.recipe_id);
+    try {
+        const recipeExists = yield helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        const recipeShared = yield helper.recipeShared(user_id, recipe_id);
+        if (!recipeShared) {
+            res.status(404).send("Recipe is not shared");
+            return;
+        }
+        yield helper.deleteSocialRecipe(user_id, recipe_id);
+        res.status(200).send("Recipe deleted");
+    }
+    catch (error) {
+        res.status(500).send("Error deleting the recipe");
     }
 }));
 app.listen(port, () => {

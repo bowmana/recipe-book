@@ -83,6 +83,43 @@ class S3Bucket {
             return url;
         });
     }
+    duplicateFile(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const command = new client_s3_1.GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: key
+            });
+            const existingFile = yield this.s3.send(command);
+            const newKey = (0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(key);
+            const upload = new lib_storage_1.Upload({
+                client: this.s3,
+                params: {
+                    Bucket: this.bucketName,
+                    Key: newKey,
+                    Body: existingFile.Body,
+                    ContentType: existingFile.ContentType
+                }
+            });
+            const result = yield upload.done();
+            const url = result.Location;
+            return url;
+        });
+    }
+    fileExists(key) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const command = new client_s3_1.GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: key
+            });
+            try {
+                yield this.s3.send(command);
+                return true;
+            }
+            catch (error) {
+                return false;
+            }
+        });
+    }
     deleteFile(key) {
         return __awaiter(this, void 0, void 0, function* () {
             const command = new client_s3_1.DeleteObjectCommand({

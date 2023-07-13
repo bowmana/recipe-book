@@ -62,6 +62,41 @@ export class S3Bucket {
     }
 
 
+ async duplicateFile(key: string): Promise<string> {
+        const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: key
+        });
+        const existingFile = await this.s3.send(command);
+        const newKey = randomBytes(16).toString("hex") + path.extname(key);
+        const upload = new Upload({
+            client: this.s3,
+            params: {
+                Bucket: this.bucketName,
+                Key: newKey,
+                Body: existingFile.Body,
+                ContentType: existingFile.ContentType
+            }
+        });
+        const result = await upload.done() as any;
+        const url = result.Location;
+        return url;
+    }
+
+  async fileExists(key: string): Promise<boolean> {
+        const command = new GetObjectCommand({
+            Bucket: this.bucketName,
+            Key: key
+        });
+        try {
+            await this.s3.send(command);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+
 
     async deleteFile(key: string): Promise<void> {
         const command = new DeleteObjectCommand({
@@ -83,6 +118,7 @@ export class S3Bucket {
         });
         return await this.s3.send(command);
     }
+    
 
 
 

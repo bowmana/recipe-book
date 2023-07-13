@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
+exports.getTotalSharedRecipesCount = exports.getPaginatedSharedRecipes = exports.deleteSocialRecipe = exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
 const db_1 = require("./db/db");
 const dbConn = new db_1.RecipeDataBaseConnection();
 dbConn.connect();
@@ -383,6 +383,20 @@ const insertSocialRecipe = (user_id, recipe_id) => __awaiter(void 0, void 0, voi
     }
 });
 exports.insertSocialRecipe = insertSocialRecipe;
+const deleteSocialRecipe = (user_id, recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        DELETE FROM social_table
+        WHERE user_id = $1 AND recipe_id = $2
+      `, [user_id, recipe_id]);
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteSocialRecipe"');
+        console.log(error);
+        throw error;
+    }
+});
+exports.deleteSocialRecipe = deleteSocialRecipe;
 const getUsersSocialRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -451,6 +465,63 @@ const getTotalSocialRecipesCount = () => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getTotalSocialRecipesCount = getTotalSocialRecipesCount;
+// getPaginatedSharedRecipes(user_id, offset, limit);
+const getPaginatedSharedRecipes = (user_id, offset, limit) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+      SELECT
+      recipe_table.recipe_id,
+      recipe_table.recipe_name,
+      recipe_table.recipe_cuisine,
+      recipe_table.recipe_type,
+      recipe_table.recipe_description,
+      ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+    FROM
+      recipe_table
+      INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
+      INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
+    WHERE
+      social_table.user_id = $1
+    GROUP BY
+      recipe_table.recipe_id,
+      recipe_table.recipe_name,
+      recipe_table.recipe_cuisine,
+      recipe_table.recipe_type,
+      recipe_table.recipe_description
+    ORDER BY
+      recipe_table.recipe_id DESC
+    OFFSET $2 LIMIT $3
+    `, [user_id, offset, limit]);
+        const recipes = result.rows;
+        const recipesWithItems = yield Promise.all(recipes.map((recipe) => __awaiter(void 0, void 0, void 0, function* () {
+            const recipeItems = yield getRecipeItems(recipe.recipe_id);
+            recipe.recipe_items = recipeItems;
+            return recipe;
+        })));
+        return recipesWithItems;
+    }
+    catch (error) {
+        console.log("\nCouldn't execute query because the pool couldn't connect to the database 'getPaginatedSharedRecipes'");
+        console.log(error);
+        throw error;
+    }
+});
+exports.getPaginatedSharedRecipes = getPaginatedSharedRecipes;
+const getTotalSharedRecipesCount = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+      SELECT COUNT(*) FROM social_table
+      WHERE user_id = $1
+    `, [user_id]);
+        return parseInt(result.rows[0].count);
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getTotalSharedRecipesCount"');
+        console.log(error);
+        throw error;
+    }
+});
+exports.getTotalSharedRecipesCount = getTotalSharedRecipesCount;
 const recipeShared = (user_id, recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`

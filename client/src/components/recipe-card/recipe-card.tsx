@@ -7,9 +7,10 @@ import { Recipe, RecipeItem } from '../types';
 interface RecipeCardItemProps {
     recipe: Recipe;
     deleteRecipe?: (recipe_id: number) => void;
+    addRecipe?: (recipe: Recipe) => void; // <-potentially change this
 }
 
-export const RecipeCard = ({ recipe, deleteRecipe }: RecipeCardItemProps) => {
+export const RecipeCard = ({ recipe, deleteRecipe, addRecipe }: RecipeCardItemProps) => {
     return (
         <div className={styles['recipe-card']}>
             <li className={styles['recipe-card-li']} key={recipe.recipe_id}>
@@ -21,14 +22,16 @@ export const RecipeCard = ({ recipe, deleteRecipe }: RecipeCardItemProps) => {
                 <div className={styles['recipe-card-line-separator']}> </div>
                 <div className={styles['recipe-card-content']}>
                     <div className={styles['recipe-card-buttons']}>
-                        <Link
-                            to={`/update-recipe/${recipe.recipe_id}`}
-                            className={styles['edit-recipe']}
-                        >
-                            {' '}
-                            edit{' '}
-                        </Link>
-                        {deleteRecipe && (
+                        {!addRecipe && (
+                            <Link
+                                to={`/update-recipe/${recipe.recipe_id}`}
+                                className={styles['edit-recipe']}
+                            >
+                                {' '}
+                                edit{' '}
+                            </Link>
+                        )}
+                        {deleteRecipe ? (
                             <button
                                 className={styles['delete-recipe']}
                                 onClick={() => {
@@ -38,6 +41,18 @@ export const RecipeCard = ({ recipe, deleteRecipe }: RecipeCardItemProps) => {
                                 {' '}
                                 delete{' '}
                             </button>
+                        ) : (
+                            addRecipe && (
+                                <button
+                                    className={styles['delete-recipe']}
+                                    onClick={() => {
+                                        addRecipe(recipe);
+                                    }}
+                                >
+                                    {' '}
+                                    add{' '}
+                                </button>
+                            )
                         )}
                     </div>
                     <ImageCycle imageUrls={recipe.recipe_images} />

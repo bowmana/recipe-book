@@ -228,7 +228,7 @@ const updateRecipe = async (recipe_id: number, recipe_name: string, recipe_cuisi
     }
   };
 
-  
+
   const deleteRecipeItems = async (recipe_id: number) => {
     try {
       await dbConn.pool.query(
@@ -440,6 +440,21 @@ const getRecipeItems = async (recipe_id: number) => {
     }
   };
 
+const deleteSocialRecipe = async (user_id: number, recipe_id: number) => {
+    try {
+      await dbConn.pool.query(
+        `
+        DELETE FROM social_table
+        WHERE user_id = $1 AND recipe_id = $2
+      `,
+        [user_id, recipe_id]
+      );
+    } catch (error) {
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteSocialRecipe"');
+      console.log(error);
+      throw error;
+    }
+  };
 
 const getUsersSocialRecipes = async (user_id: number) => {
   try {
@@ -525,6 +540,76 @@ const getTotalSocialRecipesCount = async () => {
   }
 };
 
+// getPaginatedSharedRecipes(user_id, offset, limit);
+const getPaginatedSharedRecipes = async (user_id: number, offset: number, limit: number) => {
+  try {
+    const result = await dbConn.pool.query(
+      `
+      SELECT
+      recipe_table.recipe_id,
+      recipe_table.recipe_name,
+      recipe_table.recipe_cuisine,
+      recipe_table.recipe_type,
+      recipe_table.recipe_description,
+      ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+    FROM
+      recipe_table
+      INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
+      INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
+    WHERE
+      social_table.user_id = $1
+    GROUP BY
+      recipe_table.recipe_id,
+      recipe_table.recipe_name,
+      recipe_table.recipe_cuisine,
+      recipe_table.recipe_type,
+      recipe_table.recipe_description
+    ORDER BY
+      recipe_table.recipe_id DESC
+    OFFSET $2 LIMIT $3
+    `,
+      [user_id, offset, limit]
+    );
+    const recipes = result.rows;
+
+    const recipesWithItems = await Promise.all(
+      recipes.map(async (recipe: any) => {
+        const recipeItems = await getRecipeItems(recipe.recipe_id);
+        recipe.recipe_items = recipeItems;
+
+        return recipe;
+      })
+    );
+
+    return recipesWithItems;
+  } catch (error) {
+    console.log(
+      "\nCouldn't execute query because the pool couldn't connect to the database 'getPaginatedSharedRecipes'"
+    );
+    console.log(error);
+    throw error;
+  }
+};
+
+const getTotalSharedRecipesCount = async (user_id: number) => {
+  try {
+    const result = await dbConn.pool.query(
+      `
+      SELECT COUNT(*) FROM social_table
+      WHERE user_id = $1
+    `,
+      
+      [user_id]
+    );
+    return parseInt(result.rows[0].count);
+  } catch (error) {
+    console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getTotalSharedRecipesCount"');
+    console.log(error);
+    throw error;
+  }
+};
+
+
 const recipeShared = async (user_id: number, recipe_id: number) => {
   try {
     const result = await dbConn.pool.query(
@@ -547,4 +632,4 @@ const recipeShared = async (user_id: number, recipe_id: number) => {
 };
 
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes};
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getPaginatedSharedRecipes, getTotalSharedRecipesCount };

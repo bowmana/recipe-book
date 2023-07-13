@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Recipe } from '../types';
 import { RecipeCard } from '../recipe-card/recipe-card';
+import path from 'path';
 
 export const SocialFeed = () => {
     const [user_id, setUserID] = useState(0);
@@ -10,6 +11,8 @@ export const SocialFeed = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [recipesPerPage, setRecipesPerPage] = useState(5);
     const [totalCount, setTotalCount] = useState(0);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     useEffect(() => {
         const auth = async () => {
@@ -78,12 +81,81 @@ export const SocialFeed = () => {
         fetchRecipes(page, recipesPerPage);
     };
 
+    async function toFile(url: string): Promise<File> {
+        try {
+            const response = await fetch(url, { mode: 'no-cors' });
+            const blob = await response.blob();
+            const file = new File([blob], url, {
+                type: blob.type,
+                lastModified: Date.now(),
+            });
+            return file;
+        } catch (error) {
+            console.log(error);
+            return Promise.reject(error);
+        }
+    }
+
+    const addRecipe = async (recipe: Recipe) => {
+        const {
+            recipe_name,
+            recipe_cuisine,
+            recipe_type,
+            recipe_description,
+            recipe_items,
+            recipe_images,
+        } = recipe;
+        const formData = new FormData();
+
+        for (const image of recipe_images) {
+            console.log(image, 'image in add recipe');
+            const file = await toFile(image);
+            console.log(file, 'file in add recipe');
+            formData.append('recipe_images', file);
+        }
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data',
+            },
+            onUploadProgress: (progressEvent: any) => {
+                const { loaded, total } = progressEvent;
+                const percent = Math.floor((loaded * 100) / total);
+                // setUploadProgress(percent);
+            },
+        };
+
+        recipe_items.forEach((item, index) => {
+            formData.append(`recipe_items[${index}][recipe_item]`, item.recipe_item);
+            formData.append(`recipe_items[${index}][portion_size]`, item.portion_size);
+        });
+
+        formData.append('recipe_name', recipe_name);
+
+        formData.append('recipe_cuisine', recipe_cuisine ? recipe_cuisine : '');
+        formData.append('recipe_type', recipe_type ? recipe_type : '');
+        formData.append('recipe_description', recipe_description ? recipe_description : '');
+
+        try {
+            const response = await axios.post(
+                `http://localhost:4000/${user_id}/recipes`,
+                formData,
+                config
+            );
+            window.location.href = '/home';
+            setIsUploading(false);
+            console.log(response);
+        } catch (error) {
+            console.log(error);
+            setIsUploading(false);
+        }
+    };
+
     return (
         <div className="social-feed">
             <h1>Recipes from other users</h1>
             <div className="social-feed__recipes">
                 {recipes.map((recipe) => (
-                    <RecipeCard key={recipe.recipe_id} recipe={recipe} />
+                    <RecipeCard key={recipe.recipe_id} recipe={recipe} addRecipe={addRecipe} />
                 ))}
             </div>
             <div className="pagination">

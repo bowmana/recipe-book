@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import styles from './home-page.module.scss';
 import { useEffect, useState } from 'react';
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import ManyRecipeCards from './many-recipe-cards';
+import ManyRecipeCards from '../recipe-card/many-recipe-cards';
 import { Recipe, RecipeItem } from '../types';
 
 export interface HomePageProps {

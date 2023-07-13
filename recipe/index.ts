@@ -57,6 +57,7 @@ redisClient.on("error", (err) => {
 app.use(cors({ credentials: true, origin: ["http://127.0.0.1:5173"] 
 
 }));
+
 app.use(express.json());
 
 
@@ -149,6 +150,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     const recipe_images: Express.Multer.File[] = req.files as Express.Multer.File[];
 
 
+    console.log(recipe_images, "recipe_images");
     const user_id: number = parseInt(req.params.user_id);
 
     try{
@@ -166,8 +168,18 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     }
 
 
+
+        
     const uploadPromises = recipe_images.map(async (recipe_image) => {
-        const url = "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.uploadFile(recipe_image));
+        const getUrl = async () => {
+            if (await s3Bucket.fileExists(recipe_image.originalname)) {
+                return "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.duplicateFile(recipe_image.originalname)); //in the case where we add a recipe TO personal recipes FROM social recipes
+            }
+            else {
+                return "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.uploadFile(recipe_image)); //in the case where we simply add a recipe TO personal recipes
+            }
+        }
+        const url = await getUrl();
         if (!url) {
           throw new Error("There was an error uploading the image");
         }
@@ -572,13 +584,19 @@ app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Resp
             return;
         }
      
-       deleteRecipeImages(recipe_id);
+       
 
+
+        if(await helper.recipeShared(user_id, recipe_id)){
+            console.log("recipe deleted, shared")
+            await helper.deleteSocialRecipe(user_id, recipe_id);
+        }
+        await helper.deleteUserRecipe(user_id, recipe_id);
+                  deleteRecipeImages(recipe_id);
         await helper.deleteRecipeItems(recipe_id);
         await helper.deleteRecipeImages(recipe_id);
-        await helper.deleteUserRecipe(user_id, recipe_id);
         await helper.deleteRecipe(recipe_id);
-        
+
         
             const cacheKey = `user:${user_id}:recipes`;
     await redisClient.del(cacheKey);
@@ -625,7 +643,7 @@ app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Respons
            
             return;
         }
-    
+
         await helper.insertSocialRecipe(user_id, recipe_id);
         res.status(200).send("Recipe shared");
     } catch (error) {
@@ -655,6 +673,48 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
   }
 });
 
+
+app.get("/:user_id/getsharedrecipes", async (req: Request, res: Response) => {
+    const user_id: number = parseInt(req.params.user_id);
+    try {
+        const page: number = parseInt(req.query.page as string) || 1;
+        const limit: number = parseInt(req.query.limit as string) || 10;
+        const offset: number = (page - 1) * limit;
+        const sharedRecipes = await helper.getPaginatedSharedRecipes(user_id, offset, limit);
+        const totalCount = await helper.getTotalSharedRecipesCount(user_id);
+        const totalPages = Math.ceil(totalCount / limit);
+        res.status(200).send({
+            recipes: sharedRecipes,
+            total_count: totalCount,
+            total_pages: totalPages
+        });
+    } catch (error) {
+        res.status(500).send("Error retrieving the shared recipes");
+    }
+});
+
+// await axios.delete(`http://localhost:4000/${user_id}/deletesharedrecipe/${recipe_id}`
+
+app.delete("/:user_id/deletesharedrecipe/:recipe_id", async (req: Request, res: Response) => {
+    const user_id: number = parseInt(req.params.user_id);
+    const recipe_id: number = parseInt(req.params.recipe_id);
+    try {
+        const recipeExists = await helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        const recipeShared = await helper.recipeShared(user_id, recipe_id);
+        if (!recipeShared) {
+            res.status(404).send("Recipe is not shared");
+            return;
+        }
+        await helper.deleteSocialRecipe(user_id, recipe_id);
+        res.status(200).send("Recipe deleted");
+    } catch (error) {
+        res.status(500).send("Error deleting the recipe");
+    }
+});
 
 
 app.listen(port, () => {

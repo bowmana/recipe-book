@@ -21,9 +21,11 @@ export const ImageCycle = ({ className, imageUrls }: ImageCycleProps) => {
             prevIndex === 0 ? imageUrls.length - 1 : prevIndex - 1
         );
     };
-
+    const rootClassName = classNames(styles.root, className, {
+        [styles.socialTheme]: className === 'social-recipe-card',
+    });
     return (
-        <div className={classNames(styles.root, className)}>
+        <div className={rootClassName}>
             {imageUrls.length > 0 && (
                 <div className={styles['image-container']}>
                     <img

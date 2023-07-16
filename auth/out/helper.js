@@ -53,17 +53,17 @@ const userExists = (email) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.userExists = userExists;
-const createUser = (email, password) => __awaiter(void 0, void 0, void 0, function* () {
+const createUser = (email, user_name, password) => __awaiter(void 0, void 0, void 0, function* () {
     const salt = yield bcrypt_1.default.genSalt(10);
     const hash = yield bcrypt_1.default.hash(password, salt);
     try {
         const result = yield dbConn.pool.query(`
         INSERT INTO
-          users(email, password)
+          users(email, user_name, password)
         VALUES
-          ($1, $2)
+          ($1, $2, $3)
         RETURNING *
-      ;`, [email.toLowerCase(), hash]);
+      ;`, [email.toLowerCase(), user_name, hash]);
         return result.rowCount === 0 ? false : result.rows[0];
     }
     catch (error) {

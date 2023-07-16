@@ -1,5 +1,6 @@
 interface User {
     user_id: number;
+    user_name: string;
     email: string;
     password: string;
     role: number;
@@ -50,7 +51,7 @@ const verifyToken = async (req: any, res: Response, next: any) => {
 
 
 app.post("/register", async (req: Request, res: Response) => {
-    const {email, password} = req.body;
+    const {email, user_name, password} = req.body;
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
@@ -59,7 +60,7 @@ app.post("/register", async (req: Request, res: Response) => {
         res.status(401).send('User already exists');
         return;
       }
-    const newUser: User = await helper.createUser(email, password);
+    const newUser: User = await helper.createUser(email, user_name, password);
  
 
     const token = jwt.sign({user_id: newUser.user_id, email: newUser.email, role: newUser.role}, process.env.JWT_SECRET as string, {expiresIn: "1hr"});
@@ -71,6 +72,7 @@ app.post("/register", async (req: Request, res: Response) => {
         type: "UserCreated",
         data: {
             user_id: user.user_id,
+            user_name: user.user_name,
             email: user.email,
         }
     }).catch((err) => {
@@ -115,6 +117,7 @@ app.post('/login', async (req: Request, res: Response) => {
             type: "LoginSuccess",
             data: {
                 user_id: user.user_id,
+                user_name: user.user_name,
                 email: user.email,
             }
         });
@@ -133,7 +136,9 @@ app.post('/login', async (req: Request, res: Response) => {
 
 
 
-  app.post('/auth', verifyToken, (req: any, res: Response) => {
+  app.post('/auth', verifyToken, async(req: any, res: Response) => {
+    const user: User = await helper.getUserByID(req.user.user_id);
+    req.user.user_name = user.user_name;
     res.status(200).send(req.user);
   });
   

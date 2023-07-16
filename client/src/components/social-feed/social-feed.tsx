@@ -1,85 +1,114 @@
+import classNames from 'classnames';
+import styles from './social-feed.module.scss';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Recipe } from '../types';
+import { Recipe, Option } from '../types';
 import { RecipeCard } from '../recipe-card/recipe-card';
 import path from 'path';
-
-export const SocialFeed = () => {
+import { Dropdown } from '../util-components/dropdown';
+export interface SocialPageProps {
+    className?: string;
+}
+export const SocialFeed = ({ className }: SocialPageProps) => {
     const [user_id, setUserID] = useState(0);
     const [recipes, setRecipes] = useState<Recipe[]>([]);
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const [recipesPerPage, setRecipesPerPage] = useState(5);
     const [totalCount, setTotalCount] = useState(0);
+    const [isFetching, setIsFetching] = useState(false);
+    const [lastItemId, setLastItemId] = useState(Number.MAX_SAFE_INTEGER);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [searchRecipeName, setSearchRecipeName] = useState('');
+    const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+    const [recipeCuisine, setRecipeCuisine] = useState<Option | null>(null);
+    const [recipeType, setRecipeType] = useState<Option | null>(null);
 
-    useEffect(() => {
-        const auth = async () => {
-            const url =
-                process.env.NODE_ENV === 'production'
-                    ? 'http://localhost:4001/auth' // Change if actually deployed to real web server
-                    : 'http://localhost:4001/auth';
+    useEffect(
+        () => {
+            const auth = async () => {
+                const url =
+                    process.env.NODE_ENV === 'production'
+                        ? 'http://localhost:4001/auth' // Change if actually deployed to real web server
+                        : 'http://localhost:4001/auth';
 
-            try {
-                const axiosResponse = await axios.post(url, {}, { withCredentials: true });
-                setUserID(axiosResponse.data.user_id);
-                fetchRecipes(currentPage, recipesPerPage);
-            } catch (axiosError) {
-                window.location.href = '/login';
-            }
-        };
+                try {
+                    const axiosResponse = await axios.post(url, {}, { withCredentials: true });
+                    setUserID(axiosResponse.data.user_id);
+                    // fetchRecipes(currentPage, recipesPerPage);
+                    // fetchRecipes();
+                } catch (axiosError) {
+                    window.location.href = '/login';
+                }
+            };
 
-        auth();
-    }, [currentPage, recipesPerPage, user_id]);
+            auth();
+        },
+        [user_id]
+
+        // [currentPage, recipesPerPage, user_id]
+    );
     useEffect(() => {
         if (user_id !== 0) {
-            fetchRecipes(currentPage, recipesPerPage);
+            fetchRecipes();
         }
-    }, [currentPage, recipesPerPage, user_id]);
+    }, [user_id]);
 
-    const fetchRecipes = async (page: number, limit: number) => {
+    const fetchRecipes = async () => {
         try {
             const url =
                 process.env.NODE_ENV === 'production'
-                    ? `http://localhost:4000/social-recipes?page=${page}&limit=${limit}`
-                    : `http://localhost:4000/social-recipes?page=${page}&limit=${limit}`;
+                    ? `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}` // Change if actually deployed to real web server
+                    : `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}`;
 
             const axiosResponse = await axios.get(url, { withCredentials: true });
 
-            const { recipes, totalCount } = axiosResponse.data;
-
-            setRecipes(recipes);
-            console.log(axiosResponse, 'recipes in social feed');
-            setTotalCount(totalCount);
+            const { recipes: fetchedRecipes, totalCount: fetchedTotalCount } = axiosResponse.data;
+            console.log(fetchedRecipes, 'fetched recipes');
+            setRecipes((prevRecipes) => [...prevRecipes, ...fetchedRecipes]);
+            setTotalCount(fetchedTotalCount);
+            if (fetchedRecipes.length > 0) {
+                setLastItemId(fetchedRecipes[fetchedRecipes.length - 1].recipe_id);
+            }
         } catch (axiosError) {
             console.log('Failed to fetch recipes');
             console.log(axiosError);
         }
     };
 
-    const totalPages = Math.ceil(totalCount / recipesPerPage);
+    useEffect(() => {
+        const handleScroll = () => {
+            const windowHeight = window.innerHeight;
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const scrollHeight =
+                document.documentElement.scrollHeight || document.body.scrollHeight;
+            const percentageToSubtract = 0.85;
 
-    const goToNextPage = () => {
-        const nextPage = currentPage + 1;
-        if (nextPage <= totalPages) {
-            setCurrentPage(nextPage);
-            fetchRecipes(nextPage, recipesPerPage);
+            if (windowHeight + scrollTop >= scrollHeight - windowHeight * percentageToSubtract) {
+                setIsFetching(true);
+            }
+        };
+
+        document.addEventListener('scroll', handleScroll);
+
+        return () => {
+            document.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isFetching) {
+            fetchRecipes()
+                .catch((error) => {
+                    // Handle fetch error if needed
+                })
+                .finally(() => {
+                    setIsFetching(false);
+                });
         }
-    };
-
-    const goToPreviousPage = () => {
-        const previousPage = currentPage - 1;
-        if (previousPage >= 1) {
-            setCurrentPage(previousPage);
-            fetchRecipes(previousPage, recipesPerPage);
-        }
-    };
-
-    const goToPage = (page: number) => {
-        setCurrentPage(page);
-        fetchRecipes(page, recipesPerPage);
-    };
+    }, [isFetching, lastItemId]);
 
     async function toFile(url: string): Promise<File> {
         try {
@@ -96,6 +125,19 @@ export const SocialFeed = () => {
         }
     }
 
+    const clearSearch = () => {
+        setSearchRecipeName('');
+        setFilteredRecipes([]);
+    };
+
+    const addRecipeCuisine = (recipe_cuisine: Option | null) => {
+        setRecipeCuisine(recipe_cuisine);
+    };
+
+    const addRecipeType = (recipe_type: Option | null) => {
+        setRecipeType(recipe_type);
+    };
+
     const addRecipe = async (recipe: Recipe) => {
         const {
             recipe_name,
@@ -104,6 +146,10 @@ export const SocialFeed = () => {
             recipe_description,
             recipe_items,
             recipe_images,
+            u_name,
+            u_id,
+            original_u_id,
+            original_u_name,
         } = recipe;
         const formData = new FormData();
 
@@ -130,6 +176,10 @@ export const SocialFeed = () => {
         });
 
         formData.append('recipe_name', recipe_name);
+        formData.append('u_name', u_name);
+        formData.append('u_id', u_id.toString());
+        formData.append('original_u_id', original_u_id.toString());
+        formData.append('original_u_name', original_u_name);
 
         formData.append('recipe_cuisine', recipe_cuisine ? recipe_cuisine : '');
         formData.append('recipe_type', recipe_type ? recipe_type : '');
@@ -151,30 +201,97 @@ export const SocialFeed = () => {
     };
 
     return (
-        <div className="social-feed">
+        <div className={classNames(styles.root, className)}>
+            <div className={styles['search-container']}>
+                <div className={styles['search-bar']}>
+                    <input
+                        type="text"
+                        placeholder="Search by name, cuisine, or meal category"
+                        value={searchRecipeName}
+                        onChange={(e) => setSearchRecipeName(e.target.value)}
+                    />
+
+                    <div className={styles['recipe-genre-dropdown']}>
+                        <h1 className={styles['pick-a-text']}>Search by recipe cuisine</h1>
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Italian', label: 'Italian' },
+                                    { value: 'Mexican', label: 'Mexican' },
+                                    { value: 'American', label: 'American' },
+                                    { value: 'French', label: 'French' },
+                                    { value: 'Chinese', label: 'Chinese' },
+                                    { value: 'Japanese', label: 'Japanese' },
+                                    { value: 'Indian', label: 'Indian' },
+                                    { value: 'Thai', label: 'Thai' },
+                                    { value: 'Spanish', label: 'Spanish' },
+                                    { value: 'Greek', label: 'Greek' },
+                                    { value: 'Lebanese', label: 'Lebanese' },
+                                    { value: 'Moroccan', label: 'Moroccan' },
+                                    { value: 'Brazilian', label: 'Brazilian' },
+                                    { value: 'Korean', label: 'Korean' },
+                                    { value: 'Vietnamese', label: 'Vietnamese' },
+                                    { value: 'Turkish', label: 'Turkish' },
+                                    { value: 'German', label: 'German' },
+                                    { value: 'Ethiopian', label: 'Ethiopian' },
+                                    { value: 'Peruvian', label: 'Peruvian' },
+                                    { value: 'Russian', label: 'Russian' },
+                                    { value: 'Jamaican', label: 'Jamaican' },
+                                    { value: 'Egyptian', label: 'Egyptian' },
+                                    { value: 'British', label: 'British' },
+                                    { value: 'Israeli', label: 'Israeli' },
+                                    { value: 'Indonesian', label: 'Indonesian' },
+                                    { value: 'Irish', label: 'Irish' },
+                                    { value: 'Argentine', label: 'Argentine' },
+                                    { value: 'Swedish', label: 'Swedish' },
+                                    { value: 'Australian', label: 'Australian' },
+                                    { value: 'Malaysian', label: 'Malaysian' },
+                                ]}
+                                onChange={addRecipeCuisine}
+                            />
+                        </div>
+                        <h1 className={styles['pick-a-text']}>Search by recipe type</h1>
+                        <div className={styles['dropdown-container']}>
+                            <Dropdown
+                                initialOptions={[
+                                    { value: 'Breakfast', label: 'Breakfast' },
+                                    { value: 'Lunch', label: 'Lunch' },
+                                    { value: 'Dinner', label: 'Dinner' },
+                                    { value: 'Dessert', label: 'Dessert' },
+                                    { value: 'Snack', label: 'Snack' },
+                                    { value: 'Appetizer', label: 'Appetizer' },
+                                    { value: 'Drink', label: 'Drink' },
+                                    { value: 'Side', label: 'Side' },
+                                    { value: 'Sauce', label: 'Sauce' },
+                                    { value: 'Marinade', label: 'Marinade' },
+                                ]}
+                                onChange={addRecipeType}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles['search-buttons']}>
+                        <button onClick={fetchRecipes}>Search</button>
+                        <button onClick={clearSearch}>Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            {/* 
+-------------------------------------------------------------------------------------------------------------- */}
+
             <h1>Recipes from other users</h1>
-            <div className="social-feed__recipes">
+            <div className={styles['recipe-cards-container']}>
                 {recipes.map((recipe) => (
-                    <RecipeCard key={recipe.recipe_id} recipe={recipe} addRecipe={addRecipe} />
+                    <RecipeCard
+                        key={recipe.recipe_id}
+                        recipe={recipe}
+                        addRecipe={addRecipe}
+                        currentUserId={user_id}
+                        className="social-recipe-card"
+                    />
                 ))}
             </div>
-            <div className="pagination">
-                <button onClick={goToPreviousPage} disabled={currentPage === 1}>
-                    Previous
-                </button>
-                {Array.from({ length: totalPages }).map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => goToPage(index + 1)}
-                        className={currentPage === index + 1 ? 'active' : ''}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
-                <button onClick={goToNextPage} disabled={currentPage === totalPages}>
-                    Next
-                </button>
-            </div>
+            {isFetching && <p>Loading more recipes...</p>}
         </div>
     );
 };

@@ -84,6 +84,10 @@ const ManyRecipeCards = ({
                         recipe_description: recipe.recipe_description,
                         recipe_items: recipe.recipe_items,
                         recipe_images: recipe.recipe_images,
+                        u_id: recipe.u_id,
+                        u_name: recipe.u_name,
+                        original_u_id: recipe.original_u_id,
+                        original_u_name: recipe.original_u_name,
                     },
                 }
             );
@@ -173,8 +177,19 @@ const ManyRecipeCards = ({
             {recipes.length > 0 || filteredRecipes.length > 0
                 ? (filteredRecipes.length > 0 ? filteredRecipes : recipes).map((recipe) => (
                       <>
-                          <RecipeCard recipe={recipe} deleteRecipe={deleteRecipe} />
-                          <button onClick={() => shareRecipe(recipe)}>Share</button>
+                          <RecipeCard
+                              recipe={recipe}
+                              deleteRecipe={deleteRecipe}
+                              currentUserId={user_id}
+                          />
+                          {recipe.u_id === user_id && (
+                              <button
+                                  className={styles['share-button']}
+                                  onClick={() => shareRecipe(recipe)}
+                              >
+                                  Share
+                              </button>
+                          )}
                       </>
                   ))
                 : null}

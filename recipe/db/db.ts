@@ -29,6 +29,7 @@ export class RecipeDataBaseConnection {
             CREATE TABLE IF NOT EXISTS recipe_users_table (
               user_id BIGSERIAL PRIMARY KEY,
               email VARCHAR,
+              user_name VARCHAR,
               password VARCHAR,
               role INT DEFAULT 0,
               token VARCHAR
@@ -36,11 +37,15 @@ export class RecipeDataBaseConnection {
            
             CREATE TABLE IF NOT EXISTS recipe_table (
               recipe_id BIGSERIAL PRIMARY KEY,
+          
               recipe_name VARCHAR,
               recipe_cuisine VARCHAR,
               recipe_type VARCHAR,
-              recipe_description TEXT
-
+              recipe_description TEXT,
+              u_id BIGINT REFERENCES recipe_users_table(user_id),
+              u_name VARCHAR,
+              original_u_id BIGINT REFERENCES recipe_users_table(user_id),
+              original_u_name VARCHAR
             );
            
             CREATE TABLE IF NOT EXISTS user_recipes (

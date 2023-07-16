@@ -126,7 +126,10 @@ app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, 
 }));
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { recipe_name, recipe_cuisine, recipe_type, recipe_description } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, original_u_name } = req.body;
+    const u_id = parseInt(req.body.u_id);
+    const original_u_id = parseInt(req.body.original_u_id);
+    console.log(u_id, "u_id");
     const recipe_items = req.body.recipe_items;
     console.log(recipe_description, "recipe_description");
     console.log(recipe_items, "recipe_items");
@@ -140,7 +143,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
             res.status(404).send("User does not exist");
             return;
         }
-        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description);
+        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id, original_u_id, original_u_name);
         if (!recipe) {
             res.status(500).send("There was an error creating the recipe");
             return;
@@ -202,10 +205,14 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
                 recipe_cuisine: recipe.recipe_cuisine,
                 recipe_type: recipe.recipe_type,
                 recipe_items: recipeItems,
-                recipe_images: image_urls
+                recipe_images: image_urls,
+                u_id: recipe.u_id,
+                u_name: recipe.u_name,
+                original_u_id: recipe.original_u_id,
+                original_u_name: recipe.original_u_name
             }
         });
-        res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls });
+        res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls, u_id: recipe.u_id, u_name: recipe.u_name, original_u_id: recipe.original_u_id, original_u_name: recipe.original_u_name });
     }
     catch (err) {
         console.log(err);
@@ -272,9 +279,10 @@ app.get("/:user_id/cacheData", (req, res) => __awaiter(void 0, void 0, void 0, f
 }));
 app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe_id = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_cuisine, recipe_type, recipe_description } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name } = req.body;
     const recipe_items = req.body.recipe_items;
     const user_id = parseInt(req.params.user_id);
+    const u_id = parseInt(req.body.u_id);
     try {
         const recipeExists = yield helper.recipeExists(recipe_id);
         if (!recipeExists) {
@@ -345,7 +353,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
             res.status(500).send("There was an error with Promis");
             return;
         }
-        const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description);
+        const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name);
         yield helper.deleteRecipeItems(recipe_id);
         for (let i = 0; i < recipe_items.length; i++) {
             const { recipe_item, portion_size } = recipe_items[i];
@@ -371,7 +379,11 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
             recipe_name: updatedRecipe.recipe_name,
             recipe_items: updatedRecipeItems,
             recipe_cuisine: updatedRecipe.recipe_cuisine,
-            recipe_type: updatedRecipe.recipe_type
+            recipe_type: updatedRecipe.recipe_type,
+            recipe_description: updatedRecipe.recipe_description,
+            recipe_images: recipeImages,
+            u_id: updatedRecipe.u_id,
+            u_name: updatedRecipe.u_name,
         });
     }
     catch (error) {
@@ -427,15 +439,16 @@ app.post('/usercreated', (req, res) => __awaiter(void 0, void 0, void 0, functio
     console.log(event, 'event is here on the usercreated route');
     const user_id = event.data.user_id;
     const email = event.data.email;
+    const user_name = event.data.user_name;
     console.log(typeof user_id, typeof email, 'user_id and email');
-    if (!user_id || !email) {
+    if (!user_id || !email || !user_name) {
         res.status(400).send('user_id or email is missing');
         return;
     }
     try {
-        yield helper.createUser(user_id, email);
-        console.log('user created with id', user_id, 'and email', email);
-        res.status(200).send({ user_id: user_id, email: email });
+        yield helper.createUser(user_id, email, user_name);
+        console.log('user created with id', user_id, 'and email', email, 'and user_name', user_name);
+        res.status(200).send({ user_id: user_id, email: email, user_name: user_name });
         return;
     }
     catch (error) {
@@ -463,7 +476,11 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
             recipe_description: recipe.recipe_description,
-            recipe_images: recipeImages
+            recipe_images: recipeImages,
+            u_id: recipe.u_id,
+            u_name: recipe.u_name,
+            original_u_id: recipe.original_u_id,
+            original_u_name: recipe.original_u_name
         });
     }
     catch (error) {
@@ -536,23 +553,117 @@ app.post("/recipes/:user_id/share/:recipe_id", (req, res) => __awaiter(void 0, v
         res.status(500).send("Error sharing the recipe");
     }
 }));
+// app.get("/social-recipes", async (req: Request, res: Response) => {
+//   try {
+//     const lastItemId: number = parseInt(req.query.lastItemId as string) ;
+//     const limit: number = parseInt(req.query.limit as string) ;
+//     console.log(lastItemId, "lastItemId");
+//     console.log(limit, "limit");
+//     const socialRecipes = await helper.getSocialRecipesAfterId(lastItemId, limit);
+//     const totalCount = await helper.getTotalSocialRecipesCount();
+//     res.status(200).send({
+//       recipes: socialRecipes,
+//       totalCount: totalCount,
+//     });
+//   } catch (error) {
+//     res.status(500).send("Error retrieving the social recipes");
+//   }
+// });
 app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.query, "req.query");
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
-        const socialRecipes = yield helper.getPaginatedSocialRecipes(offset, limit);
-        console.log(socialRecipes, "socialRecipes");
-        const totalCount = yield helper.getTotalSocialRecipesCount();
-        console.log(totalCount, "totalCount");
-        const totalPages = Math.ceil(totalCount / limit);
-        console.log(totalPages, "totalPages");
-        res.status(200).send({
-            recipes: socialRecipes,
-            total_count: totalCount,
-            total_pages: totalPages,
-        });
+        const lastItemId = parseInt(req.query.lastItemId);
+        const limit = parseInt(req.query.limit);
+        const recipeName = req.query.recipe_name;
+        const recipeCuisine = req.query.recipe_cuisine;
+        const recipeType = req.query.recipe_type;
+        console.log(lastItemId, "lastItemId");
+        console.log(limit, "limit");
+        console.log(recipeName, "recipeName");
+        console.log(recipeCuisine, "recipeCuisine");
+        console.log(recipeType, "recipeType");
+        if ((recipeName !== null && recipeName !== void 0 ? recipeName : false) && (recipeCuisine !== null && recipeCuisine !== void 0 ? recipeCuisine : false) && (recipeType !== null && recipeType !== void 0 ? recipeType : false)) {
+            console.log("all query params");
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeCuisine, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeCuisine, recipeType);
+            console.log(socialRecipes, "socialRecipes all query params");
+            console.log(totalCount, "totalCount all query params");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if ((recipeName !== null && recipeName !== void 0 ? recipeName : false) && (recipeCuisine !== null && recipeCuisine !== void 0 ? recipeCuisine : false)) {
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeCuisine);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeCuisine);
+            console.log(socialRecipes, "socialRecipes name and cuisine");
+            console.log(totalCount, "totalCount name and cuisine");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if ((recipeName !== null && recipeName !== void 0 ? recipeName : false) && (recipeType !== null && recipeType !== void 0 ? recipeType : false)) {
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeType);
+            console.log(socialRecipes, "socialRecipes name and type");
+            console.log(totalCount, "totalCount name and type");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if (recipeCuisine !== undefined && recipeCuisine !== '' && recipeType !== undefined && recipeType !== '') {
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeCuisine, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeCuisine, recipeType);
+            console.log(socialRecipes, "socialRecipes cuisine and type");
+            console.log(totalCount, "totalCount cuisine and type");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if (recipeName !== null && recipeName !== void 0 ? recipeName : false) {
+            console.log("recipeName only");
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName);
+            console.log(socialRecipes, "socialRecipes name");
+            console.log(totalCount, "totalCount name");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if (recipeCuisine !== null && recipeCuisine !== void 0 ? recipeCuisine : false) {
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeCuisine);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeCuisine);
+            console.log(socialRecipes, "socialRecipes cuisine");
+            console.log(totalCount, "totalCount cuisine");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else if (recipeType !== null && recipeType !== void 0 ? recipeType : false) {
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeType);
+            console.log(socialRecipes, "socialRecipes type");
+            console.log(totalCount, "totalCount type");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
+        else {
+            console.log("no query params");
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit);
+            const totalCount = yield helper.getTotalSocialRecipesCount();
+            console.log(socialRecipes, "socialRecipes no query params");
+            console.log(totalCount, "totalCount no query params");
+            res.status(200).send({
+                recipes: socialRecipes,
+                totalCount: totalCount,
+            });
+        }
     }
     catch (error) {
         res.status(500).send("Error retrieving the social recipes");

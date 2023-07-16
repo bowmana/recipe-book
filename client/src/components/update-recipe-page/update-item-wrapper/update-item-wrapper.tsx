@@ -32,6 +32,10 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [user_id, setUserID] = useState(0);
+    const [u_name, setUName] = useState('');
+    const [u_id, setUId] = useState(0);
+    // const [original_u_id, setOriginalUId] = useState(0);
+    // const [original_u_name, setOriginalUName] = useState('');
     useEffect(() => {
         const auth = async () => {
             const url =
@@ -43,6 +47,8 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 .post(url, {}, { withCredentials: true })
                 .then((axiosResponse: AxiosResponse) => {
                     setUserID(axiosResponse.data.user_id);
+                    setUName(axiosResponse.data.user_name);
+                    setUId(axiosResponse.data.user_id);
                 })
                 .catch((axiosError: AxiosError) => {
                     window.location.href = '/login';
@@ -81,6 +87,9 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     value: response.data.recipe_type,
                     label: response.data.recipe_type,
                 });
+
+                // setOriginalUId(response.data.original_u_id);
+                // setOriginalUName(response.data.original_u_name);
 
                 console.log(response.data, 'response data on update item wrapper');
                 console.log(recipe_items, 'recipe items yooo');
@@ -183,6 +192,10 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         formData.append('recipe_cuisine', recipe_cuisine?.value || '');
         formData.append('recipe_type', recipe_type?.value || '');
         formData.append('recipe_description', recipe_description);
+        formData.append('u_name', u_name);
+        formData.append('u_id', u_id.toString());
+        // formData.append('original_u_id', original_u_id.toString());
+        // formData.append('original_u_name', original_u_name);
 
         try {
             const response = await axios.put(

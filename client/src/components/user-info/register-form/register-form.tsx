@@ -59,6 +59,7 @@ export const Registerform = ({ className }: RegisterformProps) => {
 
         const data = {
             email,
+            user_name: username,
             password,
             repeatPassword,
         };

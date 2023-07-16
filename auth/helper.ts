@@ -53,29 +53,29 @@ const userExists = async (email: string) => {
     }
   }
 
-const createUser = async (email: string, password: string) => {
+const createUser = async (email: string, user_name: string, password: string) => {
     const salt: string = await bcrypt.genSalt(10);
     const hash: string = await bcrypt.hash(password, salt);
-  
+
     try {
-  
       const result: QueryResult = await dbConn.pool.query(`
         INSERT INTO
-          users(email, password)
+          users(email, user_name, password)
         VALUES
-          ($1, $2)
+          ($1, $2, $3)
         RETURNING *
-      ;`, [email.toLowerCase(), hash]);
-  
+      ;`, [email.toLowerCase(), user_name, hash]);
+
       return result.rowCount === 0 ? false : result.rows[0];
-  
+
     } catch (error) {
-  
+
       console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database');
       console.log(error);
-  
+
     }
   };
+
 
   const setToken = async (user_id: number, token: string) => {
     try {

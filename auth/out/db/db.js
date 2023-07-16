@@ -47,6 +47,7 @@ class DataBaseConnection {
             
             CREATE TABLE IF NOT EXISTS users (
                 user_id BIGSERIAL PRIMARY KEY,
+                user_name VARCHAR,
                 email VARCHAR,
                 password VARCHAR,
                 role INT DEFAULT 0,

@@ -1,13 +1,12 @@
+
+
 .recipe-card{
-    // background-color: 
- 
     border: 1rem solid #1c685e;
     border-radius: 15px;
-
     box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
-    
 }
-.recipe-card h2 {
+
+.recipe-card h2 {   
     margin: 0;
     font-size: 5rem;
     font-weight: 400;
@@ -20,45 +19,30 @@
     max-width: 500px;
     overflow-wrap: break-word;
 }
-
 .recipe-card-li{
     margin: 0;
-    // font-size: 1.5rem;
-    
-
     list-style-type: none;
     border: 5px solid #e2bd98;
-    background-color: #e7e6de;
-    
+    background-color: #e7e6de;    
     border-radius: 15px 15px 15px 15px;
 }
-
-
-
 .recipe-card-header {
     display: grid;
     grid-auto-flow: column;
-    // grid-gap: 1rem;
     justify-content: space-between;
     background-color: #e7e6de;
     border-radius: 10px 10px 0 0;
-
-
     padding: 1rem;
-   
-
 }
 ul.recipe-card-ingredients li:nth-child(odd) {
     background-color: #e2bd98;
     margin : 0;
     color: #bd6160;
-    //hide the bullet
-  
+
 }
 ul.recipe-card-ingredients li:nth-child(even) {
     background-color: #e7e6de;
     margin : 0;
-
     color: #bd6160;
 }
 
@@ -69,8 +53,7 @@ ul.recipe-card-ingredients {
     font-size: 1.5rem;
     font-weight: 400;
     color: #bd6160;
-    text-align: center;
-   
+    text-align: center;   
     border: 5px solid #e2bd98;
     background-color: #e7e6de;
     padding: 1rem;
@@ -78,17 +61,12 @@ ul.recipe-card-ingredients {
 }
 
 .recipe-card-line-separator {
-    border: 8px solid #e2bd98;
-   
+    border: 8px solid #e2bd98;   
 }
-
-.recipe-card-content{
-    
+.recipe-card-content{    
     background-color: #d17f74;
 
 }
-
-
 .recipe-card-buttons {
     display: grid;
     grid-auto-flow: column;
@@ -108,16 +86,110 @@ ul.recipe-card-ingredients {
 }
 .recipe-card-description{
     margin: 0;
-
     font-size: 1.5rem;
-
     color: #bd6160;
     text-align: start;
-    max-width: 750px;
-    
-  
-    background-color: #e7e6de;
-   
- 
+    max-width: 750px;  
+    background-color: #e7e6de;  
     overflow-wrap: break-word;
+}
+
+.socialTheme{
+
+
+    .recipe-card{
+        border: 1rem solid #344966;
+        border-radius: 15px;
+        box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+    }
+    
+    .recipe-card h2 {   
+        margin: 0;
+        font-size: 5rem;
+        font-weight: 400;
+        color: #bd6160;
+        text-align: center;
+        border: 5px solid #B4CDED;
+        background-color: #F0F4EF;
+        padding: 1rem;
+        border-radius: 10px 10px 0 0;
+        max-width: 500px;
+        overflow-wrap: break-word;
+    }
+    .recipe-card-li{
+        margin: 0;
+        list-style-type: none;
+        border: 5px solid #B4CDED;
+        background-color: #F0F4EF; 
+        border-radius: 15px 15px 15px 15px;
+    }
+    .recipe-card-header {
+        display: grid;
+        grid-auto-flow: column;
+        justify-content: space-between;
+        background-color: #F0F4EF;
+        border-radius: 10px 10px 0 0;
+        padding: 1rem;
+    }
+    ul.recipe-card-ingredients li:nth-child(odd) {
+        background-color: #B4CDED;
+        margin : 0;
+        color: #bd6160;
+    
+    }
+    ul.recipe-card-ingredients li:nth-child(even) {
+        background-color: #F0F4EF;
+        margin : 0;
+        color: #bd6160;
+    }
+    
+    ul.recipe-card-ingredients {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: #bd6160;
+        text-align: center;   
+        border: 5px solid #B4CDED;
+        background-color: #F0F4EF;
+        padding: 1rem;
+        margin: 0;
+    }
+    
+    .recipe-card-line-separator {
+        border: 8px solid #B4CDED;  
+    }
+    .recipe-card-content{    
+        background-color: #d17f74;
+    
+    }
+    .recipe-card-buttons {
+        display: grid;
+        grid-auto-flow: column;
+        grid-gap: 1rem;
+        justify-content: end;
+        padding: 1rem;
+    
+    }
+    .recipe-card-item{
+        margin : 0;
+    }
+    
+    .recipe-card-bottom{
+        border-radius: 0 0 10px 10px;
+        border: 1rem solid #B4CDED;
+    
+    }
+    .recipe-card-description{
+        margin: 0;
+        font-size: 1.5rem;
+        color: #bd6160;
+        text-align: start;
+        max-width: 750px;  
+        background-color: #F0F4EF;  
+        overflow-wrap: break-word;
+    }
+    
+    
 }

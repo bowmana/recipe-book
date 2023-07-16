@@ -69,7 +69,7 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     return next();
 });
 app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
+    const { email, user_name, password } = req.body;
     if (!email || !password) {
         res.status(400).send("Missing email or password");
         return;
@@ -78,7 +78,7 @@ app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(401).send('User already exists');
         return;
     }
-    const newUser = yield helper.createUser(email, password);
+    const newUser = yield helper.createUser(email, user_name, password);
     const token = jsonwebtoken_1.default.sign({ user_id: newUser.user_id, email: newUser.email, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: "1hr" });
     yield helper.setToken(newUser.user_id, token);
     const user = yield helper.getUserByID(newUser.user_id);
@@ -86,6 +86,7 @@ app.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         type: "UserCreated",
         data: {
             user_id: user.user_id,
+            user_name: user.user_name,
             email: user.email,
         }
     }).catch((err) => {
@@ -115,6 +116,7 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             type: "LoginSuccess",
             data: {
                 user_id: user.user_id,
+                user_name: user.user_name,
                 email: user.email,
             }
         });
@@ -125,9 +127,11 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     res.status(400).send('Invalid credentials');
 }));
-app.post('/auth', verifyToken, (req, res) => {
+app.post('/auth', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield helper.getUserByID(req.user.user_id);
+    req.user.user_name = user.user_name;
     res.status(200).send(req.user);
-});
+}));
 app.post('/logout', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const token = (_a = req.headers.cookie) === null || _a === void 0 ? void 0 : _a.split('=')[1];

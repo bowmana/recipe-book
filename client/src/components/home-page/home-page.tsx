@@ -11,6 +11,7 @@ export interface HomePageProps {
 
 export const HomePage = ({ className }: HomePageProps) => {
     const [user_id, setUserID] = useState(0);
+    const [user_name, setUserName] = useState('');
     const [recipes, setRecipes] = useState<Recipe[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -27,6 +28,7 @@ export const HomePage = ({ className }: HomePageProps) => {
             try {
                 const axiosResponse = await axios.post(url, {}, { withCredentials: true });
                 setUserID(axiosResponse.data.user_id);
+                setUserName(axiosResponse.data.user_name);
                 fetchRecipes(currentPage, recipesPerPage);
             } catch (axiosError) {
                 window.location.href = '/login';
@@ -50,6 +52,14 @@ export const HomePage = ({ className }: HomePageProps) => {
             setRecipes(recipes);
             // setAllRecipes(recipes);
             setTotalCount(totalCount);
+            console.log(
+                totalCount,
+                'total count',
+                currentPage,
+                'current page',
+                recipesPerPage,
+                'recipes per page'
+            );
             console.log(response.data, 'recipes in home page with images');
         } catch (error) {
             console.log('Failed to fetch recipes');
@@ -94,6 +104,7 @@ export const HomePage = ({ className }: HomePageProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
+            <h1 className={styles['home-page-header']}>Welcome, {user_name}!</h1>
             <div>
                 <ManyRecipeCards
                     recipes={recipes}

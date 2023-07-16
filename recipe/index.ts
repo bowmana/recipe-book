@@ -30,6 +30,10 @@ interface CachedRecipeItem {
     recipe_cuisine: string;
     recipe_type: string;
     recipe_images: string[];
+    u_id: number;
+    u_name: string;
+    original_u_id: number;
+    original_u_name: string;
   }
 
 
@@ -139,7 +143,11 @@ app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
-    const { recipe_name, recipe_cuisine, recipe_type, recipe_description}: { recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, original_u_name}: { recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, u_name: string, original_u_name: string } = req.body;
+    const u_id = parseInt(req.body.u_id);
+    const original_u_id = parseInt(req.body.original_u_id);
+
+    console.log(u_id, "u_id");
     const recipe_items: RecipeItem[] = req.body.recipe_items;
     console.log(recipe_description, "recipe_description")
     
@@ -161,7 +169,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
     }
 
 
-    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description)
+    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id, original_u_id, original_u_name);
     if (!recipe) {
         res.status(500).send("There was an error creating the recipe");
         return;
@@ -232,12 +240,15 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
             recipe_items: recipeItems,
-            recipe_images: image_urls
-
+            recipe_images: image_urls,
+            u_id : recipe.u_id,
+            u_name: recipe.u_name,
+            original_u_id: recipe.original_u_id,
+            original_u_name: recipe.original_u_name
         }
     });
 
-    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls });
+    res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls, u_id: recipe.u_id, u_name: recipe.u_name, original_u_id: recipe.original_u_id, original_u_name: recipe.original_u_name });
     }
     catch(err) {
         console.log(err);
@@ -325,9 +336,10 @@ app.get("/:user_id/cacheData", async (req: Request, res: Response) => {
 app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
     const recipe_id: number = parseInt(req.params.recipe_id);
-    const { recipe_name, recipe_cuisine, recipe_type, recipe_description}: { recipe_name: string; recipe_cuisine: string, recipe_type: string, recipe_description: string} = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name}: { recipe_name: string; recipe_cuisine: string, recipe_type: string, recipe_description: string, u_name: string} = req.body;
     const recipe_items: RecipeItem[] = req.body.recipe_items;
     const user_id: number = parseInt(req.params.user_id);
+    const u_id = parseInt(req.body.u_id);
    
 
     try {
@@ -419,7 +431,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
         }
     
 
-        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description);
+        const updatedRecipe = await helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name);
       
         await helper.deleteRecipeItems(recipe_id);
 
@@ -451,7 +463,11 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
             recipe_name: updatedRecipe.recipe_name,
             recipe_items: updatedRecipeItems,
             recipe_cuisine: updatedRecipe.recipe_cuisine,
-            recipe_type: updatedRecipe.recipe_type
+            recipe_type: updatedRecipe.recipe_type,
+            recipe_description: updatedRecipe.recipe_description,
+            recipe_images: recipeImages,
+            u_id: updatedRecipe.u_id,
+            u_name: updatedRecipe.u_name,
         });
     } catch (error) {
         res.status(500).send("Error updating the recipe");
@@ -516,19 +532,20 @@ app.post('/usercreated', async (req: Request, res: Response) => {
     console.log(event, 'event is here on the usercreated route');
     const user_id: number = event.data.user_id;
     const email: string = event.data.email;
+    const user_name: string = event.data.user_name;
     console.log(typeof user_id, typeof email, 'user_id and email')
 
 
-    if (!user_id || !email) {
+    if (!user_id || !email || !user_name) {
         res.status(400).send('user_id or email is missing');
         return;
     }
     try {
 
-        await helper.createUser(user_id, email);
+        await helper.createUser(user_id, email, user_name);
 
-        console.log('user created with id', user_id, 'and email', email);
-        res.status(200).send({ user_id: user_id, email: email });
+        console.log('user created with id', user_id, 'and email', email, 'and user_name', user_name);
+        res.status(200).send({ user_id: user_id, email: email, user_name: user_name });
 
         return;
     } catch (error) {
@@ -559,7 +576,12 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
             recipe_cuisine: recipe.recipe_cuisine,
             recipe_type: recipe.recipe_type,
             recipe_description: recipe.recipe_description,
-            recipe_images: recipeImages
+            recipe_images: recipeImages,
+            u_id: recipe.u_id,
+            u_name: recipe.u_name,
+            original_u_id: recipe.original_u_id,
+            original_u_name: recipe.original_u_name
+
         });
     } catch (error) {
         res.status(500).send("Error retrieving the recipe");
@@ -651,27 +673,170 @@ app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Respons
     }
 });
 
+// app.get("/social-recipes", async (req: Request, res: Response) => {
+//   try {
+//     const lastItemId: number = parseInt(req.query.lastItemId as string) ;
+//     const limit: number = parseInt(req.query.limit as string) ;
+//     console.log(lastItemId, "lastItemId");
+//     console.log(limit, "limit");
+//     const socialRecipes = await helper.getSocialRecipesAfterId(lastItemId, limit);
+//     const totalCount = await helper.getTotalSocialRecipesCount();
+
+//     res.status(200).send({
+//       recipes: socialRecipes,
+//       totalCount: totalCount,
+//     });
+//   } catch (error) {
+//     res.status(500).send("Error retrieving the social recipes");
+//   }
+// });
 app.get("/social-recipes", async (req: Request, res: Response) => {
   try {
-    console.log(req.query, "req.query");
-    const page: number = parseInt(req.query.page as string) || 1;
-    const limit: number = parseInt(req.query.limit as string) || 10;
-    const offset: number = (page - 1) * limit;
-    const socialRecipes = await helper.getPaginatedSocialRecipes(offset, limit);
-    console.log(socialRecipes, "socialRecipes");
-    const totalCount = await helper.getTotalSocialRecipesCount();
-    console.log(totalCount, "totalCount");
-    const totalPages = Math.ceil(totalCount / limit);
-    console.log(totalPages, "totalPages");
-    res.status(200).send({
-      recipes: socialRecipes,
-      total_count: totalCount,
-      total_pages: totalPages,
-    });
+    const lastItemId: number = parseInt(req.query.lastItemId as string);
+    const limit: number = parseInt(req.query.limit as string);
+    const recipeName: string = req.query.recipe_name as string;
+    const recipeCuisine: string = req.query.recipe_cuisine as string;
+    const recipeType: string = req.query.recipe_type as string;
+    console.log(lastItemId, "lastItemId");
+    console.log(limit, "limit");
+    console.log(recipeName, "recipeName");
+    console.log(recipeCuisine, "recipeCuisine");
+    console.log(recipeType, "recipeType");
+
+    if ((recipeName ?? false) && (recipeCuisine ?? false) && (recipeType ?? false)) {
+      console.log("all query params")
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeName,
+        recipeCuisine,
+        recipeType
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(
+        recipeName,
+        recipeCuisine,
+        recipeType
+      );
+      console.log(socialRecipes, "socialRecipes all query params");
+      console.log(totalCount, "totalCount all query params");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if ((recipeName ?? false) && (recipeCuisine ?? false)) {
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeName,
+        recipeCuisine
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(
+        recipeName,
+        recipeCuisine
+      );
+
+      console.log(socialRecipes, "socialRecipes name and cuisine");
+      console.log(totalCount, "totalCount name and cuisine");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if ((recipeName ?? false) && (recipeType ?? false)) {
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeName,
+        recipeType
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(
+        recipeName,
+        recipeType
+      );
+      console.log(socialRecipes, "socialRecipes name and type");
+      console.log(totalCount, "totalCount name and type");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if (recipeCuisine !== undefined && recipeCuisine !== '' && recipeType !== undefined && recipeType !== '') {
+
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeCuisine,
+        recipeType
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(
+        recipeCuisine,
+        recipeType
+      );
+      console.log(socialRecipes, "socialRecipes cuisine and type");
+      console.log(totalCount, "totalCount cuisine and type");
+
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if (recipeName ?? false) {
+      console.log("recipeName only");
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeName
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(recipeName);
+      console.log(socialRecipes, "socialRecipes name");
+      console.log(totalCount, "totalCount name");
+
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if (recipeCuisine ?? false) {
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeCuisine
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(recipeCuisine);
+      console.log(socialRecipes, "socialRecipes cuisine");
+      console.log(totalCount, "totalCount cuisine");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else if (recipeType ?? false) {
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit,
+        recipeType
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount(recipeType);
+      console.log(socialRecipes, "socialRecipes type");
+      console.log(totalCount, "totalCount type");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    } else {
+      console.log("no query params");
+      const socialRecipes = await helper.getSocialRecipesAfterId(
+        lastItemId,
+        limit
+      );
+      const totalCount = await helper.getTotalSocialRecipesCount();
+      console.log(socialRecipes, "socialRecipes no query params");
+      console.log(totalCount, "totalCount no query params");
+      res.status(200).send({
+        recipes: socialRecipes,
+        totalCount: totalCount,
+      });
+    }
   } catch (error) {
     res.status(500).send("Error retrieving the social recipes");
   }
 });
+
 
 
 app.get("/:user_id/getsharedrecipes", async (req: Request, res: Response) => {

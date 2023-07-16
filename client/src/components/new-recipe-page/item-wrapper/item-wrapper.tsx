@@ -21,6 +21,7 @@ export interface ItemWrapperProps {
 
 export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [user_id, setUserID] = useState(0);
+    const [user_name, setUserName] = useState('');
 
     useEffect(() => {
         const auth = async () => {
@@ -33,6 +34,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                 .post(url, {}, { withCredentials: true })
                 .then((axiosResponse: AxiosResponse) => {
                     setUserID(axiosResponse.data.user_id);
+                    setUserName(axiosResponse.data.user_name);
                 })
                 .catch((axiosError: AxiosError) => {
                     window.location.href = '/login';
@@ -148,7 +150,10 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         });
 
         formData.append('recipe_name', recipe_name);
-
+        formData.append('u_name', user_name);
+        formData.append('u_id', user_id.toString());
+        formData.append('original_u_id', user_id.toString());
+        formData.append('original_u_name', user_name);
         formData.append('recipe_cuisine', recipe_cuisine ? recipe_cuisine.value : '');
         formData.append('recipe_type', recipe_type ? recipe_type.value : '');
         formData.append('recipe_description', recipe_description ? recipe_description : '');
@@ -177,6 +182,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
+            <h1 className={styles['recipe-card-title']}> Create a Recipe for user: {user_name} </h1>
             <div className={styles['recipe-card']}>
                 <div className={styles['recipe-card-header']}>
                     <form>

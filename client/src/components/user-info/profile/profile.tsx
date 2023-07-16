@@ -106,6 +106,8 @@ export const Profile = () => {
                         key={recipe.recipe_id}
                         recipe={recipe}
                         deleteRecipe={deleteRecipe}
+                        currentUserId={user_id}
+                        className="recipe-card-profile"
                     />
                 ))}
             </div>

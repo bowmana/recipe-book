@@ -593,8 +593,8 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
         }
         else if ((recipeName !== null && recipeName !== void 0 ? recipeName : false) && (recipeCuisine !== null && recipeCuisine !== void 0 ? recipeCuisine : false)) {
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeCuisine);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeCuisine);
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeCuisine, undefined);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeCuisine, undefined);
             console.log(socialRecipes, "socialRecipes name and cuisine");
             console.log(totalCount, "totalCount name and cuisine");
             res.status(200).send({
@@ -603,8 +603,8 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
         }
         else if ((recipeName !== null && recipeName !== void 0 ? recipeName : false) && (recipeType !== null && recipeType !== void 0 ? recipeType : false)) {
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, recipeType);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, recipeType);
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, undefined, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, undefined, recipeType);
             console.log(socialRecipes, "socialRecipes name and type");
             console.log(totalCount, "totalCount name and type");
             res.status(200).send({
@@ -613,8 +613,12 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
         }
         else if (recipeCuisine !== undefined && recipeCuisine !== '' && recipeType !== undefined && recipeType !== '') {
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeCuisine, recipeType);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeCuisine, recipeType);
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, undefined, recipeCuisine, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(undefined, recipeCuisine, recipeType);
+            const checkCuisine = yield helper.recipeCuisineExists(recipeCuisine);
+            const checkType = yield helper.recipeTypeExists(recipeType);
+            console.log(checkCuisine, "checkCuisine");
+            console.log(checkType, "checkType");
             console.log(socialRecipes, "socialRecipes cuisine and type");
             console.log(totalCount, "totalCount cuisine and type");
             res.status(200).send({
@@ -624,8 +628,8 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         else if (recipeName !== null && recipeName !== void 0 ? recipeName : false) {
             console.log("recipeName only");
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName);
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeName, undefined, undefined);
+            const totalCount = yield helper.getTotalSocialRecipesCount(recipeName, undefined, undefined);
             console.log(socialRecipes, "socialRecipes name");
             console.log(totalCount, "totalCount name");
             res.status(200).send({
@@ -634,8 +638,9 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
         }
         else if (recipeCuisine !== null && recipeCuisine !== void 0 ? recipeCuisine : false) {
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeCuisine);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeCuisine);
+            console.log("recipeCuisine only");
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, undefined, recipeCuisine, undefined);
+            const totalCount = yield helper.getTotalSocialRecipesCount(undefined, recipeCuisine, undefined);
             console.log(socialRecipes, "socialRecipes cuisine");
             console.log(totalCount, "totalCount cuisine");
             res.status(200).send({
@@ -644,8 +649,8 @@ app.get("/social-recipes", (req, res) => __awaiter(void 0, void 0, void 0, funct
             });
         }
         else if (recipeType !== null && recipeType !== void 0 ? recipeType : false) {
-            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, recipeType);
-            const totalCount = yield helper.getTotalSocialRecipesCount(recipeType);
+            const socialRecipes = yield helper.getSocialRecipesAfterId(lastItemId, limit, undefined, undefined, recipeType);
+            const totalCount = yield helper.getTotalSocialRecipesCount(undefined, undefined, recipeType);
             console.log(socialRecipes, "socialRecipes type");
             console.log(totalCount, "totalCount type");
             res.status(200).send({

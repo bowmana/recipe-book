@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import ManyRecipeCards from '../recipe-card/many-recipe-cards';
 import { Recipe, RecipeItem } from '../types';
+import React from 'react';
 
 export interface HomePageProps {
     className?: string;
 }
 
 export const HomePage = ({ className }: HomePageProps) => {
+    const ellipsis = '...';
     const [user_id, setUserID] = useState(0);
     const [user_name, setUserName] = useState('');
     const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -102,6 +104,66 @@ export const HomePage = ({ className }: HomePageProps) => {
         setCurrentPage(Math.min(Math.max(page, 1), totalPages));
     };
 
+    const goToPageHandler = (page: number | string) => {
+        if (page === ellipsis) return; // Do nothing when the ellipsis is clicked
+        goToPage(page as number);
+    };
+
+    const renderPagination = () => {
+        const firstPage = 1;
+        const lastPage = totalPages;
+
+        const middleLower = Math.floor((currentPage + firstPage) / 2);
+        const middleHigher = Math.floor((currentPage + lastPage) / 2);
+
+        const paginationButtons = [
+            ...(middleLower !== firstPage && middleLower !== currentPage ? [firstPage] : []),
+            ...(middleLower > firstPage + 1 ? ellipsis : []),
+            ...(middleLower !== currentPage ? [middleLower] : []),
+            ...(middleLower < currentPage - 1 ? ellipsis : []),
+            currentPage,
+            ...(middleHigher > currentPage + 1 ? ellipsis : []),
+            ...(middleHigher !== currentPage ? [middleHigher] : []),
+            ...(middleHigher < lastPage - 1 ? ellipsis : []),
+            ...(middleHigher !== lastPage ? [lastPage] : []),
+        ];
+
+        return (
+            <div className={styles['pagination-container']}>
+                <button
+                    onClick={goToPreviousPage}
+                    className={styles['pagination-button']}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </button>
+                {paginationButtons.map((page, index) => (
+                    <React.Fragment key={index}>
+                        {page === '.' ? (
+                            <span className={styles['pagination-ellipsis']}>{page}</span>
+                        ) : (
+                            <button
+                                onClick={() => goToPageHandler(page)}
+                                className={classNames(styles['pagination-button'], {
+                                    [styles['pagination-button-active']]: page === currentPage,
+                                })}
+                            >
+                                {page}
+                            </button>
+                        )}
+                    </React.Fragment>
+                ))}
+                <button
+                    onClick={goToNextPage}
+                    className={styles['pagination-button']}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div className={classNames(styles.root, className)}>
             <h1 className={styles['home-page-header']}>Welcome, {user_name}!</h1>
@@ -112,7 +174,13 @@ export const HomePage = ({ className }: HomePageProps) => {
                     user_id={user_id}
                 />
             </div>
-            <div className={styles['pagination-container']}>
+            {renderPagination()}
+        </div>
+    );
+};
+
+{
+    /* <div className={styles['pagination-container']}>
                 <button
                     onClick={goToPreviousPage}
                     className={styles['pagination-button']}
@@ -139,8 +207,7 @@ export const HomePage = ({ className }: HomePageProps) => {
                     Next
                 </button>
             </div>
-        </div>
-    );
-};
+        </div> */
+}
 
 export default HomePage;

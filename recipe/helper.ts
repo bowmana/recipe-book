@@ -550,15 +550,17 @@ const getPaginatedSocialRecipes = async (offset: number, limit: number) => {
 // };
 
 
-// const lastItemId: number = parseInt(req.query.lastItemId as string) || 0;
-// const limit: number = parseInt(req.query.limit as string) || 10;
-
-// const socialRecipes = await helper.getSocialRecipesAfterId(lastItemId, limit);
-
-//  const getSocialRecipesAfterId = async (lastItemId: number, limit: number) => {
+// const getSocialRecipesAfterId = async (
+//   lastItemId: number,
+//   limit: number,
+//   recipeName?: string,
+//   recipeCuisine?: string,
+//   recipeType?: string
+// ) => {
 //   try {
-//     const result = await dbConn.pool.query(
-//       `
+//     //up to 3 additional conditions can be added to the query (recipeName, recipeCuisine, recipeType), not all of them have to be used if not passed in.
+//     let params: any[] = [];
+//     let query = `
 //       SELECT
 //       recipe_table.recipe_id,
 //       recipe_table.recipe_name,
@@ -589,9 +591,122 @@ const getPaginatedSocialRecipes = async (offset: number, limit: number) => {
 //     ORDER BY
 //       recipe_table.recipe_id DESC
 //     LIMIT $2
-//     `,
-//       [lastItemId, limit]
-//     );
+//     `;
+//     params = [lastItemId, limit];
+
+//     if (recipeName) {
+      
+//       query = `
+//         SELECT
+//         recipe_table.recipe_id,
+//         recipe_table.recipe_name,
+//         recipe_table.recipe_cuisine,
+//         recipe_table.recipe_type,
+//         recipe_table.recipe_description,
+//         recipe_table.u_id,
+//         recipe_table.u_name,
+//         recipe_table.original_u_id,
+//         recipe_table.original_u_name,
+//         ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+//       FROM
+//         recipe_table
+//         INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
+//         INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
+//       WHERE
+//         recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3
+//       GROUP BY
+//         recipe_table.recipe_id,
+//         recipe_table.recipe_name,
+//         recipe_table.recipe_cuisine,
+//         recipe_table.recipe_type,
+//         recipe_table.recipe_description,
+//         recipe_table.u_id,
+//         recipe_table.u_name,
+//         recipe_table.original_u_id,
+//         recipe_table.original_u_name
+//       ORDER BY
+//         recipe_table.recipe_id DESC
+//       LIMIT $2
+//       `;
+//       params = [lastItemId, limit, `%${recipeName}%`];
+
+//       if (recipeCuisine) {
+
+//         query = `
+//           SELECT
+//           recipe_table.recipe_id,
+//           recipe_table.recipe_name,
+//           recipe_table.recipe_cuisine,
+//           recipe_table.recipe_type,
+//           recipe_table.recipe_description,
+//           recipe_table.u_id,
+//           recipe_table.u_name,
+//           recipe_table.original_u_id,
+//           recipe_table.original_u_name,
+//           ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+//         FROM
+//           recipe_table
+//           INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
+//           INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
+//         WHERE
+//           recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4
+//         GROUP BY
+//           recipe_table.recipe_id,
+//           recipe_table.recipe_name,
+//           recipe_table.recipe_cuisine,
+//           recipe_table.recipe_type,
+//           recipe_table.recipe_description,
+//           recipe_table.u_id,
+//           recipe_table.u_name,
+//           recipe_table.original_u_id,
+//           recipe_table.original_u_name
+//         ORDER BY
+//           recipe_table.recipe_id DESC
+//         LIMIT $2
+//         `;
+//         params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`];
+       
+
+//         if (recipeType) {
+//           query = `
+//             SELECT
+//             recipe_table.recipe_id,
+//             recipe_table.recipe_name,
+//             recipe_table.recipe_cuisine,
+//             recipe_table.recipe_type,
+//             recipe_table.recipe_description,
+//             recipe_table.u_id,
+//             recipe_table.u_name,
+//             recipe_table.original_u_id,
+//             recipe_table.original_u_name,
+//             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+//           FROM
+//             recipe_table
+//             INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
+//             INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
+//           WHERE
+//             recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4 AND recipe_table.recipe_type ILIKE $5
+//           GROUP BY
+//             recipe_table.recipe_id,
+//             recipe_table.recipe_name,
+//             recipe_table.recipe_cuisine,
+//             recipe_table.recipe_type,
+//             recipe_table.recipe_description,
+//             recipe_table.u_id,
+//             recipe_table.u_name,
+//             recipe_table.original_u_id,
+//             recipe_table.original_u_name
+//           ORDER BY
+//             recipe_table.recipe_id DESC
+//           LIMIT $2
+//           `;
+//           params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`, `%${recipeType}%`];
+          
+
+//     }
+//   }
+// }
+//     const result = await dbConn.pool.query(query, params);
 //     const recipes = result.rows;
 
 //     const recipesWithItems = await Promise.all(
@@ -600,6 +715,7 @@ const getPaginatedSocialRecipes = async (offset: number, limit: number) => {
 //         recipe.recipe_items = recipeItems;
 
 //         return recipe;
+
 //       })
 //     );
 
@@ -620,45 +736,9 @@ const getSocialRecipesAfterId = async (
   recipeType?: string
 ) => {
   try {
-    //up to 3 additional conditions can be added to the query (recipeName, recipeCuisine, recipeType), not all of them have to be used if not passed in.
     let params: any[] = [];
     let query = `
       SELECT
-      recipe_table.recipe_id,
-      recipe_table.recipe_name,
-      recipe_table.recipe_cuisine,
-      recipe_table.recipe_type,
-      recipe_table.recipe_description,
-      recipe_table.u_id,
-      recipe_table.u_name,
-      recipe_table.original_u_id,
-      recipe_table.original_u_name,
-      ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-    FROM
-      recipe_table
-      INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-      INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-    WHERE
-      recipe_table.recipe_id < $1
-    GROUP BY
-      recipe_table.recipe_id,
-      recipe_table.recipe_name,
-      recipe_table.recipe_cuisine,
-      recipe_table.recipe_type,
-      recipe_table.recipe_description,
-      recipe_table.u_id,
-      recipe_table.u_name,
-      recipe_table.original_u_id,
-      recipe_table.original_u_name
-    ORDER BY
-      recipe_table.recipe_id DESC
-    LIMIT $2
-    `;
-    params = [lastItemId, limit];
-
-    if (recipeName) {
-      query = `
-        SELECT
         recipe_table.recipe_id,
         recipe_table.recipe_name,
         recipe_table.recipe_cuisine,
@@ -674,7 +754,43 @@ const getSocialRecipesAfterId = async (
         INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
         INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
       WHERE
-        recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3
+        recipe_table.recipe_id < $1`;
+
+    params = [lastItemId];
+
+    if (recipeType) {
+      console.log('recipeType herrre', recipeType);
+      const typeExists = await recipeTypeExists(recipeType);
+      if (typeExists) {
+
+        query += ` AND recipe_table.recipe_type ILIKE $${params.length + 1}`;
+        params.push(`%${recipeType}%`);
+      } else {
+        // Handle case when the provided type does not exist
+        console.log('Recipe type does not exist');
+        return [];
+      }
+    }
+
+    if (recipeCuisine) {
+      console.log('recipeCuisine herrre', recipeCuisine);
+      const cuisineExists = await recipeCuisineExists(recipeCuisine);
+      if (cuisineExists) {
+        query += ` AND recipe_table.recipe_cuisine ILIKE $${params.length + 1}`;
+        params.push(`%${recipeCuisine}%`);
+      } else {
+        // Handle case when the provided cuisine does not exist
+        console.log('Recipe cuisine does not exist');
+        return [];
+      }
+    }
+
+    if (recipeName) {
+      query += ` AND recipe_table.recipe_name ILIKE $${params.length + 1}`;
+      params.push(`%${recipeName}%`);
+    }
+
+    query += `
       GROUP BY
         recipe_table.recipe_id,
         recipe_table.recipe_name,
@@ -687,85 +803,11 @@ const getSocialRecipesAfterId = async (
         recipe_table.original_u_name
       ORDER BY
         recipe_table.recipe_id DESC
-      LIMIT $2
-      `;
-      params = [lastItemId, limit, `%${recipeName}%`];
+      LIMIT $${params.length + 1}
+    `;
 
-      if (recipeCuisine) {
-        query = `
-          SELECT
-          recipe_table.recipe_id,
-          recipe_table.recipe_name,
-          recipe_table.recipe_cuisine,
-          recipe_table.recipe_type,
-          recipe_table.recipe_description,
-          recipe_table.u_id,
-          recipe_table.u_name,
-          recipe_table.original_u_id,
-          recipe_table.original_u_name,
-          ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-        FROM
-          recipe_table
-          INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-          INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-        WHERE
-          recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4
-        GROUP BY
-          recipe_table.recipe_id,
-          recipe_table.recipe_name,
-          recipe_table.recipe_cuisine,
-          recipe_table.recipe_type,
-          recipe_table.recipe_description,
-          recipe_table.u_id,
-          recipe_table.u_name,
-          recipe_table.original_u_id,
-          recipe_table.original_u_name
-        ORDER BY
-          recipe_table.recipe_id DESC
-        LIMIT $2
-        `;
-        params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`];
-       
+    params.push(limit);
 
-        if (recipeType) {
-          query = `
-            SELECT
-            recipe_table.recipe_id,
-            recipe_table.recipe_name,
-            recipe_table.recipe_cuisine,
-            recipe_table.recipe_type,
-            recipe_table.recipe_description,
-            recipe_table.u_id,
-            recipe_table.u_name,
-            recipe_table.original_u_id,
-            recipe_table.original_u_name,
-            ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-          FROM
-            recipe_table
-            INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-            INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-          WHERE
-            recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4 AND recipe_table.recipe_type ILIKE $5
-          GROUP BY
-            recipe_table.recipe_id,
-            recipe_table.recipe_name,
-            recipe_table.recipe_cuisine,
-            recipe_table.recipe_type,
-            recipe_table.recipe_description,
-            recipe_table.u_id,
-            recipe_table.u_name,
-            recipe_table.original_u_id,
-            recipe_table.original_u_name
-          ORDER BY
-            recipe_table.recipe_id DESC
-          LIMIT $2
-          `;
-          params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`, `%${recipeType}%`];
-          
-
-    }
-  }
-}
     const result = await dbConn.pool.query(query, params);
     const recipes = result.rows;
 
@@ -775,7 +817,6 @@ const getSocialRecipesAfterId = async (
         recipe.recipe_items = recipeItems;
 
         return recipe;
-
       })
     );
 
@@ -784,6 +825,79 @@ const getSocialRecipesAfterId = async (
     console.log(
       "\nCouldn't execute query because the pool couldn't connect to the database 'getSocialRecipesAfterId'"
     );
+    console.log(error);
+    throw error;
+  }
+};
+
+
+const recipeNameExists = async (recipe_name: string) => {
+  try {
+    const result: QueryResult = await dbConn.pool.query(
+      `
+      SELECT recipe_name
+      FROM recipe_table
+      WHERE recipe_name ILIKE $1
+    `,
+      [`%${recipe_name}%`]
+    );
+    if (result.rows.length > 0) {
+      console.log('Recipe name exists');
+      return true;
+    } else {
+      console.log('Recipe name does not exist');
+     return Promise.reject('Recipe name does not exist');
+    }
+  } catch (error) {
+    console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "recipeNameExists"');
+    console.log(error);
+    throw error;
+  }
+};
+
+const recipeCuisineExists = async (recipe_cuisine: string) => {
+  try {
+    const result: QueryResult = await dbConn.pool.query(
+      `
+      SELECT recipe_cuisine
+      FROM recipe_table
+      WHERE recipe_cuisine ILIKE $1
+    `,
+      [`%${recipe_cuisine}%`]
+    );
+    if (result.rows.length > 0) {
+      console.log('Recipe cuisine exists');
+      return true;
+    } else {
+      console.log('Recipe cuisine does not exist');
+      return Promise.reject('Recipe cuisine does not exist');
+    }
+  } catch (error) {
+    console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "recipeCuisineExists"');
+    console.log(error);
+    throw error;
+  }
+};
+
+const recipeTypeExists = async (recipe_type: string) => {
+  try {
+    const result: QueryResult = await dbConn.pool.query(
+      `
+      SELECT recipe_type
+      FROM recipe_table
+      WHERE recipe_type ILIKE $1
+    `,
+      [`%${recipe_type}%`]
+    );
+    if (result.rows.length > 0) {
+      console.log('Recipe type exists');
+      return true;
+    } else {
+      console.log('Recipe type does not exist');
+      return Promise.reject('Recipe type does not exist');
+    }
+  } catch (error) {
+    console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "recipeTypeExists"');
     console.log(error);
     throw error;
   }
@@ -936,4 +1050,4 @@ const recipeShared = async (user_id: number, recipe_id: number) => {
 };
 
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getPaginatedSharedRecipes, getTotalSharedRecipesCount, getSocialRecipesAfterId};
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getPaginatedSharedRecipes, getTotalSharedRecipesCount, getSocialRecipesAfterId, recipeCuisineExists, recipeTypeExists, recipeNameExists};

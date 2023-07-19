@@ -728,11 +728,16 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
         lastItemId,
         limit,
         recipeName,
-        recipeCuisine
+        recipeCuisine,
+        undefined
+        
+
       );
       const totalCount = await helper.getTotalSocialRecipesCount(
         recipeName,
-        recipeCuisine
+        recipeCuisine,
+        undefined
+        
       );
 
       console.log(socialRecipes, "socialRecipes name and cuisine");
@@ -746,12 +751,15 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
         lastItemId,
         limit,
         recipeName,
+        undefined,
         recipeType
       );
       const totalCount = await helper.getTotalSocialRecipesCount(
         recipeName,
+        undefined,
         recipeType
       );
+  
       console.log(socialRecipes, "socialRecipes name and type");
       console.log(totalCount, "totalCount name and type");
       res.status(200).send({
@@ -763,13 +771,20 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
       const socialRecipes = await helper.getSocialRecipesAfterId(
         lastItemId,
         limit,
+        undefined,
         recipeCuisine,
         recipeType
       );
       const totalCount = await helper.getTotalSocialRecipesCount(
+        undefined,
         recipeCuisine,
         recipeType
       );
+      const checkCuisine= await helper.recipeCuisineExists(recipeCuisine);
+      const checkType= await helper.recipeTypeExists(recipeType);
+
+      console.log(checkCuisine, "checkCuisine");
+      console.log(checkType, "checkType");
       console.log(socialRecipes, "socialRecipes cuisine and type");
       console.log(totalCount, "totalCount cuisine and type");
 
@@ -782,9 +797,13 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
       const socialRecipes = await helper.getSocialRecipesAfterId(
         lastItemId,
         limit,
-        recipeName
+        recipeName,
+        undefined,
+        undefined
       );
-      const totalCount = await helper.getTotalSocialRecipesCount(recipeName);
+      const totalCount = await helper.getTotalSocialRecipesCount(recipeName,
+        undefined,
+        undefined);
       console.log(socialRecipes, "socialRecipes name");
       console.log(totalCount, "totalCount name");
 
@@ -793,12 +812,15 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
         totalCount: totalCount,
       });
     } else if (recipeCuisine ?? false) {
+      console.log("recipeCuisine only");
       const socialRecipes = await helper.getSocialRecipesAfterId(
         lastItemId,
         limit,
-        recipeCuisine
+        undefined,
+        recipeCuisine,
+        undefined
       );
-      const totalCount = await helper.getTotalSocialRecipesCount(recipeCuisine);
+      const totalCount = await helper.getTotalSocialRecipesCount(undefined,recipeCuisine,undefined);
       console.log(socialRecipes, "socialRecipes cuisine");
       console.log(totalCount, "totalCount cuisine");
       res.status(200).send({
@@ -809,9 +831,11 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
       const socialRecipes = await helper.getSocialRecipesAfterId(
         lastItemId,
         limit,
+        undefined,
+        undefined,
         recipeType
       );
-      const totalCount = await helper.getTotalSocialRecipesCount(recipeType);
+      const totalCount = await helper.getTotalSocialRecipesCount(undefined,undefined,recipeType);
       console.log(socialRecipes, "socialRecipes type");
       console.log(totalCount, "totalCount type");
       res.status(200).send({

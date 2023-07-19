@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import styles from './social-feed.module.scss';
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Recipe, Option } from '../types';
 import { RecipeCard } from '../recipe-card/recipe-card';
@@ -18,9 +18,12 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [searchRecipeName, setSearchRecipeName] = useState('');
-    const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+    const [shouldFetchRecipes, setShouldFetchRecipes] = useState(false);
+
     const [recipeCuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipeType, setRecipeType] = useState<Option | null>(null);
+    const dropDownRef = useRef<any>(null);
+    const dropDownRef2 = useRef<any>(null);
 
     useEffect(
         () => {
@@ -110,6 +113,13 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
         }
     }, [isFetching, lastItemId]);
 
+    useEffect(() => {
+        if (shouldFetchRecipes) {
+            fetchRecipesOnClick();
+            setShouldFetchRecipes(false);
+        }
+    }, [shouldFetchRecipes]);
+
     async function toFile(url: string): Promise<File> {
         try {
             const response = await fetch(url, { mode: 'no-cors' });
@@ -125,9 +135,73 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
         }
     }
 
-    const clearSearch = () => {
+    const clearSearch = async () => {
         setSearchRecipeName('');
-        setFilteredRecipes([]);
+        dropDownRef.current?.clear();
+        dropDownRef2.current?.clear();
+        setRecipeCuisine(null);
+        setRecipeType(null);
+        setRecipes([]);
+        setShouldFetchRecipes(true);
+        setLastItemId(Number.MAX_SAFE_INTEGER);
+
+        // Fetch new recipes after clearing the search
+        try {
+            const url =
+                process.env.NODE_ENV === 'production'
+                    ? `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}` // Change if actually deployed to real web server
+                    : `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}`;
+
+            const axiosResponse = await axios.get(url, { withCredentials: true });
+
+            const { recipes: fetchedRecipes, totalCount: fetchedTotalCount } = axiosResponse.data;
+            console.log(fetchedRecipes, 'fetched recipes');
+            setRecipes(fetchedRecipes); // Set the new recipes directly, don't concatenate with previous ones
+            setTotalCount(fetchedTotalCount);
+            if (fetchedRecipes.length > 0) {
+                setLastItemId(fetchedRecipes[fetchedRecipes.length - 1].recipe_id);
+            }
+        } catch (axiosError) {
+            console.log('Failed to fetch recipes');
+            console.log(axiosError);
+        }
+    };
+
+    const fetchRecipesOnClick = async () => {
+        setRecipes([]);
+        setShouldFetchRecipes(true);
+        setLastItemId(Number.MAX_SAFE_INTEGER);
+
+        // Fetch new recipes after clearing the search
+
+        try {
+            const url =
+                process.env.NODE_ENV === 'production'
+                    ? `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}` // Change if actually deployed to real web server
+                    : `http://localhost:4000/social-recipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                          recipeCuisine ? recipeCuisine.value : ''
+                      }&recipe_type=${recipeType ? recipeType.value : ''}`;
+
+            const axiosResponse = await axios.get(url, { withCredentials: true });
+
+            const { recipes: fetchedRecipes, totalCount: fetchedTotalCount } = axiosResponse.data;
+            console.log(fetchedRecipes, 'fetched recipes');
+
+            setRecipes(fetchedRecipes); // Set the new recipes directly, don't concatenate with previous ones
+            setTotalCount(fetchedTotalCount);
+            if (fetchedRecipes.length > 0) {
+                setLastItemId(fetchedRecipes[fetchedRecipes.length - 1].recipe_id);
+            }
+        } catch (axiosError) {
+            console.log('Failed to fetch recipes');
+            console.log(axiosError);
+        }
     };
 
     const addRecipeCuisine = (recipe_cuisine: Option | null) => {
@@ -248,6 +322,7 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
                                     { value: 'Malaysian', label: 'Malaysian' },
                                 ]}
                                 onChange={addRecipeCuisine}
+                                ref={dropDownRef}
                             />
                         </div>
                         <h1 className={styles['pick-a-text']}>Search by recipe type</h1>
@@ -266,11 +341,12 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
                                     { value: 'Marinade', label: 'Marinade' },
                                 ]}
                                 onChange={addRecipeType}
+                                ref={dropDownRef2}
                             />
                         </div>
                     </div>
                     <div className={styles['search-buttons']}>
-                        <button onClick={fetchRecipes}>Search</button>
+                        <button onClick={fetchRecipesOnClick}>Search</button>
                         <button onClick={clearSearch}>Clear</button>
                     </div>
                 </div>

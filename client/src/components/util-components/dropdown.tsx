@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
-
+import { forwardRef, useImperativeHandle } from 'react';
 import classNames from 'classnames';
 import styles from './dropdown.module.scss';
 import Placeholder from 'react-select/dist/declarations/src/components/Placeholder';
@@ -11,41 +11,49 @@ export interface DropdownProps {
     onChange?: (selectedOption: Option | null) => void;
     retrievedSelected?: Option | null;
     place_holder?: string;
+    ref?: React.Ref<any>;
 }
 interface Option {
     value: string;
     label: string;
 }
 
-export const Dropdown = ({
-    className,
-    initialOptions,
-    onChange,
-    retrievedSelected,
-    place_holder,
-}: DropdownProps) => {
+export const Dropdown = forwardRef((props: DropdownProps, ref: any) => {
+    useImperativeHandle(ref, () => ({
+        clear,
+    }));
+
     const [selectedOption, setSelectedOption] = useState<Option | null>(null);
     //set initial options list to the props passed in
 
-    const [options, setOptions] = useState<Option[]>(initialOptions || []);
+    const [options, setOptions] = useState<Option[]>(props.initialOptions || []);
 
     useEffect(() => {
-        if (initialOptions) {
-            setOptions(initialOptions);
+        if (props.initialOptions) {
+            setOptions(props.initialOptions);
         }
-    }, [initialOptions]);
+    }, [props.initialOptions]);
     const resetOptions = () => {
-        setOptions(initialOptions || []);
+        setOptions(props.initialOptions || []);
     };
 
     const handleChange = (selectedOption: Option | null) => {
         setSelectedOption(selectedOption);
         resetOptions();
-        if (onChange) {
-            onChange(selectedOption);
+        if (props.onChange) {
+            props.onChange(selectedOption);
         }
 
         console.log(`Option selected:`, selectedOption);
+    };
+    const clear = () => {
+        console.log('clearing');
+        setSelectedOption(null);
+        resetOptions();
+
+        if (props.onChange) {
+            props.onChange(null);
+        }
     };
 
     const handleInputChange = (inputValue: string) => {
@@ -57,7 +65,7 @@ export const Dropdown = ({
             setOptions([...options, otherOption]);
         }
     };
-    const dropdownClassName = className ? styles[className] : null;
+    const dropdownClassName = props.className ? styles[props.className] : null;
     const customStyles = {
         control: (base: any, state: any) => ({
             ...base,
@@ -112,14 +120,14 @@ export const Dropdown = ({
         <div className={classNames(styles.root, dropdownClassName)}>
             <Select
                 styles={customStyles}
-                value={retrievedSelected || selectedOption}
+                value={props.retrievedSelected || selectedOption}
                 onChange={handleChange}
                 isClearable
                 isSearchable
-                placeholder={place_holder || 'Select or enter an option ...'}
+                placeholder={props.place_holder || 'Select or enter an option ...'}
                 onInputChange={handleInputChange}
                 options={options}
             />
         </div>
     );
-};
+});

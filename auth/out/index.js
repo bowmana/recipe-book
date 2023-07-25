@@ -41,6 +41,13 @@ const axios_1 = __importDefault(require("axios"));
 const cors_1 = __importDefault(require("cors"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const morgan_1 = __importDefault(require("morgan"));
+const multer_1 = __importDefault(require("multer"));
+const path_1 = __importDefault(require("path"));
+const s3bucket_1 = require("./db/s3bucket");
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage: storage });
+const s3Bucket = new s3bucket_1.S3Bucket();
+s3Bucket.checkConnection();
 const app = (0, express_1.default)();
 const port = 4001;
 app.use((0, morgan_1.default)("dev"));
@@ -126,6 +133,75 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     res.status(400).send('Invalid credentials');
+}));
+app.post('/user/:user_id/profile-image', upload.single('profile_image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const profile_image = req.file;
+    const user_id = parseInt(req.params.user_id);
+    console.log(profile_image, 'file');
+    if (!profile_image) {
+        res.status(400).send('No image uploaded');
+        return;
+    }
+    const url = "https://d1uvjvhzktlyb3.cloudfront.net/profile-images/" + path_1.default.basename(yield s3Bucket.uploadFile(profile_image));
+    yield helper.setProfileImage(user_id, url);
+    res.status(200).send(url);
+    console.log(url, 'url');
+    console.log(user_id, 'user_id');
+}));
+// await axios.put(
+//   `http://localhost:4001/users/${user_id}`,
+//   { email },
+//   { withCredentials: true }
+// );
+// app.put('/user/email/:user_id', async (req: Request, res: Response) => {
+//   const user_id: number = parseInt(req.params.user_id);
+//   const {email} = req.body;
+//   if (!email) {
+//     res.status(400).send('No email provided');
+//     return;
+//   }
+//   await helper.updateEmail(user_id, email);
+//   res.status(200).send('Email updated');
+//   return;
+// });
+// app.put('/user/username/:user_id', async (req: Request, res: Response) => {
+//   const user_id: number = parseInt(req.params.user_id);
+//   const {user_name} = req.body;
+//   if (!user_name) {
+//     res.status(400).send('No username provided');
+//     return;
+//   }
+//   await helper.updateUserName(user_id, user_name);
+//   res.status(200).send('Username updated');
+//   return;
+// });
+app.get('/user/:user_id/profile-image', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    const url = yield helper.getProfileImage(user_id);
+    if (!url) {
+        res.status(404).send('No image found');
+        return;
+    }
+    res.status(200).send(url);
+    return;
+}));
+app.post('/events', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const event = req.body;
+    console.log('Received Event', event.type);
+    if (event.type === 'UsernameUpdated') {
+        const { user_id, user_name } = event.data;
+        yield helper.updateUserName(user_id, user_name);
+        res.status(200).send('Username updated');
+        return;
+    }
+    if (event.type === 'EmailUpdated') {
+        const { user_id, email } = event.data;
+        yield helper.updateEmail(user_id, email);
+        res.status(200).send('Email updated');
+        return;
+    }
+    res.status(200).send('Event received');
+    return;
 }));
 app.post('/auth', verifyToken, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield helper.getUserByID(req.user.user_id);

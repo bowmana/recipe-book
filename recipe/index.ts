@@ -180,14 +180,18 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
         
     const uploadPromises = recipe_images.map(async (recipe_image) => {
         const getUrl = async () => {
-            if (await s3Bucket.fileExists(recipe_image.originalname)) {
-                return "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.duplicateFile(recipe_image.originalname)); //in the case where we add a recipe TO personal recipes FROM social recipes
+            if (await s3Bucket.fileExists(`recipe-images/${recipe_image.originalname}`)) {
+                console.log("image exists", recipe_image.originalname);
+
+                return "https://d1uvjvhzktlyb3.cloudfront.net/recipe-images/" + path.basename(await s3Bucket.duplicateFile(`recipe-images/${recipe_image.originalname}`)); //in the case where we add a recipe TO personal recipes FROM social recipes
             }
             else {
-                return "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.uploadFile(recipe_image)); //in the case where we simply add a recipe TO personal recipes
+                return "https://d1uvjvhzktlyb3.cloudfront.net/recipe-images/" + path.basename(await s3Bucket.uploadFile(recipe_image)); //in the case where we simply add a recipe TO personal recipes
             }
         }
         const url = await getUrl();
+        console.log(url, "url");
+       
         if (!url) {
           throw new Error("There was an error uploading the image");
         }
@@ -362,6 +366,8 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
           // Extract the image URLs from recipe_images
           const existingImages = recipeImages.map((image) => image.recipe_image);
           const newImages = recipe_images.map((image) => image.originalname);
+          console.log(existingImages, "existingImages");
+          console.log(newImages, "newImages");
           const deletedImages = existingImages.filter((url) => !newImages.includes(url.split("/").pop()));
           return deletedImages;
         }
@@ -369,7 +375,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
     
 
         for (let i = 0; i < recipeImagesToDelete.length; i++) {
-          const filename = recipeImagesToDelete[i].split("/").pop();
+          const filename = 'recipe-images/' + recipeImagesToDelete[i].split("/").pop();
           console.log(filename, "filename");
           const invalidationParams = {
               DistributionId: process.env.DISTRIBUTION_ID,
@@ -404,7 +410,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
 
 
         const uploadPromises = recipe_images.map(async (recipe_image) => {
-          const cloudFrontDomain = "https://d1uvjvhzktlyb3.cloudfront.net/";
+          const cloudFrontDomain = "https://d1uvjvhzktlyb3.cloudfront.net/recipe-images/";
 
           const imageExists = await helper.imageExists(recipe_id, cloudFrontDomain + path.basename(recipe_image.originalname));
           if (imageExists) {
@@ -412,7 +418,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), async (re
               return;;
           }
           console.log("new image added")
-          const url = "https://d1uvjvhzktlyb3.cloudfront.net/" + path.basename(await s3Bucket.uploadFile(recipe_image));
+          const url = "https://d1uvjvhzktlyb3.cloudfront.net/recipe-images/" + path.basename(await s3Bucket.uploadFile(recipe_image));
           if (!url) {
             throw new Error("There was an error uploading the image");
           }
@@ -480,7 +486,7 @@ const deleteRecipeImages = async (recipe_id: number) => {
     console.log(recipeImages, "recipeImages");
     for (let i = 0; i < recipeImages.length; i++) {
       const { recipe_image } = recipeImages[i];
-      const filename = recipe_image.split("/").pop();
+      const filename = 'recipe-images/' + recipe_image.split("/").pop();
       console.log(filename, "filename");
       const invalidationParams = {
           DistributionId: process.env.DISTRIBUTION_ID,
@@ -522,10 +528,29 @@ app.post('/events', async (req: Request, res: Response) => {
 
         return;
     }
-    res.send({});
+    if(event.type === "ProfileImageUpload"){
+        console.log("ProfileImageUpload", event.data);
+        res.redirect(307, '/profileimageupload');
+        return;
+    }
+    if (event.type === 'UsernameUpdated') {
+      const { user_id, user_name } = event.data;
+      await helper.updateUserName(user_id, user_name);
+      res.status(200).send('Username updated');
+      return;
+    }
+  
+    if (event.type === 'EmailUpdated') {
+      const { user_id, email } = event.data;
+      await helper.updateEmail(user_id, email);
+      res.status(200).send('Email updated');
+      return;
+    }
+    res.status(200).send('Event received');
+    return;
+  });
+  
 
-
-});
 
 app.post('/usercreated', async (req: Request, res: Response) => {
     const event: UserCreated = req.body;
@@ -587,6 +612,36 @@ app.get("/recipes/:recipe_id", async (req: Request, res: Response) => {
         res.status(500).send("Error retrieving the recipe");
     }
 });
+app.post("/profileimageupload", async (req: Request, res: Response) => {
+    const event = req.body;
+    console.log(event, 'event is here on the profileimageupload route');
+    const user_id: number = parseInt(event.data.user_id);
+    const profile_image: string = event.data.profile_image;
+    console.log(typeof user_id, typeof profile_image, 'user_id and profile_image')
+
+    const userExists = await helper.userExists(user_id);
+    if (!userExists) {
+        res.status(404).send("User does not exist");
+        return;
+    }
+
+    if (!user_id || !profile_image) {
+        res.status(400).send('user_id or profile_image is missing');
+        return;
+    }
+
+    try {
+        await helper.updateProfileImage(user_id, profile_image);
+        console.log('profile image updated with id', user_id, 'and profile_image', profile_image);
+        res.status(200).send({ user_id: user_id, profile_image: profile_image });
+        return;
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('There was an error updating the profile image');
+        return;
+    }
+});
+
 
 
 //   .delete(`http://localhost:4000/recipes/${recipeId}`)
@@ -673,23 +728,6 @@ app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Respons
     }
 });
 
-// app.get("/social-recipes", async (req: Request, res: Response) => {
-//   try {
-//     const lastItemId: number = parseInt(req.query.lastItemId as string) ;
-//     const limit: number = parseInt(req.query.limit as string) ;
-//     console.log(lastItemId, "lastItemId");
-//     console.log(limit, "limit");
-//     const socialRecipes = await helper.getSocialRecipesAfterId(lastItemId, limit);
-//     const totalCount = await helper.getTotalSocialRecipesCount();
-
-//     res.status(200).send({
-//       recipes: socialRecipes,
-//       totalCount: totalCount,
-//     });
-//   } catch (error) {
-//     res.status(500).send("Error retrieving the social recipes");
-//   }
-// });
 app.get("/social-recipes", async (req: Request, res: Response) => {
   try {
     const lastItemId: number = parseInt(req.query.lastItemId as string);
@@ -862,48 +900,241 @@ app.get("/social-recipes", async (req: Request, res: Response) => {
 });
 
 
-
 app.get("/:user_id/getsharedrecipes", async (req: Request, res: Response) => {
     const user_id: number = parseInt(req.params.user_id);
     try {
-        const page: number = parseInt(req.query.page as string) || 1;
-        const limit: number = parseInt(req.query.limit as string) || 10;
-        const offset: number = (page - 1) * limit;
-        const sharedRecipes = await helper.getPaginatedSharedRecipes(user_id, offset, limit);
-        const totalCount = await helper.getTotalSharedRecipesCount(user_id);
-        const totalPages = Math.ceil(totalCount / limit);
-        res.status(200).send({
+        const lastItemId: number = parseInt(req.query.lastItemId as string);
+        const limit: number = parseInt(req.query.limit as string);
+        const recipeName: string = req.query.recipe_name as string;
+        const recipeCuisine: string = req.query.recipe_cuisine as string;
+        const recipeType: string = req.query.recipe_type as string;
+        console.log(lastItemId, "lastItemId");
+        console.log(limit, "limit");
+        console.log(recipeName, "recipeName");
+        console.log(recipeCuisine, "recipeCuisine");
+        console.log(recipeType, "recipeType");
+
+        if ((recipeName ?? false) && (recipeCuisine ?? false) && (recipeType ?? false)) {
+          console.log("all query params")
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            recipeName,
+            recipeCuisine,
+            recipeType
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            recipeName,
+            recipeCuisine,
+            recipeType
+          );
+          console.log(sharedRecipes, "sharedRecipes all query params");
+          console.log(totalCount, "totalCount all query params");
+          res.status(200).send({
             recipes: sharedRecipes,
-            total_count: totalCount,
-            total_pages: totalPages
-        });
-    } catch (error) {
-        res.status(500).send("Error retrieving the shared recipes");
-    }
-});
-
-// await axios.delete(`http://localhost:4000/${user_id}/deletesharedrecipe/${recipe_id}`
-
-app.delete("/:user_id/deletesharedrecipe/:recipe_id", async (req: Request, res: Response) => {
-    const user_id: number = parseInt(req.params.user_id);
-    const recipe_id: number = parseInt(req.params.recipe_id);
-    try {
-        const recipeExists = await helper.recipeExists(recipe_id);
-        if (!recipeExists) {
-            res.status(404).send("Recipe does not exist for the user");
-            return;
+            totalCount: totalCount,
+          });
+        } else if ((recipeName ?? false) && (recipeCuisine ?? false)) {
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            recipeName,
+            recipeCuisine,
+            undefined
+            
+    
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            recipeName,
+            recipeCuisine,
+            undefined
+            
+          );
+    
+          console.log(sharedRecipes, "sharedRecipes name and cuisine");
+          console.log(totalCount, "totalCount name and cuisine");
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else if ((recipeName ?? false) && (recipeType ?? false)) {
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            recipeName,
+            undefined,
+            recipeType
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            recipeName,
+            undefined,
+            recipeType
+          );
+      
+          console.log(sharedRecipes, "sharedRecipes name and type");
+          console.log(totalCount, "totalCount name and type");
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else if (recipeCuisine !== undefined && recipeCuisine !== '' && recipeType !== undefined && recipeType !== '') {
+    
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            undefined,
+            recipeCuisine,
+            recipeType
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            undefined,
+            recipeCuisine,
+            recipeType
+          );
+          const checkCuisine= await helper.recipeCuisineExists(recipeCuisine);
+          const checkType= await helper.recipeTypeExists(recipeType);
+    
+          console.log(checkCuisine, "checkCuisine");
+          console.log(checkType, "checkType");
+          console.log(sharedRecipes, "sharedRecipes cuisine and type");
+          console.log(totalCount, "totalCount cuisine and type");
+    
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else if (recipeName ?? false) {
+          console.log("recipeName only");
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            recipeName,
+            undefined,
+            undefined
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            recipeName,
+            undefined,
+            undefined);
+          console.log(sharedRecipes, "sharedRecipes name");
+          console.log(totalCount, "totalCount name");
+    
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else if (recipeCuisine ?? false) {
+          console.log("recipeCuisine only");
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            undefined,
+            recipeCuisine,
+            undefined
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            undefined,recipeCuisine,undefined);
+          console.log(sharedRecipes, "sharedRecipes cuisine");
+          console.log(totalCount, "totalCount cuisine");
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else if (recipeType ?? false) {
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit,
+            undefined,
+            undefined,
+            recipeType
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id,
+            undefined,undefined,recipeType);
+          console.log(sharedRecipes, "sharedRecipes type");
+          console.log(totalCount, "totalCount type");
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
+        } else {
+          console.log("no query params");
+          const sharedRecipes = await helper.getSharedRecipesAfterId(
+            user_id,
+            lastItemId,
+            limit
+          );
+          const totalCount = await helper.getTotalSharedRecipesCount(
+            user_id
+          );
+          console.log(sharedRecipes, "sharedRecipes no query params");
+          console.log(totalCount, "totalCount no query params");
+          res.status(200).send({
+            recipes: sharedRecipes,
+            totalCount: totalCount,
+          });
         }
-        const recipeShared = await helper.recipeShared(user_id, recipe_id);
-        if (!recipeShared) {
-            res.status(404).send("Recipe is not shared");
-            return;
-        }
-        await helper.deleteSocialRecipe(user_id, recipe_id);
-        res.status(200).send("Recipe deleted");
-    } catch (error) {
-        res.status(500).send("Error deleting the recipe");
-    }
-});
+      } catch (error) {
+        res.status(500).send("Error retrieving the social recipes");
+      }
+    });
+    
+    
+
+// app.get("/:user_id/getsharedrecipes", async (req: Request, res: Response) => {
+//     const user_id: number = parseInt(req.params.user_id);
+//     try {
+//         const page: number = parseInt(req.query.page as string) || 1;
+//         const limit: number = parseInt(req.query.limit as string) || 10;
+//         const offset: number = (page - 1) * limit;
+//         const sharedRecipes = await helper.getPaginatedSharedRecipes(user_id, offset, limit);
+//         const totalCount = await helper.getTotalSharedRecipesCount(user_id);
+//         const totalPages = Math.ceil(totalCount / limit);
+//         res.status(200).send({
+//             recipes: sharedRecipes,
+//             total_count: totalCount,
+//             total_pages: totalPages
+//         });
+//     } catch (error) {
+//         res.status(500).send("Error retrieving the shared recipes");
+//     }
+// });
+
+// // await axios.delete(`http://localhost:4000/${user_id}/deletesharedrecipe/${recipe_id}`
+
+// app.delete("/:user_id/deletesharedrecipe/:recipe_id", async (req: Request, res: Response) => {
+//     const user_id: number = parseInt(req.params.user_id);
+//     const recipe_id: number = parseInt(req.params.recipe_id);
+//     try {
+//         const recipeExists = await helper.recipeExists(recipe_id);
+//         if (!recipeExists) {
+//             res.status(404).send("Recipe does not exist for the user");
+//             return;
+//         }
+//         const recipeShared = await helper.recipeShared(user_id, recipe_id);
+//         if (!recipeShared) {
+//             res.status(404).send("Recipe is not shared");
+//             return;
+//         }
+//         await helper.deleteSocialRecipe(user_id, recipe_id);
+//         res.status(200).send("Recipe deleted");
+//     } catch (error) {
+//         res.status(500).send("Error deleting the recipe");
+//     }
+// });
 
 
 app.listen(port, () => {

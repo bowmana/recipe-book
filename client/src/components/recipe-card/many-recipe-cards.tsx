@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import classNames from 'classnames';
 import styles from './many-recipe-cards.module.scss';
 import { Link } from 'react-router-dom';
@@ -28,6 +28,10 @@ const ManyRecipeCards = ({
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
+    const [u_profile_image, setUProfileImage] = useState<string>('');
+    const [original_u_profile_image, setOriginalUProfileImage] = useState<string>('');
+    const dropDownRef = useRef<any>(null);
+    const dropDownRef2 = useRef<any>(null);
     useEffect(() => {
         handleSearch();
     }, []);
@@ -49,6 +53,10 @@ const ManyRecipeCards = ({
     const clearSearch = () => {
         setSearchRecipeName('');
         setFilteredRecipes([]);
+        dropDownRef.current?.clear();
+        dropDownRef2.current?.clear();
+        setRecipeCuisine(null);
+        setRecipeType(null);
     };
 
     const deleteRecipe = async (recipe_id: number) => {
@@ -71,7 +79,25 @@ const ManyRecipeCards = ({
     const addRecipeType = (recipe_type: Option | null) => {
         setRecipeType(recipe_type);
     };
+    const getProfileImages = async (id: number) => {
+        try {
+            return await axios.get(`http://localhost:4000/${id}/profileImages`);
+        } catch (error) {
+            console.log(error);
+        }
+    };
     const shareRecipe = async (recipe: Recipe) => {
+        //if the u_id exists then we need to get the profile image
+        //if the original_u_id exists then we need to get the original profile image
+        // if(recipe.u_id){
+        //     const response = await getProfileImages(recipe.u_id);
+        //     setUProfileImage(response.data);
+        // }
+        // if(recipe.original_u_id){
+        //     const response = await getProfileImages(recipe.original_u_id);
+        //     setOriginalUProfileImage(response.data);
+        // }
+
         try {
             const recipe_id = recipe.recipe_id;
             const response = await axios.post(
@@ -99,7 +125,7 @@ const ManyRecipeCards = ({
 
     return (
         <div className={classNames(styles.root, className)}>
-            <h1>Recipes</h1>
+            <h1>My Recipes</h1>
             <div className={styles['search-container']}>
                 <div className={styles['search-bar']}>
                     <input
@@ -146,6 +172,7 @@ const ManyRecipeCards = ({
                                     { value: 'Malaysian', label: 'Malaysian' },
                                 ]}
                                 onChange={addRecipeCuisine}
+                                ref={dropDownRef}
                             />
                         </div>
                         <h1 className={styles['pick-a-text']}>Search by recipe type</h1>
@@ -164,6 +191,7 @@ const ManyRecipeCards = ({
                                     { value: 'Marinade', label: 'Marinade' },
                                 ]}
                                 onChange={addRecipeType}
+                                ref={dropDownRef2}
                             />
                         </div>
                     </div>

@@ -20,10 +20,12 @@ export const RecipeCard = ({
     currentUserId,
     className,
 }: RecipeCardItemProps) => {
+    const isSocialCard = className === 'socialTheme';
     const isCurrentUser = recipe.u_id !== currentUserId;
     const hasOriginalUser = recipe.original_u_id !== null && recipe.original_u_id !== recipe.u_id;
     const rootClassName = classNames(styles.root, className, {
-        [styles.socialTheme]: className === 'social-recipe-card',
+        [styles.socialTheme]: className === 'socialTheme',
+        [styles.profileTheme]: className === 'profileTheme',
     });
     return (
         <div className={rootClassName}>
@@ -34,17 +36,35 @@ export const RecipeCard = ({
                         <h3>Cuisine: {recipe.recipe_cuisine}</h3>
                         <h3>Meal Category: {recipe.recipe_type}</h3>
                         <div className={styles['recipe-card-share']}>
-                            <h3>
-                                user: {recipe.u_name} id: {recipe.u_id}
-                            </h3>
+                            {isSocialCard && ( // Conditionally render the user profile image
+                                <>
+                                    <h3>
+                                        user: {recipe.u_name} id: {recipe.u_id}
+                                    </h3>
+                                    <img
+                                        src={recipe.u_profile_image}
+                                        height="50"
+                                        width="50"
+                                        alt="profile"
+                                    />
+                                </>
+                            )}
 
-                            {/* <h3>original user id: {recipe.original_u_id}</h3>
-                        <h3>original user name: {recipe.original_u_name}</h3> */}
                             {hasOriginalUser && (
-                                <h3>
-                                    Original Author: {recipe.original_u_name} id:{' '}
-                                    {recipe.original_u_id}
-                                </h3>
+                                <>
+                                    <h3>
+                                        Original Author: {recipe.original_u_name} id:{' '}
+                                        {recipe.original_u_id}
+                                    </h3>
+
+                                    {isSocialCard && ( // Conditionally render the original user profile image
+                                        <img
+                                            src={recipe.original_u_profile_image}
+                                            height={50}
+                                            width={50}
+                                        />
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>

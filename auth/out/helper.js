@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.matchPassword = exports.getUserByID = exports.setToken = exports.userExists = exports.createUser = void 0;
+exports.updateEmail = exports.updateUserName = exports.getProfileImage = exports.setProfileImage = exports.matchPassword = exports.getUserByID = exports.setToken = exports.userExists = exports.createUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const db_1 = require("./db/db");
 const dbConn = new db_1.DataBaseConnection();
@@ -89,8 +89,78 @@ const setToken = (user_id, token) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.setToken = setToken;
+const setProfileImage = (user_id, profile_image) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          profile_image = $1
+        WHERE
+          user_id = $2
+      ;`, [profile_image, user_id]);
+    }
+    catch (error) {
+        console.log('\nThere was an error setting the user\'s profile image');
+        console.log(error);
+    }
+});
+exports.setProfileImage = setProfileImage;
+const getProfileImage = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+        SELECT
+          profile_image
+        FROM
+          users
+        WHERE
+          user_id = $1
+      ;`, [user_id]);
+        return result.rowCount === 0 ? false : result.rows[0].profile_image;
+    }
+    catch (error) {
+        console.log('\nThere was an error getting the user\'s profile image');
+        console.log(error);
+    }
+});
+exports.getProfileImage = getProfileImage;
 const matchPassword = (password, hashPassword) => {
     const match = bcrypt_1.default.compare(password, hashPassword);
     return match;
 };
 exports.matchPassword = matchPassword;
+// await helper.updateUserName(user_id, user_name);
+const updateUserName = (user_id, user_name) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          user_name = $1
+        WHERE
+          user_id = $2
+      ;`, [user_name, user_id]);
+    }
+    catch (error) {
+        console.log('\nThere was an error updating the user\'s username');
+        console.log(error);
+    }
+});
+exports.updateUserName = updateUserName;
+const updateEmail = (user_id, email) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          email = $1
+        WHERE
+          user_id = $2
+      ;`, [email, user_id]);
+    }
+    catch (error) {
+        console.log('\nThere was an error updating the user\'s email');
+        console.log(error);
+    }
+});
+exports.updateEmail = updateEmail;

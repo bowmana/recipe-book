@@ -32,7 +32,8 @@ export class RecipeDataBaseConnection {
               user_name VARCHAR,
               password VARCHAR,
               role INT DEFAULT 0,
-              token VARCHAR
+              token VARCHAR,
+              profile_image VARCHAR
             );
            
             CREATE TABLE IF NOT EXISTS recipe_table (

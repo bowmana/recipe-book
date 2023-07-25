@@ -22,7 +22,8 @@ export const ImageCycle = ({ className, imageUrls }: ImageCycleProps) => {
         );
     };
     const rootClassName = classNames(styles.root, className, {
-        [styles.socialTheme]: className === 'social-recipe-card',
+        [styles.socialTheme]: className === 'socialTheme',
+        [styles.profileTheme]: className === 'profileTheme',
     });
     return (
         <div className={rootClassName}>

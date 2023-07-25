@@ -21,6 +21,8 @@ export interface Recipe {
     u_id: number;
     original_u_id: number;
     original_u_name: string;
+    original_u_profile_image: string;
+    u_profile_image: string;
 }
 
 

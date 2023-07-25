@@ -13,9 +13,9 @@ app.use(cors());
 
 app.use(logger("dev"));
 
-
 app.post("/events", async (req, res) => {
     const event = req.body;
+ 
     console.log("Event Received", event.type);
     console.log(event.data, 'event data');
     if (event.type === "UserCreated") {
@@ -37,19 +37,74 @@ app.post("/events", async (req, res) => {
         }
 
     }
-    // if (event.type === "RecipeShared") {
+    if(event.type === "ProfileImageUpload"){
+        console.log('profile image uploaded', event.data);
+        try{
+            if(!event.data.user_id || !event.data.profile_image) {
+                res.status(400).send('user_id or profile_image is missing');
+                return;
+            }
 
-    //     try{
-    //         if(!event.data.recipe_id || !event.data.recipe_name || !event.data.recipe_cuisine || !event.data.recipe_type || !event.data.recipe_description || !event.data.recipe_items || !event.data.recipe_images || !event.data.user_id) {
-    //             res.status(400).send('recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, recipe_items, recipe_images, or user_id is missing');
-    //         }
-            
-    //         await axios.post("http://localhost:4003/events", event);
-    //     }
-    //     catch (err) {
-    //         console.log(err);
-    //     }
-    // }
+            await axios.post("http://localhost:4000/events", event);
+            console.log("Event sent to recipe service");
+        }
+        catch (err) {
+            console.log(err);
+        }
+
+
+    }
+    //UsernameUpdate
+    if(event.type === "UsernameUpdated"){
+        console.log('username updated', event.data);
+        if(!event.data.user_id || !event.data.user_name) {
+            res.status(400).send('user_id or user_name is missing');
+            return;
+        }
+        try{
+        
+
+            await axios.post("http://localhost:4000/events", event);
+            console.log("Event sent to recipe service");
+        }
+        catch (err) {
+            console.log(err);
+        }
+        try{
+            await axios.post("http://localhost:4001/events", event);
+            console.log("Event sent to auth service");
+        }
+        catch (err) {
+            console.log(err);
+        }
+
+    }
+    //EmailUpdate
+    if(event.type === "EmailUpdated"){
+        console.log('email updated', event.data);
+        if(!event.data.user_id || !event.data.email) {
+            res.status(400).send('user_id or email is missing');
+            return;
+        }
+        try{
+
+            await axios.post("http://localhost:4000/events", event);
+            console.log("Event sent to recipe service");
+        }
+        catch (err) {
+            console.log(err);
+        }
+        try{
+            await axios.post("http://localhost:4001/events", event);
+            console.log("Event sent to auth service");
+        }
+        catch (err) {
+            console.log(err);
+        }
+
+    }
+    
+
 
 
     res.status(200).send({});

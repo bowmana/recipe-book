@@ -4,12 +4,7 @@ import { Upload} from "@aws-sdk/lib-storage";
 
 import { randomBytes } from "crypto";
 import path from "path";
-import multer from "multer";
-import multerS3 from "multer-s3";
-import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand, PutBucketPolicyCommand, GetBucketPolicyCommand} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import fs from "fs";
-
+import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand} from "@aws-sdk/client-s3";
 dotenv.config({ path: '../.env' });
 
 export class S3Bucket {
@@ -47,7 +42,7 @@ export class S3Bucket {
             client: this.s3,
             params: {
                 Bucket: this.bucketName,
-                Key: `recipe-images/${randomBytes(16).toString("hex") + path.extname(file.originalname)}`,
+                Key: `profile-images/${randomBytes(16).toString("hex") + path.extname(file.originalname)}`,
                 Body: file.buffer,
                 ContentType: file.mimetype,
              
@@ -68,7 +63,7 @@ export class S3Bucket {
             Key: key
         });
         const existingFile = await this.s3.send(command);
-        const newKey = `recipe-images/${randomBytes(16).toString("hex") + path.extname(key)}`;
+        const newKey = `profile-images/${randomBytes(16).toString("hex") + path.extname(key)}`;
         const upload = new Upload({
             client: this.s3,
             params: {

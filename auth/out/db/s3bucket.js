@@ -73,7 +73,7 @@ class S3Bucket {
                 client: this.s3,
                 params: {
                     Bucket: this.bucketName,
-                    Key: `recipe-images/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(file.originalname)}`,
+                    Key: `profile-images/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(file.originalname)}`,
                     Body: file.buffer,
                     ContentType: file.mimetype,
                 }
@@ -90,7 +90,7 @@ class S3Bucket {
                 Key: key
             });
             const existingFile = yield this.s3.send(command);
-            const newKey = `recipe-images/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(key)}`;
+            const newKey = `profile-images/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(key)}`;
             const upload = new lib_storage_1.Upload({
                 client: this.s3,
                 params: {

@@ -29,7 +29,8 @@ export class DataBaseConnection {
                 email VARCHAR,
                 password VARCHAR,
                 role INT DEFAULT 0,
-                token VARCHAR
+                token VARCHAR,
+                profile_image VARCHAR
             );`);
         }
         catch(err){

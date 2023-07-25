@@ -166,7 +166,6 @@ export const HomePage = ({ className }: HomePageProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <h1 className={styles['home-page-header']}>Welcome, {user_name}!</h1>
             <div>
                 <ManyRecipeCards
                     recipes={recipes}
@@ -178,36 +177,5 @@ export const HomePage = ({ className }: HomePageProps) => {
         </div>
     );
 };
-
-{
-    /* <div className={styles['pagination-container']}>
-                <button
-                    onClick={goToPreviousPage}
-                    className={styles['pagination-button']}
-                    disabled={currentPage === 1}
-                >
-                    Previous
-                </button>
-                {Array.from({ length: totalPages }).map((_, index) => (
-                    <button
-                        key={index + 1}
-                        onClick={() => goToPage(index + 1)}
-                        className={classNames(styles['pagination-button'], {
-                            [styles['pagination-button-active']]: index + 1 === currentPage,
-                        })}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
-                <button
-                    onClick={goToNextPage}
-                    className={styles['pagination-button']}
-                    disabled={currentPage === totalPages}
-                >
-                    Next
-                </button>
-            </div>
-        </div> */
-}
 
 export default HomePage;

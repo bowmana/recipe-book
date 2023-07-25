@@ -97,11 +97,97 @@ const createUser = async (email: string, user_name: string, password: string) =>
     }
   };
 
+  const setProfileImage = async (user_id: number, profile_image: string) => {
+    try {
+
+      await dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          profile_image = $1
+        WHERE
+          user_id = $2
+      ;`, [profile_image, user_id]);
+
+    } catch (error) {
+
+
+      console.log('\nThere was an error setting the user\'s profile image');
+      console.log(error);
+
+    }
+  };
+
+  const getProfileImage = async (user_id: number) => {
+    try {
+
+      const result: QueryResult = await dbConn.pool.query(`
+        SELECT
+          profile_image
+        FROM
+          users
+        WHERE
+          user_id = $1
+      ;`, [user_id]);
+
+      return result.rowCount === 0 ? false : result.rows[0].profile_image;
+
+    } catch (error) {
+
+      console.log('\nThere was an error getting the user\'s profile image');
+      console.log(error);
+
+    }
+  };
+
+
+
   const matchPassword = (password: string, hashPassword: string) => {
 
     const match = bcrypt.compare(password, hashPassword);
     return match;
   
   };
+  // await helper.updateUserName(user_id, user_name);
 
-  export {createUser, userExists, setToken, getUserByID, matchPassword};
+  const updateUserName = async (user_id: number, user_name: string) => {
+    try {
+
+      await dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          user_name = $1
+        WHERE
+          user_id = $2
+      ;`, [user_name, user_id]);
+
+    } catch (error) {
+
+      console.log('\nThere was an error updating the user\'s username');
+      console.log(error);
+
+    }
+  };
+
+  const updateEmail = async (user_id: number, email: string) => {
+    try {
+
+      await dbConn.pool.query(`
+        UPDATE
+          users
+        SET
+          email = $1
+        WHERE
+          user_id = $2
+      ;`, [email, user_id]);
+
+    } catch (error) {
+
+      console.log('\nThere was an error updating the user\'s email');
+      console.log(error);
+
+    }
+  };
+
+  export {createUser, userExists, setToken, getUserByID, matchPassword, setProfileImage, getProfileImage, updateUserName, updateEmail};

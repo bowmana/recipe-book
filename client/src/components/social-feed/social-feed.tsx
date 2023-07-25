@@ -276,6 +276,7 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
+            <h1>Social Feed</h1>
             <div className={styles['search-container']}>
                 <div className={styles['search-bar']}>
                     <input
@@ -355,7 +356,6 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
             {/* 
 -------------------------------------------------------------------------------------------------------------- */}
 
-            <h1>Recipes from other users</h1>
             <div className={styles['recipe-cards-container']}>
                 {recipes.map((recipe) => (
                     <RecipeCard
@@ -363,7 +363,7 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
                         recipe={recipe}
                         addRecipe={addRecipe}
                         currentUserId={user_id}
-                        className="social-recipe-card"
+                        className="socialTheme"
                     />
                 ))}
             </div>

@@ -1,5 +1,48 @@
 .root {
     border-radius: 15px 15px 0 0;
     padding: 1rem;
-    background-color: #266d67;
+    background-color: #d17f74;
+    
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    color: #fff;
+}
+
+.nav{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem;
+   
+}
+
+.link{
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0 1rem;
+}
+
+.favicon{
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    
+}
+
+.favicon:hover{
+    border: black 2px solid;
+   
+    animation: spin 1s linear 1;
+
+}
+
+@keyframes spin{
+    0%{
+        transform: rotate(0deg);
+    }
+    100%{
+        transform: rotate(360deg);
+    }
 }

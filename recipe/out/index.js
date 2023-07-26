@@ -143,7 +143,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
             res.status(404).send("User does not exist");
             return;
         }
-        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id, original_u_id, original_u_name);
+        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id);
         if (!recipe) {
             res.status(500).send("There was an error creating the recipe");
             return;
@@ -596,6 +596,11 @@ app.post("/recipes/:user_id/share/:recipe_id", (req, res) => __awaiter(void 0, v
             return;
         }
         yield helper.insertSocialRecipe(user_id, recipe_id);
+        //set the recipe as shared
+        yield helper.setRecipeShared(recipe_id);
+        //clear cache
+        const cacheKey = `user:${user_id}:recipes`;
+        yield redisClient.del(cacheKey);
         res.status(200).send("Recipe shared");
     }
     catch (error) {

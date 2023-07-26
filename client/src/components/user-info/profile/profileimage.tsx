@@ -73,32 +73,30 @@ export const ProfileImageUpload = ({ className, initialImage, user_id }: ImageUp
                 const response = await axios.get(
                     `http://localhost:4001/user/${user_id}/profile-image`
                 );
-                if (response) {
+                if (response.data) {
                     setRetrievedImage(response.data);
 
                     console.log(response.data, 'response.data');
                     console.log(retrievedImage + 'retrievedImage');
 
-                    if (response.data) {
-                        try {
-                            const res = await axios.post(`http://localhost:4005/events`, {
-                                type: 'ProfileImageUpload',
-                                data: {
-                                    user_id: user_id,
-                                    profile_image: response.data,
-                                },
-                            });
-                            console.log(res, 'res');
-                        } catch (error) {
-                            console.log(error);
-                        }
+                    try {
+                        const res = await axios.post(`http://localhost:4005/events`, {
+                            type: 'ProfileImageUpload',
+                            data: {
+                                user_id: user_id,
+                                profile_image: response.data,
+                            },
+                        });
+                        console.log(res, 'res');
+                    } catch (error) {
+                        console.log(error);
                     }
                 }
             } catch (error) {
                 console.log(error);
             }
         };
-
+        console.log(retrievedImage + 'retrievedImage');
         fetchImageAndSendToEventBus();
     }, [user_id, retrievedImage]);
 
@@ -116,7 +114,7 @@ export const ProfileImageUpload = ({ className, initialImage, user_id }: ImageUp
                     />
                     <div className={styles['image-preview-controls']}>
                         {isEditing ? (
-                            <button onClick={handleExitEdit}>Exit</button>
+                            <button onClick={handleExitEdit}>Cancel</button>
                         ) : (
                             <button onClick={() => setIsEditing(true)}>Edit</button>
                         )}
@@ -125,11 +123,20 @@ export const ProfileImageUpload = ({ className, initialImage, user_id }: ImageUp
             ) : (
                 <div className={styles['initial-image']}>
                     {initialImage && (
-                        <img
-                            src={initialImage}
-                            alt="Initial Image"
-                            style={{ maxWidth: '100%', maxHeight: '200px' }}
-                        />
+                        <>
+                            <img
+                                src={initialImage}
+                                alt="Initial Image"
+                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                            />
+                            <div className={styles['image-preview-controls']}>
+                                {isEditing ? (
+                                    <button onClick={handleExitEdit}>Cancel</button>
+                                ) : (
+                                    <button onClick={() => setIsEditing(true)}>Edit</button>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
             )}

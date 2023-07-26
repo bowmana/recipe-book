@@ -12,6 +12,7 @@ export interface ManyRecipeCardsProps {
     className?: string;
     onRecipeDelete: () => void;
     user_id: number;
+    user_name: string;
 }
 
 interface RecipeCardPropsWithRecipes extends ManyRecipeCardsProps {
@@ -23,13 +24,13 @@ const ManyRecipeCards = ({
     recipes,
     onRecipeDelete,
     user_id,
+    user_name,
 }: RecipeCardPropsWithRecipes) => {
     const [searchRecipeName, setSearchRecipeName] = useState('');
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
     const [recipe_type, setRecipeType] = useState<Option | null>(null);
-    const [u_profile_image, setUProfileImage] = useState<string>('');
-    const [original_u_profile_image, setOriginalUProfileImage] = useState<string>('');
+
     const dropDownRef = useRef<any>(null);
     const dropDownRef2 = useRef<any>(null);
     useEffect(() => {
@@ -79,41 +80,18 @@ const ManyRecipeCards = ({
     const addRecipeType = (recipe_type: Option | null) => {
         setRecipeType(recipe_type);
     };
-    const getProfileImages = async (id: number) => {
-        try {
-            return await axios.get(`http://localhost:4000/${id}/profileImages`);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    const shareRecipe = async (recipe: Recipe) => {
-        //if the u_id exists then we need to get the profile image
-        //if the original_u_id exists then we need to get the original profile image
-        // if(recipe.u_id){
-        //     const response = await getProfileImages(recipe.u_id);
-        //     setUProfileImage(response.data);
-        // }
-        // if(recipe.original_u_id){
-        //     const response = await getProfileImages(recipe.original_u_id);
-        //     setOriginalUProfileImage(response.data);
-        // }
 
+    const shareRecipe = async (recipe: Recipe) => {
         try {
             const recipe_id = recipe.recipe_id;
+            console.log(recipe_id);
+
             const response = await axios.post(
                 `http://localhost:4000/recipes/${user_id}/share/${recipe_id}`,
                 {
                     data: {
-                        recipe_name: recipe.recipe_name,
-                        recipe_cuisine: recipe.recipe_cuisine,
-                        recipe_type: recipe.recipe_type,
-                        recipe_description: recipe.recipe_description,
-                        recipe_items: recipe.recipe_items,
-                        recipe_images: recipe.recipe_images,
-                        u_id: recipe.u_id,
-                        u_name: recipe.u_name,
-                        original_u_id: recipe.original_u_id,
-                        original_u_name: recipe.original_u_name,
+                        u_id: user_id,
+                        u_name: user_name,
                     },
                 }
             );
@@ -210,7 +188,7 @@ const ManyRecipeCards = ({
                               deleteRecipe={deleteRecipe}
                               currentUserId={user_id}
                           />
-                          {recipe.u_id === user_id && (
+                          {recipe.shared === false && recipe.u_id === user_id && (
                               <button
                                   className={styles['share-button']}
                                   onClick={() => shareRecipe(recipe)}

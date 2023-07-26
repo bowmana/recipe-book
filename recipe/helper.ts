@@ -103,7 +103,7 @@ const updateEmail = async (user_id: number, email: string) => {
 //     }
 // };
 // const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id);
-const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, u_name: string, u_id: number, original_u_id: number, original_u_name: string) => {
+const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, original_u_id: number, original_u_name: string, u_name: string, u_id: number) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name, original_u_id, original_u_name)
@@ -124,6 +124,18 @@ const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine
     }
 };
 
+const setRecipeShared = async (recipe_id: number) => {
+    try {
+        await dbConn.pool.query(`
+        UPDATE recipe_table
+        SET shared = TRUE
+        WHERE recipe_id = $1
+        `, [recipe_id]);
+    } catch (error) {
+        console.log('\nError setting recipe to shared in database');
+        console.log(error);
+    }
+};
 
 
 
@@ -172,7 +184,7 @@ const createRecipeImage = async (recipe_id: number, recipe_image: string) => {
 const getUserRecipes = async (user_id: number) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
-            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name,
+            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name, recipe_table.shared,
             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
             FROM recipe_table
             INNER JOIN user_recipes
@@ -457,8 +469,6 @@ const getRecipeItems = async (recipe_id: number) => {
       throw error;
     }
   };
-
-
 
 
 
@@ -1249,4 +1259,4 @@ const recipeShared = async (user_id: number, recipe_id: number) => {
 };
 
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getSharedRecipesAfterId, getTotalSharedRecipesCount, getSocialRecipesAfterId, recipeCuisineExists, recipeTypeExists, recipeNameExists, updateProfileImage, updateEmail, updateUserName};
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getSharedRecipesAfterId, getTotalSharedRecipesCount, getSocialRecipesAfterId, recipeCuisineExists, recipeTypeExists, recipeNameExists, updateProfileImage, updateEmail, updateUserName, setRecipeShared};

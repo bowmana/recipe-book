@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserName = exports.updateEmail = exports.updateProfileImage = exports.recipeNameExists = exports.recipeTypeExists = exports.recipeCuisineExists = exports.getSocialRecipesAfterId = exports.getTotalSharedRecipesCount = exports.getSharedRecipesAfterId = exports.deleteSocialRecipe = exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
+exports.setRecipeShared = exports.updateUserName = exports.updateEmail = exports.updateProfileImage = exports.recipeNameExists = exports.recipeTypeExists = exports.recipeCuisineExists = exports.getSocialRecipesAfterId = exports.getTotalSharedRecipesCount = exports.getSharedRecipesAfterId = exports.deleteSocialRecipe = exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
 const db_1 = require("./db/db");
 const dbConn = new db_1.RecipeDataBaseConnection();
 dbConn.connect();
@@ -111,7 +111,7 @@ exports.updateEmail = updateEmail;
 //     }
 // };
 // const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id);
-const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id, original_u_id, original_u_name) => __awaiter(void 0, void 0, void 0, function* () {
+const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name, original_u_id, original_u_name)
@@ -132,6 +132,20 @@ const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_
     }
 });
 exports.createRecipe = createRecipe;
+const setRecipeShared = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+        UPDATE recipe_table
+        SET shared = TRUE
+        WHERE recipe_id = $1
+        `, [recipe_id]);
+    }
+    catch (error) {
+        console.log('\nError setting recipe to shared in database');
+        console.log(error);
+    }
+});
+exports.setRecipeShared = setRecipeShared;
 const createRecipeItem = (recipe_id, recipe_item, portion_size) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -169,7 +183,7 @@ exports.createRecipeImage = createRecipeImage;
 const getUserRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
-            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name,
+            SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name, recipe_table.shared,
             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
             FROM recipe_table
             INNER JOIN user_recipes

@@ -27,6 +27,8 @@ export const Profile = ({ className }: ProfileProps) => {
     const [isEditingEmail, setIsEditingEmail] = useState(false);
     const [user_name, setUsername] = useState(''); // Add the initial username value here
     const [email, setEmail] = useState(''); // Add the initial email value here
+    const [tempUserName, setTempUserName] = useState(''); // Add the initial username value here
+    const [tempEmail, setTempEmail] = useState(''); // Add the initial email value here
 
     useEffect(() => {
         const auth = async () => {
@@ -221,12 +223,13 @@ export const Profile = ({ className }: ProfileProps) => {
                 type: 'UsernameUpdated',
                 data: {
                     user_id: user_id,
-                    user_name: user_name,
+                    user_name: tempUserName,
                 },
             });
 
             // After successfully updating, set the isEditingUsername state back to false
             setIsEditingUsername(false);
+            setUsername(tempUserName);
         } catch (error) {
             console.log('Failed to save username');
             console.log(error);
@@ -239,11 +242,12 @@ export const Profile = ({ className }: ProfileProps) => {
                 type: 'EmailUpdated',
                 data: {
                     user_id: user_id,
-                    email: email.toLowerCase(),
+                    email: tempEmail.toLowerCase(),
                 },
             });
             // After successfully updating, set the isEditingEmail state back to false
             setIsEditingEmail(false);
+            setEmail(tempEmail);
         } catch (error) {
             console.log('Failed to save email');
             console.log(error);
@@ -266,8 +270,8 @@ export const Profile = ({ className }: ProfileProps) => {
                             {isEditingUsername ? (
                                 <input
                                     type="text"
-                                    value={user_name}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    value={tempUserName}
+                                    onChange={(e) => setTempUserName(e.target.value)}
                                 />
                             ) : (
                                 `Username: ${user_name}`
@@ -276,7 +280,14 @@ export const Profile = ({ className }: ProfileProps) => {
                         {isEditingUsername ? (
                             <>
                                 <button onClick={handleSaveUsername}>Save</button>
-                                <button onClick={() => setIsEditingUsername(false)}>Cancel</button>
+                                <button
+                                    onClick={() => {
+                                        setIsEditingUsername(false);
+                                        setTempUserName(user_name);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
                             </>
                         ) : (
                             <button onClick={() => setIsEditingUsername(true)}>
@@ -288,8 +299,8 @@ export const Profile = ({ className }: ProfileProps) => {
                             {isEditingEmail ? (
                                 <input
                                     type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={tempEmail}
+                                    onChange={(e) => setTempEmail(e.target.value)}
                                 />
                             ) : (
                                 `Email: ${email}`
@@ -298,12 +309,19 @@ export const Profile = ({ className }: ProfileProps) => {
                         {isEditingEmail ? (
                             <>
                                 <button onClick={handleSaveEmail}>Save</button>
-                                <button onClick={() => setIsEditingEmail(false)}>Cancel</button>
+                                <button
+                                    onClick={() => {
+                                        setIsEditingEmail(false);
+                                        setTempEmail(email);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
                             </>
                         ) : (
                             <button onClick={() => setIsEditingEmail(true)}>Edit Email</button>
                         )}
-                        <h2>Joined: 2021-01-01</h2>
+
                         <h2>Recipes Shared: {totalCount}</h2>
                     </div>
                 </div>

@@ -34,6 +34,7 @@ interface CachedRecipeItem {
     u_name: string;
     original_u_id: number;
     original_u_name: string;
+    shared: boolean;
   }
 
 
@@ -167,9 +168,10 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
         res.status(404).send("User does not exist");
         return;
     }
+  
+    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id) 
 
-
-    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id, original_u_id, original_u_name);
+    
     if (!recipe) {
         res.status(500).send("There was an error creating the recipe");
         return;
@@ -704,6 +706,8 @@ app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Resp
 
 //-------------------------------------Recipe social --------------------------------------------------
 app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Response) => {
+
+    
     const user_id: number = parseInt(req.params.user_id);
     const recipe_id: number = parseInt(req.params.recipe_id);
     //insert into shared_recipes table and social_recipes table
@@ -720,8 +724,14 @@ app.post("/recipes/:user_id/share/:recipe_id", async (req: Request, res: Respons
            
             return;
         }
-
         await helper.insertSocialRecipe(user_id, recipe_id);
+        //set the recipe as shared
+        await helper.setRecipeShared(recipe_id);
+        //clear cache
+        
+        const cacheKey = `user:${user_id}:recipes`;
+        await redisClient.del(cacheKey);
+
         res.status(200).send("Recipe shared");
     } catch (error) {
         res.status(500).send("Error sharing the recipe");

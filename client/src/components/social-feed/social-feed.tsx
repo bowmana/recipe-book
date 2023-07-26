@@ -11,6 +11,8 @@ export interface SocialPageProps {
 }
 export const SocialFeed = ({ className }: SocialPageProps) => {
     const [user_id, setUserID] = useState(0);
+    const [user_name, setUserName] = useState('');
+
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [isFetching, setIsFetching] = useState(false);
@@ -36,6 +38,8 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
                 try {
                     const axiosResponse = await axios.post(url, {}, { withCredentials: true });
                     setUserID(axiosResponse.data.user_id);
+                    setUserName(axiosResponse.data.user_name);
+
                     // fetchRecipes(currentPage, recipesPerPage);
                     // fetchRecipes();
                 } catch (axiosError) {
@@ -277,6 +281,7 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
     return (
         <div className={classNames(styles.root, className)}>
             <h1>Social Feed</h1>
+
             <div className={styles['search-container']}>
                 <div className={styles['search-bar']}>
                     <input

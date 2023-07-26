@@ -66,7 +66,8 @@ class RecipeDataBaseConnection {
               u_id BIGINT REFERENCES recipe_users_table(user_id),
               u_name VARCHAR,
               original_u_id BIGINT REFERENCES recipe_users_table(user_id),
-              original_u_name VARCHAR
+              original_u_name VARCHAR,
+              shared BOOLEAN DEFAULT FALSE
             );
            
             CREATE TABLE IF NOT EXISTS user_recipes (

@@ -23,6 +23,7 @@ export interface Recipe {
     original_u_name: string;
     original_u_profile_image: string;
     u_profile_image: string;
+    shared: boolean;
 }
 
 

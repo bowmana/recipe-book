@@ -171,6 +171,7 @@ export const HomePage = ({ className }: HomePageProps) => {
                     recipes={recipes}
                     onRecipeDelete={onRecipeDelete}
                     user_id={user_id}
+                    user_name={user_name}
                 />
             </div>
             {renderPagination()}

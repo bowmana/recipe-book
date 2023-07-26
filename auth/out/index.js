@@ -179,7 +179,7 @@ app.get('/user/:user_id/profile-image', (req, res) => __awaiter(void 0, void 0, 
     const user_id = parseInt(req.params.user_id);
     const url = yield helper.getProfileImage(user_id);
     if (!url) {
-        res.status(404).send('No image found');
+        res.status(200).send(undefined);
         return;
     }
     res.status(200).send(url);

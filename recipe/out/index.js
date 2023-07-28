@@ -131,6 +131,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
     const original_u_id = parseInt(req.body.original_u_id);
     console.log(u_id, "u_id");
     const recipe_items = req.body.recipe_items;
+    const recipe_instructions = req.body.recipe_instructions;
     console.log(recipe_description, "recipe_description");
     console.log(recipe_items, "recipe_items");
     console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
@@ -183,8 +184,21 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
                 console.log("Error creating recipe item: " + err);
             }
         }
+        for (let i = 0; i < recipe_instructions.length; i++) {
+            const { instruction, instruction_order } = recipe_instructions[i];
+            try {
+                console.log(instruction, "instruction");
+                console.log(instruction_order, "instruction_order");
+                yield helper.createInstruction(recipe.recipe_id, instruction, instruction_order);
+            }
+            catch (err) {
+                console.log("Error creating instruction: " + err);
+            }
+        }
         const recipeItems = yield helper.getRecipeItems(recipe.recipe_id);
+        const recipeInstructions = yield helper.getRecipeInstructions(recipe.recipe_id);
         console.log(recipeItems, "recipeItems");
+        console.log(recipeInstructions, "recipeInstructions");
         const cacheKey = `user:${user_id}:recipes`;
         yield redisClient.del(cacheKey);
         const cachedData = yield getOrSetCache(cacheKey, () => __awaiter(void 0, void 0, void 0, function* () {
@@ -211,10 +225,12 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
                 u_id: recipe.u_id,
                 u_name: recipe.u_name,
                 original_u_id: recipe.original_u_id,
-                original_u_name: recipe.original_u_name
+                original_u_name: recipe.original_u_name,
+                recipe_instructions: recipeInstructions,
+                recipe_description: recipe.recipe_description
             }
         });
-        res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls, u_id: recipe.u_id, u_name: recipe.u_name, original_u_id: recipe.original_u_id, original_u_name: recipe.original_u_name });
+        res.status(201).send({ recipe_id: recipe.recipe_id, recipe_name: recipe.recipe_name, recipe_cuisine: recipe.recipe_cuisine, recipe_type: recipe.recipe_type, recipe_items: recipeItems, recipe_images: image_urls, u_id: recipe.u_id, u_name: recipe.u_name, original_u_id: recipe.original_u_id, original_u_name: recipe.original_u_name, recipe_instructions: recipeInstructions, recipe_description: recipe.recipe_description });
     }
     catch (err) {
         console.log(err);
@@ -283,6 +299,7 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
     const recipe_id = parseInt(req.params.recipe_id);
     const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name } = req.body;
     const recipe_items = req.body.recipe_items;
+    const recipe_instructions = req.body.recipe_instructions;
     const user_id = parseInt(req.params.user_id);
     const u_id = parseInt(req.body.u_id);
     try {
@@ -359,9 +376,14 @@ app.put("/:user_id/recipes/:recipe_id", upload.array("recipe_images"), (req, res
         }
         const updatedRecipe = yield helper.updateRecipe(recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name);
         yield helper.deleteRecipeItems(recipe_id);
+        yield helper.deleteInstructions(recipe_id);
         for (let i = 0; i < recipe_items.length; i++) {
             const { recipe_item, portion_size } = recipe_items[i];
             yield helper.createRecipeItem(recipe_id, recipe_item, portion_size);
+        }
+        for (let i = 0; i < recipe_instructions.length; i++) {
+            const { instruction, instruction_order } = recipe_instructions[i];
+            yield helper.createInstruction(recipe_id, instruction, instruction_order);
         }
         const updatedRecipeItems = yield helper.getRecipeItems(recipe_id);
         const cacheKey = `user:${user_id}:recipes`;
@@ -489,6 +511,7 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             return;
         }
         const recipeItems = yield helper.getRecipeItems(recipe_id);
+        const recipeInstructions = yield helper.getRecipeInstructions(recipe_id);
         const recipeImages = yield helper.getRecipeImages(recipe_id);
         console.log(recipeImages, "recipeImages");
         res.status(200).send({
@@ -502,7 +525,8 @@ app.get("/recipes/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, f
             u_id: recipe.u_id,
             u_name: recipe.u_name,
             original_u_id: recipe.original_u_id,
-            original_u_name: recipe.original_u_name
+            original_u_name: recipe.original_u_name,
+            recipe_instructions: recipeInstructions
         });
     }
     catch (error) {
@@ -597,7 +621,7 @@ app.post("/recipes/:user_id/share/:recipe_id", (req, res) => __awaiter(void 0, v
         }
         yield helper.insertSocialRecipe(user_id, recipe_id);
         //set the recipe as shared
-        yield helper.setRecipeShared(recipe_id);
+        yield helper.setRecipeShared(recipe_id, true);
         //clear cache
         const cacheKey = `user:${user_id}:recipes`;
         yield redisClient.del(cacheKey);
@@ -837,26 +861,31 @@ app.get("/:user_id/getsharedrecipes", (req, res) => __awaiter(void 0, void 0, vo
 //     }
 // });
 // // await axios.delete(`http://localhost:4000/${user_id}/deletesharedrecipe/${recipe_id}`
-// app.delete("/:user_id/deletesharedrecipe/:recipe_id", async (req: Request, res: Response) => {
-//     const user_id: number = parseInt(req.params.user_id);
-//     const recipe_id: number = parseInt(req.params.recipe_id);
-//     try {
-//         const recipeExists = await helper.recipeExists(recipe_id);
-//         if (!recipeExists) {
-//             res.status(404).send("Recipe does not exist for the user");
-//             return;
-//         }
-//         const recipeShared = await helper.recipeShared(user_id, recipe_id);
-//         if (!recipeShared) {
-//             res.status(404).send("Recipe is not shared");
-//             return;
-//         }
-//         await helper.deleteSocialRecipe(user_id, recipe_id);
-//         res.status(200).send("Recipe deleted");
-//     } catch (error) {
-//         res.status(500).send("Error deleting the recipe");
-//     }
-// });
+app.delete("/:user_id/deletesharedrecipe/:recipe_id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user_id = parseInt(req.params.user_id);
+    const recipe_id = parseInt(req.params.recipe_id);
+    try {
+        const recipeExists = yield helper.recipeExists(recipe_id);
+        if (!recipeExists) {
+            res.status(404).send("Recipe does not exist for the user");
+            return;
+        }
+        const recipeShared = yield helper.recipeShared(user_id, recipe_id);
+        if (!recipeShared) {
+            res.status(404).send("Recipe is not shared");
+            return;
+        }
+        yield helper.setRecipeShared(recipe_id, false);
+        yield helper.deleteSocialRecipe(user_id, recipe_id);
+        //delete from cache
+        const cacheKey = `user:${user_id}:recipes`;
+        yield redisClient.del(cacheKey);
+        res.status(200).send("Recipe deleted");
+    }
+    catch (error) {
+        res.status(500).send("Error deleting the recipe");
+    }
+}));
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });

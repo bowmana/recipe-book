@@ -9,8 +9,11 @@ import { useParams } from 'react-router-dom';
 import { Dropdown } from '../../util-components/dropdown';
 import { ImageUpload } from '../../util-components/imageupload';
 import { LoadingModal } from '../../util-components/loadingmodal';
-import { EditableRecipeItem, Option } from '../../types';
+import { EditableRecipeItem, Option, EditableInstruction } from '../../types';
 import { useState, useEffect } from 'react';
+import { InstructionForm } from '../../shared-components/instruction-form';
+import { Instruction } from '../../shared-components/instruction';
+import { EditInstructionForm } from '../../shared-components/edit-instruction-form';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
@@ -33,6 +36,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [user_id, setUserID] = useState(0);
     const [user_name, setUserName] = useState('');
+    const [recipe_instructions, setRecipeInstructions] = useState<EditableInstruction[]>([]);
 
     // const [original_u_id, setOriginalUId] = useState(0);
     // const [original_u_name, setOriginalUName] = useState('');
@@ -70,6 +74,14 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                         isEditing: false, // Add the "isEditing" property
                     })
                 );
+                const fetchedRecipeInstructions = (response.data.recipe_instructions || []).map(
+                    (instruction: EditableInstruction) => ({
+                        instruction_id: instruction.instruction_id,
+                        instruction: instruction.instruction,
+                        isEditing: false, // Add the "isEditing" property
+                        instruction_order: instruction.instruction_order,
+                    })
+                );
 
                 setRecipeDescription(response.data.recipe_description);
                 setRecipeName(response.data.recipe_name);
@@ -87,6 +99,7 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     label: response.data.recipe_type,
                 });
 
+                setRecipeInstructions(fetchedRecipeInstructions);
                 // setOriginalUId(response.data.original_u_id);
                 // setOriginalUName(response.data.original_u_name);
 
@@ -100,6 +113,30 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         };
         fetchRecipes();
     }, [recipe_id]);
+    const deleteRecipeInstruction = (id: string) => {
+        const updatedRecipeInstructions = recipe_instructions.filter(
+            (instruction) => instruction.instruction_id !== id
+        );
+        // Update the instruction_order of the remaining instructions
+        const updatedInstructionsWithIndex = updatedRecipeInstructions.map(
+            (instruction, index) => ({
+                ...instruction,
+                instruction_order: index + 1,
+            })
+        );
+        setRecipeInstructions(updatedInstructionsWithIndex);
+    };
+
+    const addRecipeInstruction = (instruction: string) => {
+        const newItem: EditableInstruction = {
+            instruction_id: UUID(),
+            instruction,
+            isEditing: false,
+            instruction_order: recipe_instructions.length + 1,
+        };
+
+        setRecipeInstructions([...recipe_instructions, newItem]);
+    };
 
     const addRecipeItem = async (recipe_item: string, portion_size: string) => {
         try {
@@ -138,6 +175,19 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             })
         );
     };
+    const editRecipeInstruction = (id: string) => {
+        setRecipeInstructions(
+            recipe_instructions.map((instruction: EditableInstruction) => {
+                return instruction.instruction_id === id
+                    ? {
+                          ...instruction,
+
+                          isEditing: !instruction.isEditing,
+                      }
+                    : instruction;
+            })
+        );
+    };
 
     const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
@@ -147,6 +197,20 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                           ...item,
                           recipe_item,
                           portion_size: recipe_portion,
+                          isEditing: !item.isEditing,
+                      }
+                    : item;
+            })
+        );
+    };
+    const saveRecipeInstruction = (instruction: string, id: string) => {
+        setRecipeInstructions(
+            recipe_instructions.map((item: EditableInstruction) => {
+                return item.instruction_id === id
+                    ? {
+                          ...item,
+                          instruction,
+
                           isEditing: !item.isEditing,
                       }
                     : item;
@@ -187,14 +251,19 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             formData.append(`recipe_items[${index}][recipe_item]`, item.recipe_item);
             formData.append(`recipe_items[${index}][portion_size]`, item.portion_size);
         });
+        recipe_instructions.forEach((instruction, index) => {
+            formData.append(`recipe_instructions[${index}][instruction]`, instruction.instruction);
+            formData.append(
+                `recipe_instructions[${index}][instruction_order]`,
+                instruction.instruction_order.toString()
+            );
+        });
         formData.append('recipe_name', recipe_name);
         formData.append('recipe_cuisine', recipe_cuisine?.value || '');
         formData.append('recipe_type', recipe_type?.value || '');
         formData.append('recipe_description', recipe_description);
         formData.append('u_name', user_name);
         formData.append('u_id', user_id.toString());
-        // formData.append('original_u_id', original_u_id.toString());
-        // formData.append('original_u_name', original_u_name);
 
         try {
             const response = await axios.put(
@@ -365,6 +434,28 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     ) : (
                         <h1>There are no items in this recipe</h1>
                     )}
+                    <div className={styles['recipe-card-line-separator']}> </div>
+                    <div className={styles['form-container']}>
+                        <InstructionForm addRecipeInstruction={addRecipeInstruction} />
+
+                        {recipe_instructions.map((instruction, index) =>
+                            instruction.isEditing ? (
+                                <EditInstructionForm
+                                    key={index}
+                                    editRecipeInstruction={saveRecipeInstruction}
+                                    item={instruction}
+                                />
+                            ) : (
+                                <Instruction
+                                    recipe_instruction={instruction}
+                                    index={index}
+                                    deleteRecipeInstruction={deleteRecipeInstruction}
+                                    editRecipeInstruction={editRecipeInstruction}
+                                />
+                            )
+                        )}
+                    </div>
+
                     <div className={styles['recipe-card-bottom']}> </div>
                 </div>
             </div>

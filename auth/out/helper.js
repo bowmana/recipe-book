@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateEmail = exports.updateUserName = exports.getProfileImage = exports.setProfileImage = exports.matchPassword = exports.getUserByID = exports.setToken = exports.userExists = exports.createUser = void 0;
+exports.updateEmail = exports.updateUserName = exports.getProfileImageKey = exports.getProfileImage = exports.setProfileImage = exports.matchPassword = exports.getUserByID = exports.setToken = exports.userExists = exports.createUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const db_1 = require("./db/db");
 const dbConn = new db_1.DataBaseConnection();
@@ -124,6 +124,30 @@ const getProfileImage = (user_id) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getProfileImage = getProfileImage;
+const getProfileImageKey = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+      SELECT
+        profile_image
+      FROM
+        users
+      WHERE
+        user_id = $1
+    ;`, [user_id]);
+        if (result.rowCount === 0) {
+            return false;
+        }
+        const url = result.rows[0].profile_image;
+        const cloudfrontDomain = 'https://d1uvjvhzktlyb3.cloudfront.net/';
+        const key = url.replace(cloudfrontDomain, '');
+        return key;
+    }
+    catch (error) {
+        console.error('Error while getting the profile image key:', error);
+        return null;
+    }
+});
+exports.getProfileImageKey = getProfileImageKey;
 const matchPassword = (password, hashPassword) => {
     const match = bcrypt_1.default.compare(password, hashPassword);
     return match;

@@ -19,6 +19,8 @@ import multer from "multer";
 import path from "path";
 import { S3Bucket } from "./db/s3bucket";
 import { Event, UsernameUpdated, EmailUpdated} from "./event_types";
+
+import e from "express";
 const storage = multer.memoryStorage();
 const upload = multer( { storage: storage} );
 const s3Bucket = new S3Bucket();
@@ -149,7 +151,13 @@ app.post('/user/:user_id/profile-image', upload.single('profile_image'), async (
     res.status(400).send('No image uploaded');
     return;
   }
-  const url = "https://d1uvjvhzktlyb3.cloudfront.net/profile-images/" + path.basename(await s3Bucket.uploadFile(profile_image))
+  const existingProfileImageKey = await helper.getProfileImage(user_id);
+  if (existingProfileImageKey) {
+    console.log(existingProfileImageKey, 'existingProfileImageKey');
+    await s3Bucket.deleteFilesWithPrefix(`profile-images/${user_id}`);
+    console.log(`Existing profile picture deleted for user ${user_id}`);
+  }
+  const url = `https://d1uvjvhzktlyb3.cloudfront.net/profile-images/${user_id}/` + path.basename(await s3Bucket.uploadFile(profile_image, user_id))
   await helper.setProfileImage(user_id, url);
   res.status(200).send(url);
 
@@ -158,34 +166,6 @@ app.post('/user/:user_id/profile-image', upload.single('profile_image'), async (
   console.log(user_id, 'user_id');
 
 });
-// await axios.put(
-//   `http://localhost:4001/users/${user_id}`,
-//   { email },
-//   { withCredentials: true }
-// );
-// app.put('/user/email/:user_id', async (req: Request, res: Response) => {
-//   const user_id: number = parseInt(req.params.user_id);
-//   const {email} = req.body;
-//   if (!email) {
-//     res.status(400).send('No email provided');
-//     return;
-//   }
-//   await helper.updateEmail(user_id, email);
-//   res.status(200).send('Email updated');
-//   return;
-// });
-
-// app.put('/user/username/:user_id', async (req: Request, res: Response) => {
-//   const user_id: number = parseInt(req.params.user_id);
-//   const {user_name} = req.body;
-//   if (!user_name) {
-//     res.status(400).send('No username provided');
-//     return;
-//   }
-//   await helper.updateUserName(user_id, user_name);
-//   res.status(200).send('Username updated');
-//   return;
-// });
 
 
 app.get('/user/:user_id/profile-image', async (req: Request, res: Response) => {

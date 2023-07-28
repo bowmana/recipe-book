@@ -75,30 +75,35 @@ export const ProfileImageUpload = ({ className, initialImage, user_id }: ImageUp
                 );
                 if (response.data) {
                     setRetrievedImage(response.data);
-
-                    console.log(response.data, 'response.data');
-                    console.log(retrievedImage + 'retrievedImage');
-
-                    try {
-                        const res = await axios.post(`http://localhost:4005/events`, {
-                            type: 'ProfileImageUpload',
-                            data: {
-                                user_id: user_id,
-                                profile_image: response.data,
-                            },
-                        });
-                        console.log(res, 'res');
-                    } catch (error) {
-                        console.log(error);
-                    }
                 }
             } catch (error) {
                 console.log(error);
             }
         };
-        console.log(retrievedImage + 'retrievedImage');
+
         fetchImageAndSendToEventBus();
-    }, [user_id, retrievedImage]);
+    }, [user_id]);
+
+    useEffect(() => {
+        const sendProfileImageUploadEvent = async () => {
+            try {
+                const res = await axios.post(`http://localhost:4005/events`, {
+                    type: 'ProfileImageUpload',
+                    data: {
+                        user_id: user_id,
+                        profile_image: retrievedImage,
+                    },
+                });
+                console.log(res, 'res');
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        if (imageSaved && retrievedImage) {
+            sendProfileImageUploadEvent();
+        }
+    }, [imageSaved, retrievedImage, user_id]);
 
     return (
         <div className={classNames(styles['image-upload'], className)}>

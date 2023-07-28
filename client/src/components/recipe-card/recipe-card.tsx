@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ImageCycle } from '../util-components/imagecycle';
 import styles from './recipe-card.module.scss';
-import { Recipe, RecipeItem } from '../types';
+import { Instruction, Recipe, RecipeItem } from '../types';
 import classNames from 'classnames';
 
 interface RecipeCardItemProps {
@@ -107,6 +107,10 @@ export const RecipeCard = ({
                         </div>
                         <ImageCycle imageUrls={recipe.recipe_images} className={className} />
                     </div>
+                    <div className={styles['recipe-card-description']}>
+                        <h3>{recipe.recipe_description}</h3>
+                    </div>
+                    <div className={styles['recipe-card-line-separator']}> </div>
                     <ul className={styles['recipe-card-ingredients']}>
                         {recipe.recipe_items.map((item: RecipeItem) => {
                             return (
@@ -122,9 +126,22 @@ export const RecipeCard = ({
                         })}
                     </ul>
                     <div className={styles['recipe-card-line-separator']}> </div>
-                    <div className={styles['recipe-card-description']}>
-                        <h3>{recipe.recipe_description}</h3>
+
+                    <div className={styles['recipe-card-instructions']}>
+                        <ul className={styles['recipe-card-instructions-list']}>
+                            {recipe.recipe_instructions.map((item: Instruction) => {
+                                return (
+                                    <li key={item.instruction_id}>
+                                        <h3 className={styles['recipe-card-instruction']}>
+                                            {item.instruction_order}
+                                            {item.instruction}
+                                        </h3>
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
+
                     <div className={styles['recipe-card-bottom']}> </div>
                 </li>
             </div>

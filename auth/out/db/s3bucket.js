@@ -67,13 +67,13 @@ class S3Bucket {
         });
     }
     //upload as blob
-    uploadFile(file) {
+    uploadFile(file, user_id) {
         return __awaiter(this, void 0, void 0, function* () {
             const upload = new lib_storage_1.Upload({
                 client: this.s3,
                 params: {
                     Bucket: this.bucketName,
-                    Key: `profile-images/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(file.originalname)}`,
+                    Key: `profile-images/${user_id}/${(0, crypto_1.randomBytes)(16).toString("hex") + path_1.default.extname(file.originalname)}`,
                     Body: file.buffer,
                     ContentType: file.mimetype,
                 }
@@ -132,6 +132,32 @@ class S3Bucket {
             }
             catch (error) {
                 console.error('Failed to delete S3 bucket file:', error);
+            }
+        });
+    }
+    deleteFilesWithPrefix(folderPrefix) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const listObjectsCommand = new client_s3_1.ListObjectsCommand({
+                Bucket: this.bucketName,
+                Prefix: folderPrefix
+            });
+            try {
+                const data = yield this.s3.send(listObjectsCommand);
+                const objects = data.Contents;
+                if (objects) { // Check if objects is not undefined
+                    const deletePromises = objects.map((object) => {
+                        const command = new client_s3_1.DeleteObjectCommand({
+                            Bucket: this.bucketName,
+                            Key: object.Key
+                        });
+                        return this.s3.send(command);
+                    });
+                    yield Promise.all(deletePromises);
+                }
+                console.log(`Deleted all files with prefix "${folderPrefix}"`);
+            }
+            catch (error) {
+                console.error(`Failed to delete files with prefix "${folderPrefix}":`, error);
             }
         });
     }

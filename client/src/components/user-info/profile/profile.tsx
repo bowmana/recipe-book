@@ -6,6 +6,8 @@ import { Dropdown } from '../../util-components/dropdown';
 import classNames from 'classnames';
 import styles from './profile.module.scss';
 import { ProfileImageUpload } from './profileimage';
+import { Logoutform } from '../logout-form/logout-form';
+import { SearchBar } from '../../shared-components/search-bar';
 interface ProfileProps {
     className?: string;
 }
@@ -57,10 +59,10 @@ export const Profile = ({ className }: ProfileProps) => {
         try {
             const url =
                 process.env.NODE_ENV === 'production'
-                    ? `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                    ? `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${10}&recipe_name=${searchRecipeName}&recipe_cuisine=${
                           recipeCuisine ? recipeCuisine.value : ''
                       }&recipe_type=${recipeType ? recipeType.value : ''}`
-                    : `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                    : `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${10}&recipe_name=${searchRecipeName}&recipe_cuisine=${
                           recipeCuisine ? recipeCuisine.value : ''
                       }&recipe_type=${recipeType ? recipeType.value : ''}`;
 
@@ -87,10 +89,10 @@ export const Profile = ({ className }: ProfileProps) => {
         try {
             const url =
                 process.env.NODE_ENV === 'production'
-                    ? `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                    ? `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${10}&recipe_name=${searchRecipeName}&recipe_cuisine=${
                           recipeCuisine ? recipeCuisine.value : ''
                       }&recipe_type=${recipeType ? recipeType.value : ''}`
-                    : `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${5}&recipe_name=${searchRecipeName}&recipe_cuisine=${
+                    : `http://localhost:4000/${user_id}/getsharedrecipes?lastItemId=${lastItemId}&limit=${10}&recipe_name=${searchRecipeName}&recipe_cuisine=${
                           recipeCuisine ? recipeCuisine.value : ''
                       }&recipe_type=${recipeType ? recipeType.value : ''}`;
             const axiosResponse = await axios.get(url, { withCredentials: true });
@@ -124,7 +126,7 @@ export const Profile = ({ className }: ProfileProps) => {
                 const containerHeight = container.clientHeight;
                 const scrollTop = container.scrollTop;
                 const scrollHeight = container.scrollHeight;
-                const verticalPercentageToAdd = 0.85;
+                const verticalPercentageToAdd = 0.15;
 
                 // Step 3: Detect vertical scroll to the bottom
                 if (
@@ -256,6 +258,7 @@ export const Profile = ({ className }: ProfileProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
+            <h1 className={styles['profile-title']}>User Profile</h1>
             <div className={styles['profile-container']}>
                 <div className={styles['profile-image-container']}>
                     <ProfileImageUpload
@@ -326,83 +329,18 @@ export const Profile = ({ className }: ProfileProps) => {
                     </div>
                 </div>
             </div>
-
-            <div className={styles['search-container']}>
-                <div className={styles['search-bar']}>
-                    <input
-                        type="text"
-                        placeholder="Search by name, cuisine, or meal category"
-                        value={searchRecipeName}
-                        onChange={(e) => setSearchRecipeName(e.target.value)}
-                    />
-
-                    <div className={styles['recipe-genre-dropdown']}>
-                        <h1 className={styles['pick-a-text']}>Search by recipe cuisine</h1>
-                        <div className={styles['dropdown-container']}>
-                            <Dropdown
-                                initialOptions={[
-                                    { value: 'Italian', label: 'Italian' },
-                                    { value: 'Mexican', label: 'Mexican' },
-                                    { value: 'American', label: 'American' },
-                                    { value: 'French', label: 'French' },
-                                    { value: 'Chinese', label: 'Chinese' },
-                                    { value: 'Japanese', label: 'Japanese' },
-                                    { value: 'Indian', label: 'Indian' },
-                                    { value: 'Thai', label: 'Thai' },
-                                    { value: 'Spanish', label: 'Spanish' },
-                                    { value: 'Greek', label: 'Greek' },
-                                    { value: 'Lebanese', label: 'Lebanese' },
-                                    { value: 'Moroccan', label: 'Moroccan' },
-                                    { value: 'Brazilian', label: 'Brazilian' },
-                                    { value: 'Korean', label: 'Korean' },
-                                    { value: 'Vietnamese', label: 'Vietnamese' },
-                                    { value: 'Turkish', label: 'Turkish' },
-                                    { value: 'German', label: 'German' },
-                                    { value: 'Ethiopian', label: 'Ethiopian' },
-                                    { value: 'Peruvian', label: 'Peruvian' },
-                                    { value: 'Russian', label: 'Russian' },
-                                    { value: 'Jamaican', label: 'Jamaican' },
-                                    { value: 'Egyptian', label: 'Egyptian' },
-                                    { value: 'British', label: 'British' },
-                                    { value: 'Israeli', label: 'Israeli' },
-                                    { value: 'Indonesian', label: 'Indonesian' },
-                                    { value: 'Irish', label: 'Irish' },
-                                    { value: 'Argentine', label: 'Argentine' },
-                                    { value: 'Swedish', label: 'Swedish' },
-                                    { value: 'Australian', label: 'Australian' },
-                                    { value: 'Malaysian', label: 'Malaysian' },
-                                ]}
-                                onChange={addRecipeCuisine}
-                                ref={dropDownRef}
-                            />
-                        </div>
-                        <h1 className={styles['pick-a-text']}>Search by recipe type</h1>
-                        <div className={styles['dropdown-container']}>
-                            <Dropdown
-                                initialOptions={[
-                                    { value: 'Breakfast', label: 'Breakfast' },
-                                    { value: 'Lunch', label: 'Lunch' },
-                                    { value: 'Dinner', label: 'Dinner' },
-                                    { value: 'Dessert', label: 'Dessert' },
-                                    { value: 'Snack', label: 'Snack' },
-                                    { value: 'Appetizer', label: 'Appetizer' },
-                                    { value: 'Drink', label: 'Drink' },
-                                    { value: 'Side', label: 'Side' },
-                                    { value: 'Sauce', label: 'Sauce' },
-                                    { value: 'Marinade', label: 'Marinade' },
-                                ]}
-                                onChange={addRecipeType}
-                                ref={dropDownRef2}
-                            />
-                        </div>
-                    </div>
-                    <div className={styles['search-buttons']}>
-                        <button onClick={fetchRecipesOnClick}>Search</button>
-                        <button onClick={clearSearch}>Clear</button>
-                    </div>
-                </div>
-            </div>
-
+            <h1 className={styles['recipe-card-title']}>Recipes Shared</h1>
+            <SearchBar
+                addRecipeCuisine={addRecipeCuisine}
+                addRecipeType={addRecipeType}
+                fetchRecipesOnClick={fetchRecipesOnClick}
+                clearSearch={clearSearch}
+                dropDownRef={dropDownRef}
+                dropDownRef2={dropDownRef2}
+                searchRecipeName={searchRecipeName}
+                setSearchRecipeName={setSearchRecipeName}
+                className="profileTheme"
+            />
             {/* --------------------------------------------------------------------------------------------------------------------------------------------------- */}
 
             <div className={styles['recipe-card-container']} ref={recipeCardContainerRef}>
@@ -415,8 +353,10 @@ export const Profile = ({ className }: ProfileProps) => {
                         className="profileTheme"
                     />
                 ))}
+                {isFetching && <p>Loading more recipes...</p>}
             </div>
-            {isFetching && <p>Loading more recipes...</p>}
+
+            <Logoutform />
         </div>
     );
 };

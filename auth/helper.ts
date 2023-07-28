@@ -139,6 +139,36 @@ const createUser = async (email: string, user_name: string, password: string) =>
 
     }
   };
+const getProfileImageKey = async (user_id: number) => {
+  try {
+
+    const result: QueryResult = await dbConn.pool.query(`
+      SELECT
+        profile_image
+      FROM
+        users
+      WHERE
+        user_id = $1
+    ;`, [user_id]);
+
+    if (result.rowCount === 0) {
+      return false;
+    }
+
+    const url = result.rows[0].profile_image;
+    const cloudfrontDomain = 'https://d1uvjvhzktlyb3.cloudfront.net/';
+    const key = url.replace(cloudfrontDomain, '');
+    return key;
+  } catch (error) {
+    console.error('Error while getting the profile image key:', error);
+    return null;
+  }
+};
+
+
+
+
+
 
 
 
@@ -190,4 +220,6 @@ const createUser = async (email: string, user_name: string, password: string) =>
     }
   };
 
-  export {createUser, userExists, setToken, getUserByID, matchPassword, setProfileImage, getProfileImage, updateUserName, updateEmail};
+
+
+  export {createUser, userExists, setToken, getUserByID, matchPassword, setProfileImage, getProfileImage, getProfileImageKey, updateUserName, updateEmail};

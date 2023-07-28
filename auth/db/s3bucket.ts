@@ -4,7 +4,7 @@ import { Upload} from "@aws-sdk/lib-storage";
 
 import { randomBytes } from "crypto";
 import path from "path";
-import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand} from "@aws-sdk/client-s3";
+import { S3, GetObjectCommand, GetObjectCommandOutput, DeleteObjectCommand, ListObjectsCommand} from "@aws-sdk/client-s3";
 dotenv.config({ path: '../.env' });
 
 export class S3Bucket {
@@ -37,12 +37,12 @@ export class S3Bucket {
 
 
  //upload as blob
-    async uploadFile(file: Express.Multer.File): Promise<string> {
+    async uploadFile(file: Express.Multer.File, user_id : number): Promise<string> {
         const upload = new Upload({
             client: this.s3,
             params: {
                 Bucket: this.bucketName,
-                Key: `profile-images/${randomBytes(16).toString("hex") + path.extname(file.originalname)}`,
+                Key: `profile-images/${user_id}/${randomBytes(16).toString("hex") + path.extname(file.originalname)}`,
                 Body: file.buffer,
                 ContentType: file.mimetype,
              
@@ -105,6 +105,33 @@ export class S3Bucket {
             console.error('Failed to delete S3 bucket file:', error);
         }
     }
+    async deleteFilesWithPrefix(folderPrefix: string): Promise<void> {
+        const listObjectsCommand = new ListObjectsCommand({
+          Bucket: this.bucketName,
+          Prefix: folderPrefix
+        });
+      
+        try {
+          const data = await this.s3.send(listObjectsCommand);
+          const objects = data.Contents;
+          if (objects) { // Check if objects is not undefined
+            const deletePromises = objects.map((object) => {
+              const command = new DeleteObjectCommand({
+                Bucket: this.bucketName,
+                Key: object.Key
+              });
+              return this.s3.send(command);
+            });
+      
+            await Promise.all(deletePromises);
+          }
+          console.log(`Deleted all files with prefix "${folderPrefix}"`);
+        } catch (error) {
+          console.error(`Failed to delete files with prefix "${folderPrefix}":`, error);
+        }
+      }
+      
+      
 
     async getFile(key: string): Promise<GetObjectCommandOutput> {
         const command = new GetObjectCommand({

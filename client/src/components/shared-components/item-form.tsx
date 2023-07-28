@@ -8,6 +8,7 @@ import { Option } from '../types';
 export interface ItemFormProps {
     className?: string;
     addRecipeItem: (recipe_item: string, portion_size: string) => void;
+    addRecipeInstruction: (instruction: string) => void;
     addRecipeDescription: (recipe_description: string) => void;
     recipeDescription: string;
 }
@@ -16,13 +17,15 @@ export const ItemForm = ({
     className,
     addRecipeItem,
     addRecipeDescription,
+
     recipeDescription,
 }: ItemFormProps & any) => {
     const [recipe_item, setRecipeItem] = useState('' as string);
+
     const [portion, setPortion] = useState<Option | null>(null);
     const [recipe_description, setRecipeDescription] = useState('' as string);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmitItem = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!recipe_item) {
             alert('Please enter an ingredient');
@@ -33,6 +36,7 @@ export const ItemForm = ({
 
         setRecipeItem('');
     };
+
     const RecipePortion = (recipe_portion: Option | null) => {
         console.log(recipe_portion, 'add recipe portion');
         setPortion(recipe_portion);
@@ -50,7 +54,7 @@ export const ItemForm = ({
 
     return (
         <div className={classNames(styles.root, className)}>
-            <form className={styles['item-form']} onSubmit={handleSubmit}>
+            <form className={styles['item-form']} onSubmit={handleSubmitItem}>
                 <h2>Add description</h2>
                 <textarea
                     className={styles['text-area']}

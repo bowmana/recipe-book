@@ -1,3 +1,14 @@
+.root {
+    display: grid;
+    grid-auto-flow: row;
+ 
+    padding: 1rem;
+    background-color: #506580;
+    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    
+}
+
+
 .recipe-card-container{
     //4 per row
     display: grid;
@@ -5,159 +16,25 @@
     grid-gap: 2rem;
     justify-content: center;
     padding: 1rem;
-    margin: 1rem;
+    // margin: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
     background-color: #e7e6de;
-    border-radius: 10px;
-    border: 5px solid #e2bd98;
-    box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
+    border-radius: 0 0 10px 10px;
+    border-bottom: 5px solid #e2bd98;
+    border-left: 5px solid #e2bd98;
+    border-right: 5px solid #e2bd98;
+   
     
     max-height: 1000px;
-    max-width: 1000px;
-  
+
     overflow: auto;
 
 
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-.search-container {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 1rem;
-    justify-content: center;
-    padding: 1rem;
-    margin: 1rem;
-    background-color: #e7e6de;
-    border-radius: 10px;
-    border: 5px solid #e2bd98;
-}
-
-.search-bar {
-    display: grid;
-    grid-auto-flow: column;
-    grid-gap: 1rem;
-    justify-content: center;
-    padding: 1rem;
-    margin: 1rem;
-    background-color: #e7e6de;
-    border-radius: 10px;
-    border: 5px solid #e2bd98;
-    
-}
-
-.search-bar input {
-    padding: 1rem;
-
-    border: 5px solid #e2bd98;
-    border-radius: 5px;
-    background-color: #e7e6de;
-    color: #bd6160;
-    font-size: 1.5rem;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background-color 300ms;
-    
-}
-
-.search-bar input:focus {
-    outline: none;
-    background-color: #d17f74;
-}
-
-.search-bar input::placeholder {
-    color: #bd6160;
-    font-size: 1.5rem;
-    font-weight: 400;
-}
-
-.search-buttons button {
-    padding: 1rem;
-    border: 5px solid #e2bd98;
-    border-radius: 5px;
-    background-color: #e7e6de;
-    color: #bd6160;
-    font-size: 1.5rem;
-    font-weight: 400;
-    cursor: pointer;
-    transition: background-color 300ms;
-}
-
-.search-buttons button:hover {
-    background-color: #d17f74;
-}
-
-
-
-
-// <div className={classNames(styles.root, className)}>
-// <div className={styles['profile-container']}>
-//     <div className={styles['profile-image-container']}>
-//         <ProfileImageUpload
-//             className="profileTheme"
-//             initialImage="https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png"
-//             user_id={user_id}
-//         />
-//     </div>
-//     <div className={styles['profile-info-container']}>
-//         <div className={styles['profile-info']}>
-//             <h1>
-//                 {isEditingUsername ? (
-//                     <input
-//                         type="text"
-//                         value={user_name}
-//                         onChange={(e) => setUsername(e.target.value)}
-//                     />
-//                 ) : (
-//                     `Username: ${user_name}`
-//                 )}
-//             </h1>
-//             {isEditingUsername ? (
-//                 <>
-//                     <button onClick={handleSaveUsername}>Save</button>
-//                     <button onClick={() => setIsEditingUsername(false)}>Cancel</button>
-//                 </>
-//             ) : (
-//                 <button onClick={() => setIsEditingUsername(true)}>
-//                     Edit Username
-//                 </button>
-//             )}
-
-//             <h2>
-//                 {isEditingEmail ? (
-//                     <input
-//                         type="email"
-//                         value={email}
-//                         onChange={(e) => setEmail(e.target.value)}
-//                     />
-//                 ) : (
-//                     `Email: ${email}`
-//                 )}
-//             </h2>
-//             {isEditingEmail ? (
-//                 <>
-//                     <button onClick={handleSaveEmail}>Save</button>
-//                     <button onClick={() => setIsEditingEmail(false)}>Cancel</button>
-//                 </>
-//             ) : (
-//                 <button onClick={() => setIsEditingEmail(true)}>Edit Email</button>
-//             )}
-
-//             <h2>Recipes Shared: {totalCount}</h2>
-//         </div>
-//     </div>
-// </div>
 
 .profile-container {
     display: grid;

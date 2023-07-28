@@ -142,39 +142,18 @@ app.post('/user/:user_id/profile-image', upload.single('profile_image'), (req, r
         res.status(400).send('No image uploaded');
         return;
     }
-    const url = "https://d1uvjvhzktlyb3.cloudfront.net/profile-images/" + path_1.default.basename(yield s3Bucket.uploadFile(profile_image));
+    const existingProfileImageKey = yield helper.getProfileImage(user_id);
+    if (existingProfileImageKey) {
+        console.log(existingProfileImageKey, 'existingProfileImageKey');
+        yield s3Bucket.deleteFilesWithPrefix(`profile-images/${user_id}`);
+        console.log(`Existing profile picture deleted for user ${user_id}`);
+    }
+    const url = `https://d1uvjvhzktlyb3.cloudfront.net/profile-images/${user_id}/` + path_1.default.basename(yield s3Bucket.uploadFile(profile_image, user_id));
     yield helper.setProfileImage(user_id, url);
     res.status(200).send(url);
     console.log(url, 'url');
     console.log(user_id, 'user_id');
 }));
-// await axios.put(
-//   `http://localhost:4001/users/${user_id}`,
-//   { email },
-//   { withCredentials: true }
-// );
-// app.put('/user/email/:user_id', async (req: Request, res: Response) => {
-//   const user_id: number = parseInt(req.params.user_id);
-//   const {email} = req.body;
-//   if (!email) {
-//     res.status(400).send('No email provided');
-//     return;
-//   }
-//   await helper.updateEmail(user_id, email);
-//   res.status(200).send('Email updated');
-//   return;
-// });
-// app.put('/user/username/:user_id', async (req: Request, res: Response) => {
-//   const user_id: number = parseInt(req.params.user_id);
-//   const {user_name} = req.body;
-//   if (!user_name) {
-//     res.status(400).send('No username provided');
-//     return;
-//   }
-//   await helper.updateUserName(user_id, user_name);
-//   res.status(200).send('Username updated');
-//   return;
-// });
 app.get('/user/:user_id/profile-image', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user_id = parseInt(req.params.user_id);
     const url = yield helper.getProfileImage(user_id);

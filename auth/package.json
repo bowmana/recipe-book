@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.378.0",
     "@aws-sdk/lib-storage": "^3.374.0",
     "@types/axios": "^0.14.0",
     "@types/cors": "^2.8.13",

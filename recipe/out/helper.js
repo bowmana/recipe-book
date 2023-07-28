@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setRecipeShared = exports.updateUserName = exports.updateEmail = exports.updateProfileImage = exports.recipeNameExists = exports.recipeTypeExists = exports.recipeCuisineExists = exports.getSocialRecipesAfterId = exports.getTotalSharedRecipesCount = exports.getSharedRecipesAfterId = exports.deleteSocialRecipe = exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
+exports.deleteInstructions = exports.getRecipeInstructions = exports.createInstruction = exports.setRecipeShared = exports.updateUserName = exports.updateEmail = exports.updateProfileImage = exports.recipeNameExists = exports.recipeTypeExists = exports.recipeCuisineExists = exports.getSocialRecipesAfterId = exports.getTotalSharedRecipesCount = exports.getSharedRecipesAfterId = exports.deleteSocialRecipe = exports.getUsersSocialRecipes = exports.getTotalSocialRecipesCount = exports.getPaginatedSocialRecipes = exports.insertSocialRecipe = exports.recipeShared = exports.deleteRecipeImage = exports.imageExists = exports.deleteUserRecipe = exports.deleteRecipeImages = exports.getRecipeImages = exports.createRecipeImage = exports.deleteRecipe = exports.getRecipeItems = exports.getRecipeById = exports.deleteRecipeItems = exports.updateRecipe = exports.recipeExists = exports.getUserRecipes = exports.createRecipeItem = exports.userExists = exports.createRecipe = exports.createUser = void 0;
 const db_1 = require("./db/db");
 const dbConn = new db_1.RecipeDataBaseConnection();
 dbConn.connect();
@@ -91,26 +91,6 @@ const updateEmail = (user_id, email) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.updateEmail = updateEmail;
-// const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, user_name: string) => {
-//     try {
-//         const result: QueryResult = await dbConn.pool.query(`
-//         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name)
-//         VALUES ($1, $2, $3, $4, $5, $6)
-//         RETURNING recipe_id
-//         `, [recipe_name, recipe_cuisine, recipe_type, recipe_description, user_id, user_name]);
-//         const recipe_id = result.rows[0].recipe_id;
-//         await dbConn.pool.query(`
-//         INSERT INTO user_recipes (user_id, recipe_id)
-//         VALUES ($1, $2)
-//         RETURNING recipe_id
-//         `, [user_id, recipe_id]);
-//         return { recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, user_id, user_name};
-//     } catch (error) {
-//         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createRecipe"');
-//         console.log(error);
-//     }
-// };
-// const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id);
 const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -132,13 +112,14 @@ const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_
     }
 });
 exports.createRecipe = createRecipe;
-const setRecipeShared = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+const setRecipeShared = (recipe_id, val) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const sharedValue = val ? 'TRUE' : 'FALSE';
         yield dbConn.pool.query(`
         UPDATE recipe_table
-        SET shared = TRUE
-        WHERE recipe_id = $1
-        `, [recipe_id]);
+        SET shared = $1
+        WHERE recipe_id = $2
+        `, [sharedValue, recipe_id]);
     }
     catch (error) {
         console.log('\nError setting recipe to shared in database');
@@ -166,6 +147,35 @@ const createRecipeItem = (recipe_id, recipe_item, portion_size) => __awaiter(voi
     }
 });
 exports.createRecipeItem = createRecipeItem;
+const createInstruction = (recipe_id, instruction, instruction_order) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+      INSERT INTO instructions (recipe_id, instruction, instruction_order)
+      VALUES ($1, $2, $3)
+      RETURNING instruction_id;
+      `, [recipe_id, instruction, instruction_order]);
+        const instruction_id = result.rows[0].instruction_id;
+        return { instruction_id, instruction };
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createInstruction"');
+        console.log(error);
+    }
+});
+exports.createInstruction = createInstruction;
+const deleteInstructions = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield dbConn.pool.query(`
+    DELETE FROM instructions
+    WHERE recipe_id = $1
+    `, [recipe_id]);
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteInstructions"');
+        console.log(error);
+    }
+});
+exports.deleteInstructions = deleteInstructions;
 const createRecipeImage = (recipe_id, recipe_image) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield dbConn.pool.query(`
@@ -185,11 +195,13 @@ const getUserRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* 
         const result = yield dbConn.pool.query(`
             SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name, recipe_table.shared,
             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+       
             FROM recipe_table
             INNER JOIN user_recipes
             ON recipe_table.recipe_id = user_recipes.recipe_id
             LEFT JOIN recipe_images
             ON recipe_table.recipe_id = recipe_images.recipe_id
+
             WHERE user_recipes.user_id = $1
             GROUP BY recipe_table.recipe_id
         `, [user_id]);
@@ -197,6 +209,8 @@ const getUserRecipes = (user_id) => __awaiter(void 0, void 0, void 0, function* 
         const recipesWithItems = yield Promise.all(recipes.map((recipe) => __awaiter(void 0, void 0, void 0, function* () {
             const recipeItems = yield getRecipeItems(recipe.recipe_id);
             recipe.recipe_items = recipeItems;
+            const recipeInstructions = yield getRecipeInstructions(recipe.recipe_id);
+            recipe.recipe_instructions = recipeInstructions;
             return recipe;
         })));
         return recipesWithItems;
@@ -390,6 +404,22 @@ const getRecipeItems = (recipe_id) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getRecipeItems = getRecipeItems;
+const getRecipeInstructions = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield dbConn.pool.query(`
+      SELECT instruction_id, instruction, instruction_order
+      FROM instructions
+      WHERE recipe_id = $1;
+      `, [recipe_id]);
+        return result.rows;
+    }
+    catch (error) {
+        console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getRecipeInstructions"');
+        console.log(error);
+        throw error;
+    }
+});
+exports.getRecipeInstructions = getRecipeInstructions;
 const getRecipeImages = (recipe_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
@@ -503,6 +533,8 @@ const getPaginatedSocialRecipes = (offset, limit) => __awaiter(void 0, void 0, v
         const recipesWithItems = yield Promise.all(recipes.map((recipe) => __awaiter(void 0, void 0, void 0, function* () {
             const recipeItems = yield getRecipeItems(recipe.recipe_id);
             recipe.recipe_items = recipeItems;
+            const recipeInstructions = yield getRecipeInstructions(recipe.recipe_id);
+            recipe.recipe_instructions = recipeInstructions;
             return recipe;
         })));
         return recipesWithItems;
@@ -514,186 +546,6 @@ const getPaginatedSocialRecipes = (offset, limit) => __awaiter(void 0, void 0, v
     }
 });
 exports.getPaginatedSocialRecipes = getPaginatedSocialRecipes;
-// const getTotalSocialRecipesCount = async () => {
-//   try {
-//     const result = await dbConn.pool.query(
-//       `
-//       SELECT COUNT(*) FROM social_table
-//     `
-//     );
-//     return parseInt(result.rows[0].count);
-//   } catch (error) {
-//     console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getTotalSocialRecipesCount"');
-//     console.log(error);
-//     throw error;
-//   }
-// };
-// const getSocialRecipesAfterId = async (
-//   lastItemId: number,
-//   limit: number,
-//   recipeName?: string,
-//   recipeCuisine?: string,
-//   recipeType?: string
-// ) => {
-//   try {
-//     //up to 3 additional conditions can be added to the query (recipeName, recipeCuisine, recipeType), not all of them have to be used if not passed in.
-//     let params: any[] = [];
-//     let query = `
-//       SELECT
-//       recipe_table.recipe_id,
-//       recipe_table.recipe_name,
-//       recipe_table.recipe_cuisine,
-//       recipe_table.recipe_type,
-//       recipe_table.recipe_description,
-//       recipe_table.u_id,
-//       recipe_table.u_name,
-//       recipe_table.original_u_id,
-//       recipe_table.original_u_name,
-//       ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//     FROM
-//       recipe_table
-//       INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//       INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//     WHERE
-//       recipe_table.recipe_id < $1
-//     GROUP BY
-//       recipe_table.recipe_id,
-//       recipe_table.recipe_name,
-//       recipe_table.recipe_cuisine,
-//       recipe_table.recipe_type,
-//       recipe_table.recipe_description,
-//       recipe_table.u_id,
-//       recipe_table.u_name,
-//       recipe_table.original_u_id,
-//       recipe_table.original_u_name
-//     ORDER BY
-//       recipe_table.recipe_id DESC
-//     LIMIT $2
-//     `;
-//     params = [lastItemId, limit];
-//     if (recipeName) {
-//       query = `
-//         SELECT
-//         recipe_table.recipe_id,
-//         recipe_table.recipe_name,
-//         recipe_table.recipe_cuisine,
-//         recipe_table.recipe_type,
-//         recipe_table.recipe_description,
-//         recipe_table.u_id,
-//         recipe_table.u_name,
-//         recipe_table.original_u_id,
-//         recipe_table.original_u_name,
-//         ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//       FROM
-//         recipe_table
-//         INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//         INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//       WHERE
-//         recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3
-//       GROUP BY
-//         recipe_table.recipe_id,
-//         recipe_table.recipe_name,
-//         recipe_table.recipe_cuisine,
-//         recipe_table.recipe_type,
-//         recipe_table.recipe_description,
-//         recipe_table.u_id,
-//         recipe_table.u_name,
-//         recipe_table.original_u_id,
-//         recipe_table.original_u_name
-//       ORDER BY
-//         recipe_table.recipe_id DESC
-//       LIMIT $2
-//       `;
-//       params = [lastItemId, limit, `%${recipeName}%`];
-//       if (recipeCuisine) {
-//         query = `
-//           SELECT
-//           recipe_table.recipe_id,
-//           recipe_table.recipe_name,
-//           recipe_table.recipe_cuisine,
-//           recipe_table.recipe_type,
-//           recipe_table.recipe_description,
-//           recipe_table.u_id,
-//           recipe_table.u_name,
-//           recipe_table.original_u_id,
-//           recipe_table.original_u_name,
-//           ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//         FROM
-//           recipe_table
-//           INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//           INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//         WHERE
-//           recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4
-//         GROUP BY
-//           recipe_table.recipe_id,
-//           recipe_table.recipe_name,
-//           recipe_table.recipe_cuisine,
-//           recipe_table.recipe_type,
-//           recipe_table.recipe_description,
-//           recipe_table.u_id,
-//           recipe_table.u_name,
-//           recipe_table.original_u_id,
-//           recipe_table.original_u_name
-//         ORDER BY
-//           recipe_table.recipe_id DESC
-//         LIMIT $2
-//         `;
-//         params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`];
-//         if (recipeType) {
-//           query = `
-//             SELECT
-//             recipe_table.recipe_id,
-//             recipe_table.recipe_name,
-//             recipe_table.recipe_cuisine,
-//             recipe_table.recipe_type,
-//             recipe_table.recipe_description,
-//             recipe_table.u_id,
-//             recipe_table.u_name,
-//             recipe_table.original_u_id,
-//             recipe_table.original_u_name,
-//             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//           FROM
-//             recipe_table
-//             INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//             INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//           WHERE
-//             recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4 AND recipe_table.recipe_type ILIKE $5
-//           GROUP BY
-//             recipe_table.recipe_id,
-//             recipe_table.recipe_name,
-//             recipe_table.recipe_cuisine,
-//             recipe_table.recipe_type,
-//             recipe_table.recipe_description,
-//             recipe_table.u_id,
-//             recipe_table.u_name,
-//             recipe_table.original_u_id,
-//             recipe_table.original_u_name
-//           ORDER BY
-//             recipe_table.recipe_id DESC
-//           LIMIT $2
-//           `;
-//           params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`, `%${recipeType}%`];
-//     }
-//   }
-// }
-//     const result = await dbConn.pool.query(query, params);
-//     const recipes = result.rows;
-//     const recipesWithItems = await Promise.all(
-//       recipes.map(async (recipe: any) => {
-//         const recipeItems = await getRecipeItems(recipe.recipe_id);
-//         recipe.recipe_items = recipeItems;
-//         return recipe;
-//       })
-//     );
-//     return recipesWithItems;
-//   } catch (error) {
-//     console.log(
-//       "\nCouldn't execute query because the pool couldn't connect to the database 'getSocialRecipesAfterId'"
-//     );
-//     console.log(error);
-//     throw error;
-//   }
-// };
 const getSocialRecipesAfterId = (lastItemId, limit, recipeName, recipeCuisine, recipeType) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let params = [];
@@ -776,6 +628,8 @@ const getSocialRecipesAfterId = (lastItemId, limit, recipeName, recipeCuisine, r
         const recipesWithItems = yield Promise.all(recipes.map((recipe) => __awaiter(void 0, void 0, void 0, function* () {
             const recipeItems = yield getRecipeItems(recipe.recipe_id);
             recipe.recipe_items = recipeItems;
+            const recipeInstructions = yield getRecipeInstructions(recipe.recipe_id);
+            recipe.recipe_instructions = recipeInstructions;
             return recipe;
         })));
         return recipesWithItems;
@@ -894,14 +748,6 @@ const getTotalSocialRecipesCount = (recipeName, recipeCuisine, recipeType) => __
     }
 });
 exports.getTotalSocialRecipesCount = getTotalSocialRecipesCount;
-// const sharedRecipes = await helper.getSharedRecipesAfterId(
-//   user_id,
-//   lastItemId,
-//   limit,
-//   recipeName,
-//   recipeCuisine,
-//   recipeType
-// );
 const getSharedRecipesAfterId = (user_id, lastItemId, limit, recipeName, recipeCuisine, recipeType) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let params = [];
@@ -975,6 +821,8 @@ const getSharedRecipesAfterId = (user_id, lastItemId, limit, recipeName, recipeC
         const recipesWithItems = yield Promise.all(recipes.map((recipe) => __awaiter(void 0, void 0, void 0, function* () {
             const recipeItems = yield getRecipeItems(recipe.recipe_id);
             recipe.recipe_items = recipeItems;
+            const recipeInstructions = yield getRecipeInstructions(recipe.recipe_id);
+            recipe.recipe_instructions = recipeInstructions;
             return recipe;
         })));
         return recipesWithItems;

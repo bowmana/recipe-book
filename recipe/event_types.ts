@@ -29,6 +29,11 @@
         recipe_item_id: number;
 
     }
+    interface Instruction {
+        instruction: string;
+        instruction_id: number;
+        instruction_order: number;
+    }
     
     interface Recipe {
         id: number;
@@ -46,5 +51,6 @@
           UserCreated,
           LoginSuccess,
           RecipeItem,
-          Recipe
+          Recipe,
+          Instruction
       }

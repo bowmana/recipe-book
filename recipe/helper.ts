@@ -82,27 +82,7 @@ const updateEmail = async (user_id: number, email: string) => {
 
 
 
-// const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, user_name: string) => {
-//     try {
-//         const result: QueryResult = await dbConn.pool.query(`
-//         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name)
-//         VALUES ($1, $2, $3, $4, $5, $6)
-//         RETURNING recipe_id
-//         `, [recipe_name, recipe_cuisine, recipe_type, recipe_description, user_id, user_name]);
 
-//         const recipe_id = result.rows[0].recipe_id;
-//         await dbConn.pool.query(`
-//         INSERT INTO user_recipes (user_id, recipe_id)
-//         VALUES ($1, $2)
-//         RETURNING recipe_id
-//         `, [user_id, recipe_id]);
-//         return { recipe_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, user_id, user_name};
-//     } catch (error) {
-//         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createRecipe"');
-//         console.log(error);
-//     }
-// };
-// const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, u_id);
 const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, original_u_id: number, original_u_name: string, u_name: string, u_id: number) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
@@ -124,13 +104,14 @@ const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine
     }
 };
 
-const setRecipeShared = async (recipe_id: number) => {
+const setRecipeShared = async (recipe_id: number, val: boolean) => {
     try {
+      const sharedValue = val ? 'TRUE' : 'FALSE';
         await dbConn.pool.query(`
         UPDATE recipe_table
-        SET shared = TRUE
-        WHERE recipe_id = $1
-        `, [recipe_id]);
+        SET shared = $1
+        WHERE recipe_id = $2
+        `, [sharedValue, recipe_id]);
     } catch (error) {
         console.log('\nError setting recipe to shared in database');
         console.log(error);
@@ -159,6 +140,37 @@ const createRecipeItem = async (recipe_id: number, recipe_item: string, portion_
     }
 };
 
+const createInstruction = async (recipe_id: number, instruction: string, instruction_order: number) => {
+  try {
+      const result: QueryResult = await dbConn.pool.query(`
+      INSERT INTO instructions (recipe_id, instruction, instruction_order)
+      VALUES ($1, $2, $3)
+      RETURNING instruction_id;
+      `, [recipe_id, instruction, instruction_order]);
+
+      const instruction_id = result.rows[0].instruction_id;
+      return { instruction_id, instruction };
+  } catch (error) {
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "createInstruction"');
+      console.log(error);
+  }
+};
+
+const deleteInstructions = async (recipe_id: number) => {
+  try {
+    await dbConn.pool.query(`
+    DELETE FROM instructions
+    WHERE recipe_id = $1
+    `, [recipe_id]);
+  } catch (error) {
+    console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "deleteInstructions"');
+    console.log(error);
+  }
+};
+
+
+
+
 
 const createRecipeImage = async (recipe_id: number, recipe_image: string) => {
     try {
@@ -186,25 +198,32 @@ const getUserRecipes = async (user_id: number) => {
         const result: QueryResult = await dbConn.pool.query(`
             SELECT recipe_table.recipe_id, recipe_table.recipe_name, recipe_table.recipe_cuisine, recipe_table.recipe_type, recipe_table.recipe_description, recipe_table.u_id, recipe_table.u_name, recipe_table.original_u_id, recipe_table.original_u_name, recipe_table.shared,
             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
+       
             FROM recipe_table
             INNER JOIN user_recipes
             ON recipe_table.recipe_id = user_recipes.recipe_id
             LEFT JOIN recipe_images
             ON recipe_table.recipe_id = recipe_images.recipe_id
+
             WHERE user_recipes.user_id = $1
             GROUP BY recipe_table.recipe_id
         `, [user_id]);
         const recipes = result.rows;
+        
         const recipesWithItems = await Promise.all(
-            recipes.map(async (recipe: any) => {
-                const recipeItems = await getRecipeItems(recipe.recipe_id);
-                recipe.recipe_items = recipeItems;
+          recipes.map(async (recipe: any) => {
+              const recipeItems = await getRecipeItems(recipe.recipe_id);
+              recipe.recipe_items = recipeItems;
 
-                return recipe;
-            })
-        );
+              const recipeInstructions = await getRecipeInstructions(recipe.recipe_id);
+              recipe.recipe_instructions = recipeInstructions;
 
-        return recipesWithItems;
+              return recipe;
+          })
+      );
+
+      return recipesWithItems;
+       
     } catch (error) {
         console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getUserRecipes"');
         console.log(error);
@@ -426,6 +445,22 @@ const getRecipeItems = async (recipe_id: number) => {
     }
 };
 
+const getRecipeInstructions = async (recipe_id: number) => {
+  try {
+      const result: QueryResult = await dbConn.pool.query(`
+      SELECT instruction_id, instruction, instruction_order
+      FROM instructions
+      WHERE recipe_id = $1;
+      `, [recipe_id]);
+      return result.rows;
+  } catch (error) {
+      console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getRecipeInstructions"');
+      console.log(error);
+      throw error;
+  }
+};
+
+
   const getRecipeImages = async (recipe_id: number) => {
     try {
       const result: QueryResult = await dbConn.pool.query(
@@ -564,14 +599,17 @@ const getPaginatedSocialRecipes = async (offset: number, limit: number) => {
 
     const recipesWithItems = await Promise.all(
       recipes.map(async (recipe: any) => {
-        const recipeItems = await getRecipeItems(recipe.recipe_id);
-        recipe.recipe_items = recipeItems;
+          const recipeItems = await getRecipeItems(recipe.recipe_id);
+          recipe.recipe_items = recipeItems;
 
-        return recipe;
+          const recipeInstructions = await getRecipeInstructions(recipe.recipe_id);
+          recipe.recipe_instructions = recipeInstructions;
+
+          return recipe;
       })
-    );
+  );
 
-    return recipesWithItems;
+  return recipesWithItems;
   } catch (error) {
     console.log(
       "\nCouldn't execute query because the pool couldn't connect to the database 'getPaginatedSocialRecipes'"
@@ -583,200 +621,6 @@ const getPaginatedSocialRecipes = async (offset: number, limit: number) => {
 
 
 
-// const getTotalSocialRecipesCount = async () => {
-//   try {
-//     const result = await dbConn.pool.query(
-//       `
-//       SELECT COUNT(*) FROM social_table
-//     `
-//     );
-//     return parseInt(result.rows[0].count);
-//   } catch (error) {
-//     console.log('\nCouldn\'t execute query because the pool couldn\'t connect to the database "getTotalSocialRecipesCount"');
-//     console.log(error);
-//     throw error;
-//   }
-// };
-
-
-// const getSocialRecipesAfterId = async (
-//   lastItemId: number,
-//   limit: number,
-//   recipeName?: string,
-//   recipeCuisine?: string,
-//   recipeType?: string
-// ) => {
-//   try {
-//     //up to 3 additional conditions can be added to the query (recipeName, recipeCuisine, recipeType), not all of them have to be used if not passed in.
-//     let params: any[] = [];
-//     let query = `
-//       SELECT
-//       recipe_table.recipe_id,
-//       recipe_table.recipe_name,
-//       recipe_table.recipe_cuisine,
-//       recipe_table.recipe_type,
-//       recipe_table.recipe_description,
-//       recipe_table.u_id,
-//       recipe_table.u_name,
-//       recipe_table.original_u_id,
-//       recipe_table.original_u_name,
-//       ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//     FROM
-//       recipe_table
-//       INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//       INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//     WHERE
-//       recipe_table.recipe_id < $1
-//     GROUP BY
-//       recipe_table.recipe_id,
-//       recipe_table.recipe_name,
-//       recipe_table.recipe_cuisine,
-//       recipe_table.recipe_type,
-//       recipe_table.recipe_description,
-//       recipe_table.u_id,
-//       recipe_table.u_name,
-//       recipe_table.original_u_id,
-//       recipe_table.original_u_name
-//     ORDER BY
-//       recipe_table.recipe_id DESC
-//     LIMIT $2
-//     `;
-//     params = [lastItemId, limit];
-
-//     if (recipeName) {
-      
-//       query = `
-//         SELECT
-//         recipe_table.recipe_id,
-//         recipe_table.recipe_name,
-//         recipe_table.recipe_cuisine,
-//         recipe_table.recipe_type,
-//         recipe_table.recipe_description,
-//         recipe_table.u_id,
-//         recipe_table.u_name,
-//         recipe_table.original_u_id,
-//         recipe_table.original_u_name,
-//         ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//       FROM
-//         recipe_table
-//         INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//         INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//       WHERE
-//         recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3
-//       GROUP BY
-//         recipe_table.recipe_id,
-//         recipe_table.recipe_name,
-//         recipe_table.recipe_cuisine,
-//         recipe_table.recipe_type,
-//         recipe_table.recipe_description,
-//         recipe_table.u_id,
-//         recipe_table.u_name,
-//         recipe_table.original_u_id,
-//         recipe_table.original_u_name
-//       ORDER BY
-//         recipe_table.recipe_id DESC
-//       LIMIT $2
-//       `;
-//       params = [lastItemId, limit, `%${recipeName}%`];
-
-//       if (recipeCuisine) {
-
-//         query = `
-//           SELECT
-//           recipe_table.recipe_id,
-//           recipe_table.recipe_name,
-//           recipe_table.recipe_cuisine,
-//           recipe_table.recipe_type,
-//           recipe_table.recipe_description,
-//           recipe_table.u_id,
-//           recipe_table.u_name,
-//           recipe_table.original_u_id,
-//           recipe_table.original_u_name,
-//           ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//         FROM
-//           recipe_table
-//           INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//           INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//         WHERE
-//           recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4
-//         GROUP BY
-//           recipe_table.recipe_id,
-//           recipe_table.recipe_name,
-//           recipe_table.recipe_cuisine,
-//           recipe_table.recipe_type,
-//           recipe_table.recipe_description,
-//           recipe_table.u_id,
-//           recipe_table.u_name,
-//           recipe_table.original_u_id,
-//           recipe_table.original_u_name
-//         ORDER BY
-//           recipe_table.recipe_id DESC
-//         LIMIT $2
-//         `;
-//         params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`];
-       
-
-//         if (recipeType) {
-//           query = `
-//             SELECT
-//             recipe_table.recipe_id,
-//             recipe_table.recipe_name,
-//             recipe_table.recipe_cuisine,
-//             recipe_table.recipe_type,
-//             recipe_table.recipe_description,
-//             recipe_table.u_id,
-//             recipe_table.u_name,
-//             recipe_table.original_u_id,
-//             recipe_table.original_u_name,
-//             ARRAY_AGG(recipe_images.recipe_image) AS recipe_images
-//           FROM
-//             recipe_table
-//             INNER JOIN recipe_images ON recipe_table.recipe_id = recipe_images.recipe_id
-//             INNER JOIN social_table ON recipe_table.recipe_id = social_table.recipe_id
-//           WHERE
-//             recipe_table.recipe_id < $1 AND recipe_table.recipe_name ILIKE $3 AND recipe_table.recipe_cuisine ILIKE $4 AND recipe_table.recipe_type ILIKE $5
-//           GROUP BY
-//             recipe_table.recipe_id,
-//             recipe_table.recipe_name,
-//             recipe_table.recipe_cuisine,
-//             recipe_table.recipe_type,
-//             recipe_table.recipe_description,
-//             recipe_table.u_id,
-//             recipe_table.u_name,
-//             recipe_table.original_u_id,
-//             recipe_table.original_u_name
-//           ORDER BY
-//             recipe_table.recipe_id DESC
-//           LIMIT $2
-//           `;
-//           params = [lastItemId, limit, `%${recipeName}%`, `%${recipeCuisine}%`, `%${recipeType}%`];
-          
-
-//     }
-//   }
-// }
-//     const result = await dbConn.pool.query(query, params);
-//     const recipes = result.rows;
-
-//     const recipesWithItems = await Promise.all(
-//       recipes.map(async (recipe: any) => {
-//         const recipeItems = await getRecipeItems(recipe.recipe_id);
-//         recipe.recipe_items = recipeItems;
-
-//         return recipe;
-
-//       })
-//     );
-
-//     return recipesWithItems;
-//   } catch (error) {
-//     console.log(
-//       "\nCouldn't execute query because the pool couldn't connect to the database 'getSocialRecipesAfterId'"
-//     );
-//     console.log(error);
-//     throw error;
-//   }
-// };
 const getSocialRecipesAfterId = async (
   lastItemId: number,
   limit: number,
@@ -868,17 +712,19 @@ const getSocialRecipesAfterId = async (
 
     const result = await dbConn.pool.query(query, params);
     const recipes = result.rows;
-
     const recipesWithItems = await Promise.all(
       recipes.map(async (recipe: any) => {
-        const recipeItems = await getRecipeItems(recipe.recipe_id);
-        recipe.recipe_items = recipeItems;
+          const recipeItems = await getRecipeItems(recipe.recipe_id);
+          recipe.recipe_items = recipeItems;
 
-        return recipe;
+          const recipeInstructions = await getRecipeInstructions(recipe.recipe_id);
+          recipe.recipe_instructions = recipeInstructions;
+
+          return recipe;
       })
-    );
+  );
 
-    return recipesWithItems;
+  return recipesWithItems;
   } catch (error) {
     console.log(
       "\nCouldn't execute query because the pool couldn't connect to the database 'getSocialRecipesAfterId'"
@@ -1006,14 +852,6 @@ const getTotalSocialRecipesCount = async (recipeName?: string, recipeCuisine?: s
 };
   
 
-// const sharedRecipes = await helper.getSharedRecipesAfterId(
-//   user_id,
-//   lastItemId,
-//   limit,
-//   recipeName,
-//   recipeCuisine,
-//   recipeType
-// );
 
 const getSharedRecipesAfterId = async (user_id: number, lastItemId: number, limit: number, recipeName?: string, recipeCuisine?: string, recipeType?: string) => {
   try {
@@ -1094,14 +932,17 @@ const getSharedRecipesAfterId = async (user_id: number, lastItemId: number, limi
 
     const recipesWithItems = await Promise.all(
       recipes.map(async (recipe: any) => {
-        const recipeItems = await getRecipeItems(recipe.recipe_id);
-        recipe.recipe_items = recipeItems;
+          const recipeItems = await getRecipeItems(recipe.recipe_id);
+          recipe.recipe_items = recipeItems;
 
-        return recipe;
+          const recipeInstructions = await getRecipeInstructions(recipe.recipe_id);
+          recipe.recipe_instructions = recipeInstructions;
+
+          return recipe;
       })
-    );
+  );
 
-    return recipesWithItems;
+  return recipesWithItems;
   } catch (error) {
     console.log(
       "\nCouldn't execute query because the pool couldn't connect to the database 'getSharedRecipesAfterId'"
@@ -1259,4 +1100,4 @@ const recipeShared = async (user_id: number, recipe_id: number) => {
 };
 
 
-export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getSharedRecipesAfterId, getTotalSharedRecipesCount, getSocialRecipesAfterId, recipeCuisineExists, recipeTypeExists, recipeNameExists, updateProfileImage, updateEmail, updateUserName, setRecipeShared};
+export { createUser, createRecipe,  userExists , createRecipeItem,  getUserRecipes , recipeExists,  updateRecipe, deleteRecipeItems, getRecipeById, getRecipeItems, deleteRecipe, createRecipeImage, getRecipeImages, deleteRecipeImages, deleteUserRecipe, imageExists, deleteRecipeImage, recipeShared, insertSocialRecipe, getPaginatedSocialRecipes, getTotalSocialRecipesCount, getUsersSocialRecipes, deleteSocialRecipe, getSharedRecipesAfterId, getTotalSharedRecipesCount, getSocialRecipesAfterId, recipeCuisineExists, recipeTypeExists, recipeNameExists, updateProfileImage, updateEmail, updateUserName, setRecipeShared, createInstruction, getRecipeInstructions, deleteInstructions};

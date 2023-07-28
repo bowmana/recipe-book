@@ -81,6 +81,15 @@ class RecipeDataBaseConnection {
               recipe_item VARCHAR,
               portion_size VARCHAR
             );
+            CREATE TABLE IF NOT EXISTS instructions (
+              recipe_id BIGINT REFERENCES recipe_table(recipe_id),
+              instruction_id BIGSERIAL PRIMARY KEY,
+              instruction VARCHAR,
+              instruction_order INT
+             
+            );
+
+          
         
             CREATE TABLE IF NOT EXISTS recipe_items (
               recipe_id BIGINT REFERENCES recipe_table(recipe_id),

@@ -3,7 +3,11 @@ import styles from './item-wrapper.module.scss';
 import { ItemForm } from '../../shared-components/item-form';
 import { Item } from '../../shared-components/item';
 
+import { InstructionForm } from '../../shared-components/instruction-form';
+
 import { EditItemForm } from '../../shared-components/edit-item-form';
+import { EditInstructionForm } from '../../shared-components/edit-instruction-form';
+import { Instruction } from '../../shared-components/instruction';
 import { ImageUpload } from '../../util-components/imageupload';
 import { v4 as UUID } from 'uuid';
 import defaultImage from '../../../assets/images/default.png';
@@ -13,7 +17,7 @@ import { Dropdown } from '../../util-components/dropdown';
 import { LoadingModal } from '../../util-components/loadingmodal';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { EditableRecipeItem, Option } from '../../types';
+import { EditableRecipeItem, Option, EditableInstruction } from '../../types';
 
 export interface ItemWrapperProps {
     className?: string;
@@ -45,6 +49,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     }, []);
 
     const [recipe_items, setRecipeItems] = useState<EditableRecipeItem[]>([]);
+    const [recipe_instructions, setRecipeInstructions] = useState<EditableInstruction[]>([]);
 
     const [recipe_name, setRecipeName] = useState<string>('');
     const [recipe_cuisine, setRecipeCuisine] = useState<Option | null>(null);
@@ -64,6 +69,24 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         setRecipeItems([...recipe_items, newItem]);
 
         console.log(recipe_items);
+    };
+    const addRecipeInstruction = (instruction: string) => {
+        const newItem: EditableInstruction = {
+            instruction_id: UUID(),
+            instruction,
+            isEditing: false,
+            instruction_order: recipe_instructions.length + 1,
+        };
+
+        setRecipeInstructions([...recipe_instructions, newItem]);
+    };
+
+    const deleteRecipeInstruction = (id: string) => {
+        const updatedRecipeInstructions = recipe_instructions.filter(
+            (instruction) => instruction.instruction_id !== id
+        );
+
+        setRecipeInstructions(updatedRecipeInstructions);
     };
 
     const addRecipeCuisine = (recipe_cuisine: Option | null) => {
@@ -97,6 +120,20 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
         );
     };
 
+    const editRecipeInstruction = (id: string) => {
+        setRecipeInstructions(
+            recipe_instructions.map((instruction: EditableInstruction) => {
+                return instruction.instruction_id === id
+                    ? {
+                          ...instruction,
+
+                          isEditing: !instruction.isEditing,
+                      }
+                    : instruction;
+            })
+        );
+    };
+
     const saveRecipeItem = (recipe_item: string, recipe_portion: string, id: string) => {
         setRecipeItems(
             recipe_items.map((item: EditableRecipeItem) => {
@@ -105,6 +142,21 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                           ...item,
                           recipe_item,
                           portion_size: recipe_portion,
+
+                          isEditing: !item.isEditing,
+                      }
+                    : item;
+            })
+        );
+    };
+
+    const saveRecipeInstruction = (instruction: string, id: string) => {
+        setRecipeInstructions(
+            recipe_instructions.map((item: EditableInstruction) => {
+                return item.instruction_id === id
+                    ? {
+                          ...item,
+                          instruction,
 
                           isEditing: !item.isEditing,
                       }
@@ -148,6 +200,13 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
             formData.append(`recipe_items[${index}][recipe_item]`, item.recipe_item);
             formData.append(`recipe_items[${index}][portion_size]`, item.portion_size);
         });
+        recipe_instructions.forEach((instruction, index) => {
+            formData.append(`recipe_instructions[${index}][instruction]`, instruction.instruction);
+            formData.append(
+                `recipe_instructions[${index}][instruction_order]`,
+                (index + 1).toString()
+            );
+        });
 
         formData.append('recipe_name', recipe_name);
         formData.append('u_name', user_name);
@@ -182,7 +241,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <h1 className={styles['recipe-card-title']}> Create a Recipe for user: {user_name} </h1>
+            <h1 className={styles['recipe-card-title']}> Create a Recipe</h1>
             <div className={styles['recipe-card']}>
                 <div className={styles['recipe-card-header']}>
                     <form>
@@ -281,6 +340,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                     <ItemForm
                         addRecipeItem={addRecipeItem}
                         addRecipeDescription={addRecipeDescription}
+                        addRecipeInstruction={addRecipeInstruction}
                     />
 
                     {recipe_items.map((item, index) =>
@@ -295,6 +355,28 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                             />
                         )
                     )}
+                    <div className={styles['recipe-card-line-separator']}> </div>
+                    <div className={styles['form-container']}>
+                        <InstructionForm addRecipeInstruction={addRecipeInstruction} />
+
+                        {recipe_instructions.map((instruction, index) =>
+                            instruction.isEditing ? (
+                                <EditInstructionForm
+                                    key={index}
+                                    editRecipeInstruction={saveRecipeInstruction}
+                                    item={instruction}
+                                />
+                            ) : (
+                                <Instruction
+                                    recipe_instruction={instruction}
+                                    index={index}
+                                    deleteRecipeInstruction={deleteRecipeInstruction}
+                                    editRecipeInstruction={editRecipeInstruction}
+                                />
+                            )
+                        )}
+                    </div>
+
                     <div className={styles['recipe-card-bottom']}> </div>
                 </div>
             </div>

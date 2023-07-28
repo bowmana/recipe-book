@@ -12,7 +12,7 @@ import { ItemWrapper } from './components/new-recipe-page/item-wrapper/item-wrap
 import { UpdateItemWrapper } from './components/update-recipe-page/update-item-wrapper/update-item-wrapper';
 import { Registerform } from './components/user-info/register-form/register-form';
 import { Loginform } from './components/user-info/login-form/login-form';
-import { Logoutform } from './components/user-info/logout-form/logout-form';
+
 import { SocialFeed } from './components/social-feed/social-feed';
 import { Profile } from './components/user-info/profile/profile';
 import { UserNav } from './components/user-info/user-nav/user-nav';
@@ -76,7 +76,6 @@ function App() {
                             <div>
                                 <Nav />
                                 <Profile />
-                                <Logoutform />
                             </div>
                         }
                     />

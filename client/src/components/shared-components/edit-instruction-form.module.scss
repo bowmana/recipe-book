@@ -24,31 +24,33 @@
     margin-bottom: 1rem;
 }
 
-.update-recipe-item{
+.update-recipe-instruction{
   
   margin: 1rem;
 
+  align-self: center;
+  justify-self: flex-end;
   
 }
+
 
 
 @media (max-width: 500px){
   
   
-    .input-box{
-      width: 100%;
-      max-width: 50px;
-      font-size: small;
-      font-weight: 400;
-    }
-    .input-box::placeholder{
-      font-size: small;
-      font-weight: 400;
-    }
-    .input-box:focus::placeholder {
-      color: transparent;
-    }
+  .input-box{
+    width: 100%;
+    max-width: 100px;
+    font-size: small;
+    font-weight: 400;
+  }
+  .input-box::placeholder{
+    font-size: small;
+    font-weight: 400;
+  }
+  .input-box:focus::placeholder {
+    color: transparent;
+  }
 
 
-  
 }

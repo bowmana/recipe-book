@@ -27,45 +27,71 @@ export const RecipeCard = ({
         [styles.socialTheme]: className === 'socialTheme',
         [styles.profileTheme]: className === 'profileTheme',
     });
+    console.log(recipe, 'recipe in recipe card');
     return (
         <div className={rootClassName}>
             <div className={styles['recipe-card']}>
                 <li className={styles['recipe-card-li']} key={recipe.recipe_id}>
                     <div className={styles['recipe-card-header']}>
-                        <h2>{recipe.recipe_name}</h2>
-                        <h3>Cuisine: {recipe.recipe_cuisine}</h3>
-                        <h3>Meal Category: {recipe.recipe_type}</h3>
-                        <div className={styles['recipe-card-share']}>
-                            {isSocialCard && ( // Conditionally render the user profile image
-                                <>
-                                    <h3>
-                                        user: {recipe.u_name} id: {recipe.u_id}
-                                    </h3>
-                                    <img
-                                        src={recipe.u_profile_image}
-                                        height="50"
-                                        width="50"
-                                        alt="profile"
-                                    />
-                                </>
-                            )}
+                        <div className={styles['recipe-card-header-info-container']}>
+                            <h2 className={styles['name']}>{recipe.recipe_name}</h2>
+                            <div className={styles['recipe-card-header-wrapper']}>
+                                <div className={styles['recipe-card-header-info']}>
+                                    <div className={styles['cuisine']}>
+                                        {recipe.recipe_cuisine && (
+                                            <h3>
+                                                <span className="optional-text-large">
+                                                    Cuisine:
+                                                </span>{' '}
+                                                {recipe.recipe_cuisine}
+                                            </h3>
+                                        )}
+                                    </div>
+                                    <div className={styles['type']}>
+                                        {recipe.recipe_type && (
+                                            <h3>
+                                                <span className="optional-text-large">
+                                                    Meal Category:
+                                                </span>{' '}
+                                                {recipe.recipe_type}
+                                            </h3>
+                                        )}
+                                    </div>
+                                </div>
 
-                            {hasOriginalUser && (
-                                <>
-                                    <h3>
-                                        Original Author: {recipe.original_u_name} id:{' '}
-                                        {recipe.original_u_id}
-                                    </h3>
+                                <div className={styles['recipe-card-user-container']}>
+                                    <div className={styles['recipe-card-user']}>
+                                        {isSocialCard && (
+                                            <>
+                                                <h3>user: {recipe.u_name}</h3>
+                                                {recipe.u_profile_image && (
+                                                    <img
+                                                        className={styles['profile-image']}
+                                                        src={recipe.u_profile_image}
+                                                        alt="profile"
+                                                    />
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className={styles['recipe-card-original-user']}>
+                                        {hasOriginalUser && (
+                                            <>
+                                                <h3>Original Author: {recipe.original_u_name}</h3>
 
-                                    {isSocialCard && ( // Conditionally render the original user profile image
-                                        <img
-                                            src={recipe.original_u_profile_image}
-                                            height={50}
-                                            width={50}
-                                        />
-                                    )}
-                                </>
-                            )}
+                                                {isSocialCard &&
+                                                    recipe.original_u_profile_image && (
+                                                        <img
+                                                            src={recipe.original_u_profile_image}
+                                                            alt="profile"
+                                                            className={styles['profile-image']}
+                                                        />
+                                                    )}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div className={styles['recipe-card-line-separator']}> </div>
@@ -107,40 +133,41 @@ export const RecipeCard = ({
                         </div>
                         <ImageCycle imageUrls={recipe.recipe_images} className={className} />
                     </div>
-                    <div className={styles['recipe-card-description']}>
-                        <h3>{recipe.recipe_description}</h3>
-                    </div>
+                    {recipe.recipe_description && (
+                        <div className={styles['recipe-card-description']}>
+                            <h3>{recipe.recipe_description}</h3>
+                        </div>
+                    )}
                     <div className={styles['recipe-card-line-separator']}> </div>
                     <ul className={styles['recipe-card-ingredients']}>
                         {recipe.recipe_items.map((item: RecipeItem) => {
                             return (
                                 <li key={item.recipe_item_id}>
-                                    <h3 className={styles['recipe-card-item']}>
-                                        {item.recipe_item}
-                                    </h3>
-                                    <h3 className={styles['recipe-card-portion']}>
-                                        {item.portion_size}
-                                    </h3>
+                                    <div className={styles['recipe-card-item-container']}>
+                                        <h3 className={styles['recipe-card-item']}>
+                                            {item.recipe_item}
+                                        </h3>
+                                        <h3 className={styles['recipe-card-portion']}>
+                                            {item.portion_size}
+                                        </h3>
+                                    </div>
                                 </li>
                             );
                         })}
                     </ul>
                     <div className={styles['recipe-card-line-separator']}> </div>
 
-                    <div className={styles['recipe-card-instructions']}>
-                        <ul className={styles['recipe-card-instructions-list']}>
-                            {recipe.recipe_instructions.map((item: Instruction) => {
-                                return (
-                                    <li key={item.instruction_id}>
-                                        <h3 className={styles['recipe-card-instruction']}>
-                                            {item.instruction_order}
-                                            {item.instruction}
-                                        </h3>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+                    <ul className={styles['recipe-card-instructions-list']}>
+                        {recipe.recipe_instructions.map((item: Instruction) => {
+                            return (
+                                <li key={item.instruction_id}>
+                                    <h3 className={styles['recipe-card-instruction']}>
+                                        {item.instruction_order}) {item.instruction}
+                                    </h3>
+                                </li>
+                            );
+                        })}
+                    </ul>
 
                     <div className={styles['recipe-card-bottom']}> </div>
                 </li>

@@ -7,6 +7,22 @@
     padding: 1rem;
     background-color: #506580;
     box-shadow: 10px 10px 10px 10px rgba(0,0,0,0.5);
-    
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  
+    overflow: auto;
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent; /* make scrollbar transparent */
+    }
+}
+
+.recipe-cards-container{
+    display: grid;
+    grid-auto-flow: row;
+    grid-gap: 2rem;
+
+  
 }
 

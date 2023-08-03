@@ -1,0 +1,49 @@
+
+  /* Define styles for the recipe list */
+  .recipe-instructions-list {
+    list-style-type: none; /* Remove default bullets for the list */
+    padding: 0; /* Remove default padding for the list */
+    margin: 0; /* Remove default margin for the list */
+
+  
+    /* Add any other styles for the list here */
+  }
+.recipe-instruction-even{
+    background-color: #e7e6de;
+ 
+    padding: 1rem;
+}
+
+.recipe-instruction-odd{
+    background-color: #d17f74;
+
+    padding: 1rem;
+    
+}
+
+
+
+
+  /* Define styles for the instruction text */
+  .recipe-instruction {
+    /* Add styles for the instruction text here */
+    margin: 0 10px; /* Add some horizontal space around the text */
+    border-radius: 5px; /* Add rounded corners */
+    padding: 10px; /* Add some padding */
+    font-size: 1.2rem; /* Set the font size */
+    font-weight: 400; /* Set the font weight */
+    
+
+     
+  }
+  
+  .recipe-instruction h3{
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #bd6160;
+    text-align: center;
+    padding: 1rem;
+    margin: 0;
+   
+    word-break: break-word;
+  }

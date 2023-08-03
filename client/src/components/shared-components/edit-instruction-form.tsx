@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import styles from './edit-item-form.module.scss';
+import styles from './edit-instruction-form.module.scss';
 
 import React from 'react';
 import { useState } from 'react';
@@ -30,15 +30,15 @@ export const EditInstructionForm = ({
     return (
         <div className={classNames(styles.root, className)}>
             <form className={styles['item-form']} onSubmit={handleSubmit}>
-                <input
+                <textarea
                     className={styles['input-box']}
-                    type="text"
+                    // type="text"
                     onChange={(e) => setRecipeInstruction(e.target.value)}
                     placeholder="update instruction"
                     value={recipe_instruction}
                 />
 
-                <button className={styles['add-recipe-instruction']}>Update</button>
+                <button className={styles['update-recipe-instruction']}>Update</button>
             </form>
         </div>
     );

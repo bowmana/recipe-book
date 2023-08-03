@@ -51,8 +51,9 @@ export const HomePage = ({ className }: HomePageProps) => {
                 `http://localhost:4000/${user_id}/getrecipes?page=${page}&limit=${limit}`
             );
             const { recipes, totalCount } = response.data;
+            //console log the recipes descriptions
+
             setRecipes(recipes);
-            // setAllRecipes(recipes);
             setTotalCount(totalCount);
             console.log(
                 totalCount,

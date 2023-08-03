@@ -113,6 +113,38 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
         };
         fetchRecipes();
     }, [recipe_id]);
+    const [showInstructionForm, setShowInstructionForm] = useState<boolean>(
+        recipe_instructions.length === 0
+    );
+    const [showDropDown, setShowDropDown] = useState<boolean>(
+        recipe_cuisine !== null || recipe_type !== null
+    );
+    const [showDescriptionForm, setShowDescriptionForm] = useState<boolean>(
+        recipe_description === null
+    );
+
+    const toggleInstructionForm = () => {
+        if (showInstructionForm) {
+            setRecipeInstructions([]);
+        }
+        setShowInstructionForm(!showInstructionForm);
+    };
+    const toggleDropDown = () => {
+        if (showDropDown) {
+            setRecipeCuisine(null);
+            setRecipeType(null);
+        }
+
+        setShowDropDown(!showDropDown);
+    };
+    const toggleDescriptionForm = () => {
+        if (showDescriptionForm) {
+            setRecipeDescription('');
+        }
+
+        setShowDescriptionForm(!showDescriptionForm);
+    };
+
     const deleteRecipeInstruction = (id: string) => {
         const updatedRecipeInstructions = recipe_instructions.filter(
             (instruction) => instruction.instruction_id !== id
@@ -231,6 +263,14 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             alert('Please enter a recipe name more than 3 characters');
             return;
         }
+        if (!images.length) {
+            alert('Please upload at least one image');
+            return;
+        }
+        if (recipe_items.length < 1) {
+            alert('Please add at least one ingredient');
+            return;
+        }
         setIsUploading(true);
         const formData = new FormData();
 
@@ -255,7 +295,9 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
             formData.append(`recipe_instructions[${index}][instruction]`, instruction.instruction);
             formData.append(
                 `recipe_instructions[${index}][instruction_order]`,
-                instruction.instruction_order.toString()
+                (index + 1).toString()
+                // `recipe_instructions[${index}][instruction_order]`,
+                // instruction.instruction_order.toString()
             );
         });
         formData.append('recipe_name', recipe_name);
@@ -283,8 +325,11 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
     const clearRecipe = () => {
         setRecipeItems([]);
     };
-
     const updateName = (e: any) => {
+        if (e.target.value.length > 50) {
+            alert('Please enter a recipe name less than 50 characters');
+            return;
+        }
         setRecipeName(e.target.value);
     };
 
@@ -333,85 +378,133 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                 )}
                 <div className={styles['recipe-card-line-separator']}> </div>
                 <ImageUpload maxImages={5} addImages={setImages} retrievedImages={recipe_images} />
-                <div className={styles['recipe-card-line-separator']}> </div>
-                <div className={styles['recipe-genre-dropdown']}>
-                    {editRecipeCuisine ? (
-                        <div className={styles['dropdown-container']}>
-                            <Dropdown
-                                initialOptions={[
-                                    { value: 'Italian', label: 'Italian' },
-                                    { value: 'Mexican', label: 'Mexican' },
-                                    { value: 'American', label: 'American' },
-                                    { value: 'French', label: 'French' },
-                                    { value: 'Chinese', label: 'Chinese' },
-                                    { value: 'Japanese', label: 'Japanese' },
-                                    { value: 'Indian', label: 'Indian' },
-                                    { value: 'Thai', label: 'Thai' },
-                                    { value: 'Spanish', label: 'Spanish' },
-                                    { value: 'Greek', label: 'Greek' },
-                                    { value: 'Lebanese', label: 'Lebanese' },
-                                    { value: 'Moroccan', label: 'Moroccan' },
-                                    { value: 'Brazilian', label: 'Brazilian' },
-                                    { value: 'Korean', label: 'Korean' },
-                                    { value: 'Vietnamese', label: 'Vietnamese' },
-                                    { value: 'Turkish', label: 'Turkish' },
-                                    { value: 'German', label: 'German' },
-                                    { value: 'Ethiopian', label: 'Ethiopian' },
-                                    { value: 'Peruvian', label: 'Peruvian' },
-                                    { value: 'Russian', label: 'Russian' },
-                                    { value: 'Jamaican', label: 'Jamaican' },
-                                    { value: 'Egyptian', label: 'Egyptian' },
-                                    { value: 'British', label: 'British' },
-                                    { value: 'Israeli', label: 'Israeli' },
-                                    { value: 'Indonesian', label: 'Indonesian' },
-                                    { value: 'Irish', label: 'Irish' },
-                                    { value: 'Argentine', label: 'Argentine' },
-                                    { value: 'Swedish', label: 'Swedish' },
-                                    { value: 'Australian', label: 'Australian' },
-                                    { value: 'Malaysian', label: 'Malaysian' },
-                                ]}
-                                onChange={addRecipeCuisine}
-                                retrievedSelected={recipe_cuisine}
-                            />
-                        </div>
-                    ) : (
-                        <div>
-                            <span>{recipe_cuisine ? recipe_cuisine.label : ''}</span>
-                            <button onClick={toggleEditRecipeCuisine}>Edit</button>
-                        </div>
-                    )}
-                    {editRecipeType ? (
-                        <div className={styles['dropdown-container']}>
-                            <Dropdown
-                                initialOptions={[
-                                    { value: 'Breakfast', label: 'Breakfast' },
-                                    { value: 'Lunch', label: 'Lunch' },
-                                    { value: 'Dinner', label: 'Dinner' },
-                                    { value: 'Dessert', label: 'Dessert' },
-                                    { value: 'Snack', label: 'Snack' },
-                                    { value: 'Appetizer', label: 'Appetizer' },
-                                    { value: 'Drink', label: 'Drink' },
-                                    { value: 'Side', label: 'Side' },
-                                    { value: 'Sauce', label: 'Sauce' },
-                                    { value: 'Marinade', label: 'Marinade' },
-                                ]}
-                                onChange={addRecipeType}
-                                retrievedSelected={recipe_type}
-                            />
-                        </div>
-                    ) : (
-                        <div>
-                            <span>{recipe_type ? recipe_type.label : ''}</span>
-                            <button onClick={toggleEditRecipeType}>Edit</button>
-                        </div>
-                    )}
+                <div className={'line-separator'}> </div>
+                <div className={styles['recipe-toggles']}>
+                    <button className={'small-button'} onClick={toggleDropDown}>
+                        {showDropDown ? (
+                            <>
+                                <span> Remove Recipe Cuisine and Type </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Cuisine and Type </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
+                    <button className={'small-button'} onClick={toggleDescriptionForm}>
+                        {showDescriptionForm ? (
+                            <>
+                                <span> Remove Recipe Description </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Description </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
+                    <button className={'small-button'} onClick={toggleInstructionForm}>
+                        {showInstructionForm ? (
+                            <>
+                                <span> Remove Recipe Instructions </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Instructions </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
                 </div>
-                <div className={styles['recipe-card-line-separator']}> </div>
+                {showDropDown && (
+                    <>
+                        <div className={'line-separator'}> </div>
+                        <div className={styles['recipe-genre-dropdown']}>
+                            {editRecipeCuisine ? (
+                                <div className={styles['dropdown-container']}>
+                                    <Dropdown
+                                        initialOptions={[
+                                            { value: 'Italian', label: 'Italian' },
+                                            { value: 'Mexican', label: 'Mexican' },
+                                            { value: 'American', label: 'American' },
+                                            { value: 'French', label: 'French' },
+                                            { value: 'Chinese', label: 'Chinese' },
+                                            { value: 'Japanese', label: 'Japanese' },
+                                            { value: 'Indian', label: 'Indian' },
+                                            { value: 'Thai', label: 'Thai' },
+                                            { value: 'Spanish', label: 'Spanish' },
+                                            { value: 'Greek', label: 'Greek' },
+                                            { value: 'Lebanese', label: 'Lebanese' },
+                                            { value: 'Moroccan', label: 'Moroccan' },
+                                            { value: 'Brazilian', label: 'Brazilian' },
+                                            { value: 'Korean', label: 'Korean' },
+                                            { value: 'Vietnamese', label: 'Vietnamese' },
+                                            { value: 'Turkish', label: 'Turkish' },
+                                            { value: 'German', label: 'German' },
+                                            { value: 'Ethiopian', label: 'Ethiopian' },
+                                            { value: 'Peruvian', label: 'Peruvian' },
+                                            { value: 'Russian', label: 'Russian' },
+                                            { value: 'Jamaican', label: 'Jamaican' },
+                                            { value: 'Egyptian', label: 'Egyptian' },
+                                            { value: 'British', label: 'British' },
+                                            { value: 'Israeli', label: 'Israeli' },
+                                            { value: 'Indonesian', label: 'Indonesian' },
+                                            { value: 'Irish', label: 'Irish' },
+                                            { value: 'Argentine', label: 'Argentine' },
+                                            { value: 'Swedish', label: 'Swedish' },
+                                            { value: 'Australian', label: 'Australian' },
+                                            { value: 'Malaysian', label: 'Malaysian' },
+                                        ]}
+                                        onChange={addRecipeCuisine}
+                                        retrievedSelected={recipe_cuisine}
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <span>{recipe_cuisine ? recipe_cuisine.label : ''}</span>
+                                    <button onClick={toggleEditRecipeCuisine}>Edit</button>
+                                </div>
+                            )}
+                            {editRecipeType ? (
+                                <div className={styles['dropdown-container']}>
+                                    <Dropdown
+                                        initialOptions={[
+                                            { value: 'Breakfast', label: 'Breakfast' },
+                                            { value: 'Lunch', label: 'Lunch' },
+                                            { value: 'Dinner', label: 'Dinner' },
+                                            { value: 'Dessert', label: 'Dessert' },
+                                            { value: 'Snack', label: 'Snack' },
+                                            { value: 'Appetizer', label: 'Appetizer' },
+                                            { value: 'Drink', label: 'Drink' },
+                                            { value: 'Side', label: 'Side' },
+                                            { value: 'Sauce', label: 'Sauce' },
+                                            { value: 'Marinade', label: 'Marinade' },
+                                        ]}
+                                        onChange={addRecipeType}
+                                        retrievedSelected={recipe_type}
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <span>{recipe_type ? recipe_type.label : ''}</span>
+                                    <button onClick={toggleEditRecipeType}>Edit</button>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
+                <div className={'line-separator'}> </div>
                 <div className={styles['form-container']}>
                     <ItemForm
                         addRecipeItem={addRecipeItem}
                         recipeDescription={recipe_description}
                         addRecipeDescription={addRecipeDescription}
+                        showDescriptionForm={showDescriptionForm}
+                        setRecipeDescription={setRecipeDescription}
                     />
 
                     {recipe_items && recipe_items.length > 0 ? (
@@ -434,27 +527,36 @@ export const UpdateItemWrapper = ({ className }: ItemWrapperProps) => {
                     ) : (
                         <h1>There are no items in this recipe</h1>
                     )}
-                    <div className={styles['recipe-card-line-separator']}> </div>
-                    <div className={styles['form-container']}>
-                        <InstructionForm addRecipeInstruction={addRecipeInstruction} />
+                    {showInstructionForm && (
+                        <>
+                            <div className={'line-separator'}> </div>
 
-                        {recipe_instructions.map((instruction, index) =>
-                            instruction.isEditing ? (
-                                <EditInstructionForm
-                                    key={index}
-                                    editRecipeInstruction={saveRecipeInstruction}
-                                    item={instruction}
-                                />
-                            ) : (
-                                <Instruction
-                                    recipe_instruction={instruction}
-                                    index={index}
-                                    deleteRecipeInstruction={deleteRecipeInstruction}
-                                    editRecipeInstruction={editRecipeInstruction}
-                                />
-                            )
-                        )}
-                    </div>
+                            <div>
+                                <InstructionForm addRecipeInstruction={addRecipeInstruction} />
+
+                                {recipe_instructions && recipe_instructions.length > 0 ? (
+                                    recipe_instructions.map((instruction, index) =>
+                                        instruction.isEditing ? (
+                                            <EditInstructionForm
+                                                key={index}
+                                                editRecipeInstruction={saveRecipeInstruction}
+                                                item={instruction}
+                                            />
+                                        ) : (
+                                            <Instruction
+                                                recipe_instruction={instruction}
+                                                index={index}
+                                                deleteRecipeInstruction={deleteRecipeInstruction}
+                                                editRecipeInstruction={editRecipeInstruction}
+                                            />
+                                        )
+                                    )
+                                ) : (
+                                    <h1>There are no instructions in this recipe</h1>
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     <div className={styles['recipe-card-bottom']}> </div>
                 </div>

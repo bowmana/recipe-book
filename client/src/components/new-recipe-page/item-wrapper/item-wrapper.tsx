@@ -26,6 +26,9 @@ export interface ItemWrapperProps {
 export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [user_id, setUserID] = useState(0);
     const [user_name, setUserName] = useState('');
+    const [showInstructionForm, setShowInstructionForm] = useState<boolean>(false);
+    const [showDropDown, setShowDropDown] = useState<boolean>(false);
+    const [showDescriptionForm, setShowDescriptionForm] = useState<boolean>(false);
 
     useEffect(() => {
         const auth = async () => {
@@ -58,6 +61,28 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [recipe_description, setRecipeDescription] = useState<string>('');
+
+    const toggleInstructionForm = () => {
+        if (showInstructionForm) {
+            setRecipeInstructions([]);
+        }
+        setShowInstructionForm(!showInstructionForm);
+    };
+    const toggleDropDown = () => {
+        if (showDropDown) {
+            setRecipeCuisine(null);
+            setRecipeType(null);
+        }
+
+        setShowDropDown(!showDropDown);
+    };
+    const toggleDescriptionForm = () => {
+        if (showDescriptionForm) {
+            setRecipeDescription('');
+        }
+
+        setShowDescriptionForm(!showDescriptionForm);
+    };
 
     const addRecipeItem = (recipe_item: string, portion_size: string) => {
         const newItem: EditableRecipeItem = {
@@ -178,6 +203,14 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
             alert('Please enter a recipe name more than 3 characters');
             return;
         }
+        if (!images.length) {
+            alert('Please upload at least one image');
+            return;
+        }
+        if (recipe_items.length < 1) {
+            alert('Please add at least one ingredient');
+            return;
+        }
         setIsUploading(true);
 
         const formData = new FormData();
@@ -236,6 +269,10 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
     };
 
     const updateName = (e: any) => {
+        if (e.target.value.length > 50) {
+            alert('Please enter a recipe name less than 50 characters');
+            return;
+        }
         setRecipeName(e.target.value);
     };
 
@@ -267,80 +304,128 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                         />
                     </div>
                 )}
-                <div className={styles['recipe-card-line-separator']}> </div>
+                <div className={'line-separator'}> </div>
 
-                <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} />
-                <div className={styles['recipe-card-line-separator']}> </div>
-
-                <div className={styles['recipe-genre-dropdown']}>
-                    <div className={styles['dropdown-container']}>
-                        <h2> Pick a Cuisine </h2>
-                        <Dropdown
-                            className="cuisine-dropdown"
-                            initialOptions={[
-                                { value: 'Italian', label: 'Italian' },
-                                { value: 'Mexican', label: 'Mexican' },
-                                { value: 'American', label: 'American' },
-                                { value: 'French', label: 'French' },
-                                { value: 'Chinese', label: 'Chinese' },
-                                { value: 'Japanese', label: 'Japanese' },
-                                { value: 'Indian', label: 'Indian' },
-                                { value: 'Thai', label: 'Thai' },
-                                { value: 'Spanish', label: 'Spanish' },
-                                { value: 'Greek', label: 'Greek' },
-                                { value: 'Lebanese', label: 'Lebanese' },
-                                { value: 'Moroccan', label: 'Moroccan' },
-                                { value: 'Brazilian', label: 'Brazilian' },
-                                { value: 'Korean', label: 'Korean' },
-                                { value: 'Vietnamese', label: 'Vietnamese' },
-                                { value: 'Turkish', label: 'Turkish' },
-                                { value: 'German', label: 'German' },
-                                { value: 'Ethiopian', label: 'Ethiopian' },
-                                { value: 'Peruvian', label: 'Peruvian' },
-                                { value: 'Russian', label: 'Russian' },
-                                { value: 'Jamaican', label: 'Jamaican' },
-                                { value: 'Egyptian', label: 'Egyptian' },
-                                { value: 'British', label: 'British' },
-                                { value: 'Israeli', label: 'Israeli' },
-                                { value: 'Indonesian', label: 'Indonesian' },
-                                { value: 'Irish', label: 'Irish' },
-                                { value: 'Argentine', label: 'Argentine' },
-                                { value: 'Swedish', label: 'Swedish' },
-                                { value: 'Australian', label: 'Australian' },
-                                { value: 'Malaysian', label: 'Malaysian' },
-                            ]}
-                            onChange={addRecipeCuisine}
-                            place_holder="Select a cuisine"
-                        />
-                    </div>
-
-                    <div className={styles['dropdown-container']}>
-                        <h2>Pick a recipe type </h2>
-                        <Dropdown
-                            className="type-dropdown"
-                            initialOptions={[
-                                { value: 'Breakfast', label: 'Breakfast' },
-                                { value: 'Lunch', label: 'Lunch' },
-                                { value: 'Dinner', label: 'Dinner' },
-                                { value: 'Dessert', label: 'Dessert' },
-                                { value: 'Snack', label: 'Snack' },
-                                { value: 'Appetizer', label: 'Appetizer' },
-                                { value: 'Drink', label: 'Drink' },
-                                { value: 'Side', label: 'Side' },
-                                { value: 'Sauce', label: 'Sauce' },
-                                { value: 'Marinade', label: 'Marinade' },
-                            ]}
-                            onChange={addRecipeType}
-                            place_holder="Select a recipe type"
-                        />
-                    </div>
+                {/* <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} /> */}
+                <div className={'line-separator'}> </div>
+                <div className={styles['recipe-toggles']}>
+                    <button className={'small-button'} onClick={toggleDropDown}>
+                        {showDropDown ? (
+                            <>
+                                <span> Remove Recipe Cuisine and Type </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Cuisine and Type </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
+                    <button className={'small-button'} onClick={toggleDescriptionForm}>
+                        {showDescriptionForm ? (
+                            <>
+                                <span> Remove Recipe Description </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Description </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
+                    <button className={'small-button'} onClick={toggleInstructionForm}>
+                        {showInstructionForm ? (
+                            <>
+                                <span> Remove Recipe Instructions </span>
+                                <span className={'optional-text'}>X</span>
+                            </>
+                        ) : (
+                            <>
+                                <span> Add Recipe Instructions </span>
+                                <span className={'optional-text'}>Optional</span>
+                            </>
+                        )}
+                    </button>
                 </div>
-                <div className={styles['recipe-card-line-separator']}> </div>
+
+                {showDropDown && (
+                    <>
+                        <div className={'line-separator'}> </div>
+                        <div className={styles['recipe-genre-dropdown']}>
+                            <div className={styles['dropdown-container']}>
+                                <h2> Pick a Cuisine </h2>
+                                <Dropdown
+                                    className="cuisine-dropdown"
+                                    initialOptions={[
+                                        { value: 'Italian', label: 'Italian' },
+                                        { value: 'Mexican', label: 'Mexican' },
+                                        { value: 'American', label: 'American' },
+                                        { value: 'French', label: 'French' },
+                                        { value: 'Chinese', label: 'Chinese' },
+                                        { value: 'Japanese', label: 'Japanese' },
+                                        { value: 'Indian', label: 'Indian' },
+                                        { value: 'Thai', label: 'Thai' },
+                                        { value: 'Spanish', label: 'Spanish' },
+                                        { value: 'Greek', label: 'Greek' },
+                                        { value: 'Lebanese', label: 'Lebanese' },
+                                        { value: 'Moroccan', label: 'Moroccan' },
+                                        { value: 'Brazilian', label: 'Brazilian' },
+                                        { value: 'Korean', label: 'Korean' },
+                                        { value: 'Vietnamese', label: 'Vietnamese' },
+                                        { value: 'Turkish', label: 'Turkish' },
+                                        { value: 'German', label: 'German' },
+                                        { value: 'Ethiopian', label: 'Ethiopian' },
+                                        { value: 'Peruvian', label: 'Peruvian' },
+                                        { value: 'Russian', label: 'Russian' },
+                                        { value: 'Jamaican', label: 'Jamaican' },
+                                        { value: 'Egyptian', label: 'Egyptian' },
+                                        { value: 'British', label: 'British' },
+                                        { value: 'Israeli', label: 'Israeli' },
+                                        { value: 'Indonesian', label: 'Indonesian' },
+                                        { value: 'Irish', label: 'Irish' },
+                                        { value: 'Argentine', label: 'Argentine' },
+                                        { value: 'Swedish', label: 'Swedish' },
+                                        { value: 'Australian', label: 'Australian' },
+                                        { value: 'Malaysian', label: 'Malaysian' },
+                                    ]}
+                                    onChange={addRecipeCuisine}
+                                    place_holder="Enter or Select a cuisine"
+                                />
+                            </div>
+
+                            <div className={styles['dropdown-container']}>
+                                <h2>Pick a recipe type </h2>
+                                <Dropdown
+                                    className="type-dropdown"
+                                    initialOptions={[
+                                        { value: 'Breakfast', label: 'Breakfast' },
+                                        { value: 'Lunch', label: 'Lunch' },
+                                        { value: 'Dinner', label: 'Dinner' },
+                                        { value: 'Dessert', label: 'Dessert' },
+                                        { value: 'Snack', label: 'Snack' },
+                                        { value: 'Appetizer', label: 'Appetizer' },
+                                        { value: 'Drink', label: 'Drink' },
+                                        { value: 'Side', label: 'Side' },
+                                        { value: 'Sauce', label: 'Sauce' },
+                                        { value: 'Marinade', label: 'Marinade' },
+                                    ]}
+                                    onChange={addRecipeType}
+                                    place_holder="Enter or Select a recipe type"
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
+                <div className={'line-separator'}> </div>
                 <div className={styles['form-container']}>
                     <ItemForm
                         addRecipeItem={addRecipeItem}
                         addRecipeDescription={addRecipeDescription}
-                        addRecipeInstruction={addRecipeInstruction}
+                        showDescriptionForm={showDescriptionForm}
+                        setRecipeDescription={setRecipeDescription}
+                        recipeDescription={recipe_description}
                     />
 
                     {recipe_items.map((item, index) =>
@@ -355,27 +440,33 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                             />
                         )
                     )}
-                    <div className={styles['recipe-card-line-separator']}> </div>
-                    <div className={styles['form-container']}>
-                        <InstructionForm addRecipeInstruction={addRecipeInstruction} />
 
-                        {recipe_instructions.map((instruction, index) =>
-                            instruction.isEditing ? (
-                                <EditInstructionForm
-                                    key={index}
-                                    editRecipeInstruction={saveRecipeInstruction}
-                                    item={instruction}
-                                />
-                            ) : (
-                                <Instruction
-                                    recipe_instruction={instruction}
-                                    index={index}
-                                    deleteRecipeInstruction={deleteRecipeInstruction}
-                                    editRecipeInstruction={editRecipeInstruction}
-                                />
-                            )
-                        )}
-                    </div>
+                    {showInstructionForm && (
+                        <>
+                            <div className={'line-separator'}> </div>
+
+                            <div>
+                                <InstructionForm addRecipeInstruction={addRecipeInstruction} />
+
+                                {recipe_instructions.map((instruction, index) =>
+                                    instruction.isEditing ? (
+                                        <EditInstructionForm
+                                            key={index}
+                                            editRecipeInstruction={saveRecipeInstruction}
+                                            item={instruction}
+                                        />
+                                    ) : (
+                                        <Instruction
+                                            recipe_instruction={instruction}
+                                            index={index}
+                                            deleteRecipeInstruction={deleteRecipeInstruction}
+                                            editRecipeInstruction={editRecipeInstruction}
+                                        />
+                                    )
+                                )}
+                            </div>
+                        </>
+                    )}
 
                     <div className={styles['recipe-card-bottom']}> </div>
                 </div>

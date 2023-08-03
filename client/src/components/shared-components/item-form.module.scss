@@ -6,7 +6,8 @@
 
 
     justify-content: center;
-    background-color: #266d67;
+    align-items: center;
+    background-color: #d17f74;
     
    
 }
@@ -18,7 +19,7 @@
     justify-content: center;
     align-items: center;
     padding: 1rem;
-    background-color: #d17f74;
+  
 
 
 }
@@ -35,36 +36,12 @@
     border: 1rem solid #1c685e;
     border-radius: 15px;
     box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
-    //set font color to default placeholder color
-    color: black;
+    padding: 1rem;
+    width: 100%;
+    max-width: 500px;
+ 
 
     
-}
-
-.text-area{
-    display: block;
-    grid-auto-flow: row;
-    grid-gap: 2rem;
-    justify-content: center;
-    padding: 1rem;
-   
-    border: 1rem solid #1c685e;
-    border-radius: 15px;
-    box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
-   width: 400px;
-   max-width: 400px;
-
-
-   // Set minimum and maximum heights to control the expansion
-   min-height: 100px;  // Adjust this value as needed
-   max-height: 400px;  // Adjust this value as needed
- 
-    margin: 1rem;
-
-    background-color: #e7e6de;
-    font-size: 1.5rem;
-
-
 }
 
 .input-box{
@@ -75,38 +52,78 @@
   border: 5px solid #e2bd98;
   color: #bd6160;
   font-size: 1.5rem;
+  font-weight: 400;
+  text-align: center;
 }
 .input-box::placeholder{
   color: #bd6160;
-}
+  font-size: 1.5rem;
+  font-weight: 400;
+  text-align: center;
 
+}
+.input-box:focus::placeholder {
+  color: transparent;
+}
   .input-container {
     display: grid;
     grid-auto-flow: column;
     grid-gap: 1rem;
     align-items: center;
     justify-content: center;
-    background-color: #d17f74;
+
     padding: 1rem;
   }
 
 
-.text-area::-webkit-scrollbar {
-    width: 8px; /* Set the width of the scrollbar */
-  }
-  
-  .text-area::-webkit-scrollbar-track {
-    background-color: #f1f1f1; /* Set the background color of the track */
-  }
-  
-  .text-area::-webkit-scrollbar-thumb {
-    background-color: #888; /* Set the color of the scrollbar thumb */
-  }
-  
-  .text-area::-webkit-scrollbar-thumb:hover {
-    background-color: #555; /* Set the color of the scrollbar thumb on hover */
-  }
 
-
-
+.description-form{
+    display: flex;
+    flex-direction: column;
+    // grid-gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    
+    padding: 1rem;
  
+
+}
+
+
+@media (max-width: 500px){
+
+  .add-recipe-item{
+    width: 100%;
+    max-width: 500px;
+  }
+  .input-box{
+    width: 100%;
+    max-width: 150px;
+    font-size: small;
+    font-weight: 400;
+  }
+  .input-box::placeholder{
+    font-size: small;
+    font-weight: 400;
+  }
+  .input-box:focus::placeholder {
+    color: transparent;
+  }
+  .input-container{
+    width: 100%;
+    max-width: 500px;
+  }
+  .description-form{
+    width: 100%;
+    padding: 0;
+   
+  }
+  .input-container{
+  
+    grid-auto-flow: row;
+
+
+  }
+
+
+}

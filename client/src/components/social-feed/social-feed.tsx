@@ -281,8 +281,6 @@ export const SocialFeed = ({ className }: SocialPageProps) => {
 
     return (
         <div className={classNames(styles.root, className)}>
-            <h1>Social Feed</h1>
-
             <SearchBar
                 addRecipeCuisine={addRecipeCuisine}
                 addRecipeType={addRecipeType}

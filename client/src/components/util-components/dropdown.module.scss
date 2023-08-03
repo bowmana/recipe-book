@@ -8,6 +8,7 @@
     font-size: 1.5rem;
     
     
+    
 &.portion-dropdown{
     
  
@@ -18,31 +19,14 @@
         border: 5px solid #e2bd98;
         position: sticky;
         
-    
-    
-}
-&.cuisine-dropdown{
-    
- 
-        margin: 1rem;
-        padding: 1rem;
-        background-color: #e7e6de;
-        border-radius: 10px;
-        border: 5px solid #e2bd98;
-     
-    
-    
-}
-&.type-dropdown{
-     
-     
-          margin: 1rem;
-          padding: 1rem;
-          background-color: #e7e6de;
-          border-radius: 10px;
-          border: 5px solid #e2bd98;
         
-     
+    
+    
+}
+
+&.portion-dropdown:hover{
+    cursor: pointer;
+    background-color: #d17f74;
 }
 :hover{
 
@@ -50,6 +34,18 @@
     cursor: pointer;
 }
 
+
+
 }
+
+
+
+
+@media (max-width: 500px){
+    .root{
+        font-size: small;
+    }
+}
+
 
 

@@ -1,9 +1,7 @@
 import classNames from 'classnames';
-import styles from './item-form.module.scss';
+import styles from './instruction-form.module.scss';
 import React from 'react';
 import { useState } from 'react';
-import { Dropdown } from '../util-components/dropdown';
-import { Option } from '../types';
 
 export interface InstructionFormProps {
     className?: string;
@@ -30,17 +28,26 @@ export const InstructionForm = ({
         setInstruction('');
     };
 
+    const handleInstruction = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        if (value.length <= 250) {
+            setInstruction(value);
+        } else {
+            setInstruction(value.substring(0, 250));
+        }
+    };
+
     return (
         <div className={classNames(styles.root, className)}>
-            <div className={styles['recipe-card-line-separator']}> </div>
             <form className={styles['instructions-form']} onSubmit={handleSubmitInstruction}>
                 <h2>Add Instructions</h2>
                 <textarea
                     className={styles['text-area']}
                     value={instruction}
-                    onChange={(e) => setInstruction(e.target.value)}
+                    onChange={(e) => handleInstruction(e)}
                     placeholder="add instruction"
                 />
+                <div className={styles['description-count']}>{instruction.length}/250</div>
                 <button className={styles['add-recipe-instruction']}>Add Instruction</button>
             </form>
         </div>

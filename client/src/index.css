@@ -13,6 +13,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+
+  
 }
 
 
@@ -31,17 +34,21 @@ body {
   place-items: center;
   justify-content: center;
   min-width: 320px;
+
   min-height: 100vh;
-    background-image: url("../../client//src/assets/images/Watercolor-Fruits-Pattern2.png");
-  background-repeat: repeat;
+  background-image: url("../../client//src/assets/images/Watercolor-Fruits-Pattern2.png");
+background-repeat: repeat;
  
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 3.2rem;
   line-height: 1.1;
 }
-
+p{
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
 button {
   padding: 1rem;
   border: 5px solid #e2bd98;
@@ -56,6 +63,9 @@ button {
 }
 button:hover {
   border-color: #646cff;
+ 
+    background-color: #d17f74;
+
 }
 button:focus,
 button:focus-visible {
@@ -88,3 +98,137 @@ button:focus-visible {
 .input-box::placeholder{
   color: #bd6160;
 }
+
+.small-button {
+  padding: 0.75rem 1.5rem; /* Adjust the padding to make it smaller */
+  border: 3px solid #e2bd98; /* Reduce the border size */
+  border-radius: 5px;
+  background-color: #e7e6de;
+  color: #bd6160;
+  font-size: 1rem; /* Reduce the font size */
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 300ms;
+  margin: 1rem;
+
+
+}
+
+.small-button:hover {
+  border-color: #646cff;
+}
+
+.small-button:focus,
+.small-button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Add a media query for the small-button color in light mode */
+@media (prefers-color-scheme: light) {
+  .small-button {
+    background-color: #f9f9f9;
+  }
+}
+
+.optional-text{
+  font-size: 1rem;
+  color: #942bda;
+  font-style: italic;
+  margin: 1rem;
+}
+.optional-text-large{
+  font-size: 1.5rem;
+  color: #942bda;
+  font-style: italic;
+  margin: 1rem;
+  
+  font-weight: 600;
+
+}
+.required-text{
+  font-size: 2rem;
+  color: #ff0400;
+  font-style: italic;
+
+}
+.line-separator {
+  border: 8px solid #e2bd98;
+ 
+}
+textarea{
+  display: block;
+  grid-auto-flow: row;
+  grid-gap: 2rem;
+  justify-content: center;
+  padding: 1rem;
+ 
+  border: 1rem solid #1c685e;
+  border-radius: 15px;
+  box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
+ width: 400px;
+ max-width: 400px;
+ max-height: 300px;
+ color: #bd6160;
+  font-size: 1.5rem;
+}
+textarea::placeholder{
+  color: #bd6160;
+}
+
+
+@media (max-width: 500px) {
+ 
+  textarea{
+    width: 300px;
+    max-width: 150px;
+    max-height: 100px;
+  }
+  .input-box{
+    width: 300px;
+    max-width: 150px;
+    max-height: 100px;
+  }
+  .small-button{
+    width: 300px;
+    max-width: 150px;
+    max-height: 100px;
+  }
+  .optional-text{
+    font-size: .75rem;
+  }
+  .optional-text-large{
+    font-size: small;
+
+  }
+  .required-text{
+    font-size: 1.5rem;
+
+  }
+  .line-separator{
+    border: 3px solid #e2bd98;
+  }
+  .input-box::placeholder{
+    font-size: small;
+  }
+  textarea::placeholder{
+    font-size: small;
+  }
+  button{
+    font-size: small;
+  
+  }
+  h1{
+    font-size: 2rem;
+  }
+  input{
+    font-size: small;
+    max-width: 150px;
+  }
+  p{
+    font-size: small;
+  }
+  h3{
+    font-size: small;
+  }
+}
+

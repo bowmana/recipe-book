@@ -122,7 +122,7 @@ app.get("/:user_id/getrecipes", (req, res) => __awaiter(void 0, void 0, void 0, 
     const endIndex = page * limit;
     const results = cachedData.slice(startIndex, endIndex);
     const totalCount = cachedData.length;
-    res.status(200).json({ recipes: results, totalCount });
+    res.status(200).send({ recipes: results, totalCount });
 }));
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -131,7 +131,7 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
     const original_u_id = parseInt(req.body.original_u_id);
     console.log(u_id, "u_id");
     const recipe_items = req.body.recipe_items;
-    const recipe_instructions = req.body.recipe_instructions;
+    const recipe_instructions = req.body.recipe_instructions || [];
     console.log(recipe_description, "recipe_description");
     console.log(recipe_items, "recipe_items");
     console.log(recipe_name, recipe_cuisine, recipe_type, "recipe_name, recipe_cuisine, recipe_type");
@@ -144,7 +144,33 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), (req, res) => __awa
             res.status(404).send("User does not exist");
             return;
         }
-        const recipe = yield helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id);
+        const makeRecipe = () => {
+            if (recipe_cuisine && recipe_type && recipe_description) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, recipe_type, recipe_description);
+            }
+            else if (recipe_cuisine && recipe_type) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, recipe_type, undefined);
+            }
+            else if (recipe_cuisine && recipe_description) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, undefined, recipe_description);
+            }
+            else if (recipe_type && recipe_description) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, recipe_type, recipe_description);
+            }
+            else if (recipe_cuisine) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, undefined, undefined);
+            }
+            else if (recipe_type) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, recipe_type, undefined);
+            }
+            else if (recipe_description) {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, undefined, recipe_description);
+            }
+            else {
+                return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, undefined, undefined);
+            }
+        };
+        const recipe = yield makeRecipe();
         if (!recipe) {
             res.status(500).send("There was an error creating the recipe");
             return;
@@ -581,6 +607,7 @@ app.delete("/recipes/:user_id/delete/:recipe_id", (req, res) => __awaiter(void 0
         yield helper.deleteUserRecipe(user_id, recipe_id);
         deleteRecipeImages(recipe_id);
         yield helper.deleteRecipeItems(recipe_id);
+        yield helper.deleteInstructions(recipe_id);
         yield helper.deleteRecipeImages(recipe_id);
         yield helper.deleteRecipe(recipe_id);
         const cacheKey = `user:${user_id}:recipes`;

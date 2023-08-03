@@ -3,7 +3,10 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-  font-family: sans-serif;
+
+
+  
+ 
   
 }
 
@@ -50,4 +53,13 @@
 
 .read-the-docs {
   color: #888;
+}
+
+
+@media (max-width: 500px){
+  .App{
+    padding: 0;
+    
+  }
+
 }

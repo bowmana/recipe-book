@@ -12,6 +12,7 @@ export interface DropdownProps {
     retrievedSelected?: Option | null;
     place_holder?: string;
     ref?: React.Ref<any>;
+   
 }
 interface Option {
     value: string;
@@ -57,6 +58,9 @@ export const Dropdown = forwardRef((props: DropdownProps, ref: any) => {
     };
 
     const handleInputChange = (inputValue: string) => {
+        if (inputValue.length > 40) {
+            return;
+        }
         const optionExists = options.some(
             (option) => option.value.toLowerCase() === inputValue.toLowerCase()
         );
@@ -94,6 +98,7 @@ export const Dropdown = forwardRef((props: DropdownProps, ref: any) => {
         option: (base: any, state: any) => ({
             ...base,
             backgroundColor: 'transparent',
+
             color: 'black',
             '&:hover': {
                 backgroundColor: '#e2bd98',
@@ -113,6 +118,9 @@ export const Dropdown = forwardRef((props: DropdownProps, ref: any) => {
 
         input: (base: any, state: any) => ({
             ...base,
+
+            overflow: 'hidden',
+            maxWidth: '300px',
             color: '#bd6160',
         }),
     };

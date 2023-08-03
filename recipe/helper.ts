@@ -83,7 +83,7 @@ const updateEmail = async (user_id: number, email: string) => {
 
 
 
-const createRecipe = async (user_id: number, recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, original_u_id: number, original_u_name: string, u_name: string, u_id: number) => {
+const createRecipe = async (user_id: number, recipe_name: string, original_u_id: number, original_u_name: string, u_name: string, u_id: number, recipe_cuisine?: string, recipe_type?: string, recipe_description?: string) => {
     try {
         const result: QueryResult = await dbConn.pool.query(`
         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name, original_u_id, original_u_name)

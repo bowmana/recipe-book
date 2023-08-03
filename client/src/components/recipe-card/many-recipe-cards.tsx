@@ -104,8 +104,6 @@ const ManyRecipeCards = ({
 
     return (
         <div className={classNames(styles.root, className)}>
-            <h1>My Recipes</h1>
-
             <SearchBar
                 addRecipeCuisine={addRecipeCuisine}
                 addRecipeType={addRecipeType}

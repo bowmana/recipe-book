@@ -91,7 +91,7 @@ const updateEmail = (user_id, email) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.updateEmail = updateEmail;
-const createRecipe = (user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id) => __awaiter(void 0, void 0, void 0, function* () {
+const createRecipe = (user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, recipe_type, recipe_description) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield dbConn.pool.query(`
         INSERT INTO recipe_table (recipe_name, recipe_cuisine, recipe_type, recipe_description, u_id, u_name, original_u_id, original_u_name)

@@ -13,6 +13,9 @@
   margin : 0;
 
   color: #bd6160;
+  //word-wrap: break-word;
+  
+ 
 
 }
 
@@ -54,9 +57,70 @@
  
   text-align: center;
  
-  border: 5px solid #e2bd98;
+  
 
   background-color: #e7e6de;
   padding: 1rem;
   margin: 0;
+}
+
+.recipe-ingredients-list h3{
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #bd6160;
+  text-align: center;
+
+  padding: 1rem;
+  margin: 0;
+  max-width: 500px;
+  word-wrap: break-word;
+}
+
+@media (max-width: 500px){
+  .root{
+    padding: 0;
+    
+  }
+
+  .recipe-card-header label{
+    font-size: small;
+    font-weight: 400;
+    max-width: 150px;
+    overflow-wrap: break-word;
+  }
+
+  .recipe-card-header input{
+    font-size: small;
+    font-weight: 400;
+    max-width: 150px;
+    overflow-wrap: break-word;
+  }
+
+  .recipe-genre-dropdown{
+    font-size: small;
+    font-weight: 400;
+    max-width: 150px;
+    overflow-wrap: break-word;
+  }
+ 
+
+  .recipe-toggles{
+    font-size: small;
+    font-weight: 400;
+  
+    overflow-wrap: break-word;
+  }
+  // .recipe-toggles{
+  //   font-size: small;
+  //   font-weight: 400;
+  //   max-width: 150px;
+  //   overflow-wrap: break-word;
+  // }
+
+  // .form-container{
+  //   font-size: small;
+  //   font-weight: 400;
+  //   max-width: 150px;
+  //   overflow-wrap: break-word;
+  // }
 }

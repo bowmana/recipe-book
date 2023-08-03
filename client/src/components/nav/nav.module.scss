@@ -46,3 +46,21 @@
         transform: rotate(360deg);
     }
 }
+
+@media (max-width: 500px) {
+    .root{
+        border-radius: 0;
+    
+    }
+    .nav{
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .link{
+        padding: 0rem;
+    }
+    .favicon{
+        margin: 1rem;
+    }
+}

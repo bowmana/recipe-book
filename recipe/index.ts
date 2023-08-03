@@ -142,7 +142,7 @@ app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
     const endIndex = page * limit;
     const results = cachedData.slice(startIndex, endIndex);
     const totalCount = cachedData.length;
-    res.status(200).json({recipes: results, totalCount });
+    res.status(200).send({recipes: results, totalCount });
 });
 
 
@@ -150,13 +150,13 @@ app.get("/:user_id/getrecipes", async (req: Request, res: Response) => {
 //upload the images to s3 bucket
 app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request, res: Response) => {
 
-    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, original_u_name}: { recipe_name: string, recipe_cuisine: string, recipe_type: string, recipe_description: string, u_name: string, original_u_name: string } = req.body;
+    const { recipe_name, recipe_cuisine, recipe_type, recipe_description, u_name, original_u_name}: { recipe_name: string, recipe_cuisine?: string, recipe_type?: string, recipe_description?: string, u_name: string, original_u_name: string } = req.body;
     const u_id = parseInt(req.body.u_id);
     const original_u_id = parseInt(req.body.original_u_id);
 
     console.log(u_id, "u_id");
     const recipe_items: RecipeItem[] = req.body.recipe_items;
-    const recipe_instructions: Instruction[] = req.body.recipe_instructions;
+    const recipe_instructions: Instruction[] = req.body.recipe_instructions || [];
 
     console.log(recipe_description, "recipe_description")
     
@@ -176,8 +176,34 @@ app.post("/:user_id/recipes", upload.array("recipe_images"), async (req: Request
         res.status(404).send("User does not exist");
         return;
     }
-  
-    const recipe = await helper.createRecipe(user_id, recipe_name, recipe_cuisine, recipe_type, recipe_description, original_u_id, original_u_name, u_name, u_id) 
+    const makeRecipe = () => {
+        if(recipe_cuisine && recipe_type && recipe_description){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, recipe_type, recipe_description);
+        }
+        else if(recipe_cuisine && recipe_type){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, recipe_type, undefined);
+        }
+        else if(recipe_cuisine && recipe_description){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, undefined, recipe_description);
+        }
+        else if(recipe_type && recipe_description){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, recipe_type, recipe_description);
+        }
+        else if(recipe_cuisine){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, recipe_cuisine, undefined, undefined);
+        }
+        else if(recipe_type){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, recipe_type, undefined);
+        }
+        else if(recipe_description){
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, undefined,recipe_description);
+        }
+        else{
+            return helper.createRecipe(user_id, recipe_name, original_u_id, original_u_name, u_name, u_id, undefined, undefined, undefined);
+        }
+    }
+
+    const recipe = await makeRecipe();
 
     
     if (!recipe) {
@@ -712,6 +738,7 @@ app.delete("/recipes/:user_id/delete/:recipe_id", async (req: Request, res: Resp
         await helper.deleteUserRecipe(user_id, recipe_id);
                   deleteRecipeImages(recipe_id);
         await helper.deleteRecipeItems(recipe_id);
+        await helper.deleteInstructions(recipe_id);
         await helper.deleteRecipeImages(recipe_id);
         await helper.deleteRecipe(recipe_id);
 

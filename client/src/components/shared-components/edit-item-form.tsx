@@ -52,7 +52,7 @@ export const EditItemForm = ({ className, editRecipeItem, item }: EditItemFormPr
                     onChange={addRecipePortion}
                 />
 
-                <button className={styles['add-recipe-item']}>Update</button>
+                <button className={styles['update-recipe-item']}>Update</button>
             </form>
         </div>
     );

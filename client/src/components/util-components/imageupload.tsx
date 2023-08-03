@@ -159,7 +159,9 @@ export const ImageUpload = ({
 
     return (
         <div className={classNames(styles['image-upload'], className)}>
-            <h2>Add Images (up to 5)</h2>
+            <h2>
+                Add Images (up to 5) <span className={'required-text'}>*</span>
+            </h2>
             <input
                 type="file"
                 accept="image/png, image/jpeg"

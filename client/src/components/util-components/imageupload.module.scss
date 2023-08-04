@@ -11,7 +11,7 @@
 }
 
 .image-preview-container{
-    width: 700px;
+    width: 90%;
   
     display: grid;
     grid-auto-flow: column;
@@ -23,21 +23,21 @@
     box-shadow: 0 0 10px 0 rgba(0,0,0,.75);
     position: relative;
 
-    
+    overflow: hidden;
 }
 
 .current-image{
 
-    // display: block;
+   
     margin: auto;
-    width: 100%;
-    height: 600px;
+    padding: 1rem;
     object-fit: scale-down;
-    margin: 1rem;
+    
 }
 
 .image-preview-controls{
     display: grid;
+    background-color: blue;
     grid-auto-flow: column;
     grid-gap: 1rem;
     justify-content: center;
@@ -54,7 +54,7 @@
 .image-preview{
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: scale-down;
     border-radius: 15px 15px 0 0;
 }
 
@@ -79,19 +79,42 @@
 @media (max-width: 500px){
 
     .current-image{
-        width: 100%;
+        width: auto;
         height: 100px;
         object-fit: scale-down;
     }
+    .image-preview-container {
+        width: 90%; /* Reduce the width for smaller screens */
+        height: 90px;
+        display: block; /* Change display to block for stacked layout on smaller screens */
+        // padding: 1rem; /* Adjust padding for smaller screens */
+        // margin: 0 auto; /* Center the container horizontally */
+        
+        // padding-bottom: 8rem;
+        
+        font-size: small;
+        
+      }
+   .image-preview-controls {
+   background-color: green;
+    position: relative;
+    align-items: center;
+    button{
+       font-size: small;
+        border: 1px solid #e2bd98;
+        padding: 0.5rem;
+        
+    }
+    }
     .image-preview{
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: 150px;
+        object-fit: contain;
         border-radius: 15px 15px 0 0;
     }
     .initial-image{
         width: 100%;
-        height: 100px;
+        height: 160px;
         object-fit: scale-down;
     }
 

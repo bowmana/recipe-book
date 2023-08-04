@@ -115,7 +115,7 @@
   .recipe-card-header label{
     font-size: small;
     font-weight: 400;
-    max-width: 100px;
+    
     overflow-wrap: break-word;
   
    
@@ -125,20 +125,23 @@
   .recipe-card-header input{
     font-size: small;
     font-weight: 400;
-     max-width: 100px;
-   
+  
     overflow-wrap: break-word;
     margin-top: 1rem;
     margin-bottom: 1rem;
   }
   .recipe-card-header{
     grid-auto-flow: row;
+    padding: 1rem;
+    
+    
+  
   }
 
   .recipe-genre-dropdown{
     font-size: small;
     font-weight: 400;
-    // max-width: 150px;
+   
     overflow-wrap: break-word;
   }
  

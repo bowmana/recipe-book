@@ -57,7 +57,33 @@
     padding: 1rem;
 }
 
-@media screen and (max-width: 500px) {
+@media (max-width: 500px) {
+  .root {
+      height: auto;
+      width: auto;
+    //   padding: 2rem;
+  }
+
+  .button-container button {
+      font-size: small;
+      border: 5px solid #e2bd98;
+      padding: 0.5rem;
+  }
+
+  .current-image {
+      height: 100px; /* Adjust the height as needed */
+      width: 100px; /* Adjust the width as needed */
+  }
+
+  .image-container {
+      height: auto;
+      width: auto;
+      font-size: small;
+  }
+}
+
+
+@media screen and (min-width: 500px) and (max-width: 800px) {
   .root {
       height: auto;
       width: auto;
@@ -69,13 +95,14 @@
   }
 
   .current-image {
-      height: 100px; /* Adjust the height as needed */
-      width: 100px; /* Adjust the width as needed */
+      height: 200px; /* Adjust the height as needed */
+      width: 200px; /* Adjust the width as needed */
   }
 
   .image-container {
       height: auto;
       width: auto;
+      color: orange;
   }
 }
 
@@ -84,11 +111,33 @@
 
 
 
+
+@media (min-width: 800px) and (max-width: 1200px){
+    .root{
+        height: auto;
+        width: auto;
+        padding: 2rem;
+    }
+
+    .button-container button{
+        font-size: 1rem;
+    }
+
+    .current-image{
+        height: 300px; /* Adjust the height as needed */
+        width: 300px; /* Adjust the width as needed */
+    }
+
+    .image-container{
+        height: auto;
+        width: auto;
+    }
 }
 
-
+}
 
 .socialTheme{
+
 
     .image-container{
         border: 5px solid #344966;
@@ -106,6 +155,7 @@
        padding: 4rem;
        margin-left: auto;
        margin-right: auto;
+      
      
   
     .image-container{
@@ -113,13 +163,34 @@
         background-color: #e7e6de;
         max-height: 350px;
         max-width: 400px;
-     
+       
     }
     .current-image{
         height: 250px;
         width: 300px;
     }
 
-  
+  @media(max-width: 500px){
+   
+        height: auto;
+        width: auto;
+        padding: 2rem;
+        
+   
+
+    .button-container button{
+        font-size: 1rem;
+    }
+
+    .current-image{
+        height: 100px; /* Adjust the height as needed */
+        width: 100px; /* Adjust the width as needed */
+    }
+
+    .image-container{
+        height: auto;
+        width: auto;
+    }
+  }
 
 }

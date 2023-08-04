@@ -10,13 +10,13 @@
 
 
 .recipe-card-container{
-    //4 per row
+  
     display: grid;
-    // grid-template-columns: repeat(3, 1fr);
+   
     grid-gap: 2rem;
     justify-content: center;
     padding: 1rem;
-    // margin: 1rem;
+
     margin-left: 1rem;
     margin-right: 1rem;
     margin-bottom: 1rem;
@@ -120,3 +120,22 @@
     font-weight: 400;
 }
 
+
+
+
+@media screen and (max-width: 500px) {
+    .profile-container,
+    .profile-image-container,
+    .profile-info-container {
+        grid-auto-flow: row;
+        max-width: 300px;
+        justify-self: center;
+       
+    }
+    .recipe-card-container{
+        grid-auto-flow: row;
+        max-width: 300px;
+        justify-self: center;
+        overflow-x: hidden;
+    }
+}

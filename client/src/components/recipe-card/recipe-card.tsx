@@ -156,19 +156,19 @@ export const RecipeCard = ({
                         })}
                     </ul>
                     <div className={styles['recipe-card-line-separator']}> </div>
-
-                    <ul className={styles['recipe-card-instructions-list']}>
-                        {recipe.recipe_instructions.map((item: Instruction) => {
-                            return (
-                                <li key={item.instruction_id}>
-                                    <h3 className={styles['recipe-card-instruction']}>
-                                        {item.instruction_order}) {item.instruction}
-                                    </h3>
-                                </li>
-                            );
-                        })}
-                    </ul>
-
+                    <div className={styles['recipe-card-instructions-wrapper']}>
+                        <ul className={styles['recipe-card-instructions-list']}>
+                            {recipe.recipe_instructions.map((item: Instruction) => {
+                                return (
+                                    <li key={item.instruction_id}>
+                                        <h3 className={styles['recipe-card-instruction']}>
+                                            {item.instruction_order}) {item.instruction}
+                                        </h3>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
                     <div className={styles['recipe-card-bottom']}> </div>
                 </li>
             </div>

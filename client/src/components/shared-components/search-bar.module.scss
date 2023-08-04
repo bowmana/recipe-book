@@ -90,7 +90,7 @@
     
     margin-left: 1rem;
     margin-right: 1rem;
-
+        
     }
  
     .search-buttons{
@@ -104,7 +104,8 @@
     }
     .search-bar input {
         padding: 1.75rem;
-        margin: 1rem;
+        // margin: 1rem;
+        
         border: 5px solid #e2bd98;
         border-radius: 10px;
         background-color: #e7e6de;
@@ -113,9 +114,9 @@
         font-weight: 400;
         cursor: pointer;
         transition: background-color 300ms;
-        // width: 100%;
-                
+        
     }
+   
     .search-bar input:focus {
         outline: none;
         background-color: #d17f74;
@@ -143,77 +144,8 @@
 }
 
 .profileTheme{
-    .search-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-    
-        justify-content: center;
-        align-items: center;
-    
-        background-color: #e7e6de;
-        border-radius: 10px 10px 0 0;
-    
-    
-     
-        
-    }
-    
-    
-    
-    .search-bar input {
-        padding: 1.75rem;
-        margin: 1rem;
-        border: 5px solid #e2bd98;
-        border-radius: 10px;
-        background-color: #e7e6de;
-        color: #bd6160;
-        font-size: 1.5rem;
-        font-weight: 400;
-        cursor: pointer;
-        transition: background-color 300ms;
-    
-        
-    }
-    
-    .search-bar input:focus {
-        outline: none;
-        background-color: #d17f74;
-    }
-    
-    .search-bar input::placeholder {
-        color: #bd6160;
-        font-size: 1.5rem;
-        font-weight: 400;
-    }
-    
-    .search-buttons button {
-        padding: 1rem;
-        border: 5px solid #e2bd98;
-        border-radius: 5px;
-        background-color: #e7e6de;
-        color: #bd6160;
-        font-size: 1.5rem;
-        font-weight: 400;
-        cursor: pointer;
-        transition: background-color 300ms;
-    }
-    
-    .search-buttons button:hover {
-        background-color: #d17f74;
-    }
-    
-    .search-buttons{
-        display: grid;
-        grid-auto-flow: column;
-        grid-gap: 1rem;
-        justify-content: center;
-        padding: 1rem;
-    
-        background-color: #e7e6de;
-    
-    
-    
-    }
+
+  
     .search-wrapper{
         box-shadow: 0 0 10px 0 rgba(0,0,0,0.5);
         position: relative;
@@ -230,100 +162,5 @@
     
     }
     
-    .dropdown-container{
-        display: grid;
-        grid-auto-flow: column;
-        grid-gap: 1rem;
-        justify-content: center;
-        padding: 1rem;
-        margin:1rem;
-        background-color: #e7e6de;
-        border-radius: 10px;
-        border: 5px solid #e2bd98;
-    }
-    .profile-container {
-        display: grid;
-        grid-auto-flow: column;
-        grid-gap: 1rem;
-        justify-content: center;
-        padding: 1rem;
-        margin: 1rem;
-        background-color: #e7e6de;
-        border-radius: 10px;
-        border: 5px solid #e2bd98;
-    }
-    
-    .profile-image-container {
-        display: grid;
-        grid-auto-flow: column;
-        grid-gap: 1rem;
-        justify-content: center;
-        padding: 1rem;
-        margin: 1rem;
-        background-color: #e7e6de;
-        border-radius: 10px;
-        border: 5px solid #e2bd98;
-    }
-    
-    .profile-info-container {
-        display: grid;
-        grid-auto-flow: column;
-        grid-gap: 1rem;
-        justify-content: center;
-        padding: 1rem;
-        margin: 1rem;
-        background-color: #e7e6de;
-        border-radius: 10px;
-        border: 5px solid #e2bd98;
-    }
-    
-    .profile-info {
-     
-        justify-content: center;
-        padding: 1rem;
-        margin: 1rem;
-      
-    }
-    
-    .profile-info h1 {
-        font-size: 2rem;
-        font-weight: 400;
-        color: #bd6160;
-    }
-    
-    .profile-info h2 {
-        font-size: 1.5rem;
-        font-weight: 400;
-        color: #bd6160;
-    }
-    
-    
-    .profile-info button:hover {
-        background-color: #d17f74;
-    }
-    
-    .profile-info input {
-        padding: 1rem;
-        border: 5px solid #e2bd98;
-        border-radius: 5px;
-        background-color: #e7e6de;
-        color: #bd6160;
-        font-size: 1.5rem;
-        font-weight: 400;
-        cursor: pointer;
-        transition: background-color 300ms;
-    }
-    
-    .profile-info input:focus {
-        outline: none;
-        background-color: #d17f74;
-    }
-    
-    .profile-info input::placeholder {
-        color: #bd6160;
-        font-size: 1.5rem;
-        font-weight: 400;
-    }
-    
-    
+ 
 }

@@ -306,7 +306,7 @@ export const ItemWrapper = ({ className }: ItemWrapperProps) => {
                 )}
                 <div className={'line-separator'}> </div>
 
-                {/* <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} /> */}
+                <ImageUpload maxImages={5} addImages={setImages} initialImage={defaultImage} />
                 <div className={'line-separator'}> </div>
                 <div className={styles['recipe-toggles']}>
                     <button className={'small-button'} onClick={toggleDropDown}>
